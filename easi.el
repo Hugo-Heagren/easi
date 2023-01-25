@@ -491,6 +491,7 @@ different presenters.")
    (easi-results-presenter-after presenter))))
 
 (defun easi--get-current-result ()
+  "Return the result at point."
   (cl-labels ((get-getter (presenter)
 		(if (symbolp presenter)
 		    (get-getter (symbol-value presenter))
