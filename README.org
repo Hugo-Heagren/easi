@@ -1,0 +1,13 @@
+#+title: EASI: the Emacs Advanced Searching Interface
+
+*THIS PROJECT IS IN A VERY ALPHA STATE*
+
+* Overview
+Easi lets you search multiple information sources at once---it is a
+[[https://en.wikipedia.org/wiki/Federated_search][federated search]] system in Emacs. Search engines or other sources of
+information are declared once in the init file and arbitrary groups
+can be used together. After searching, the results are collected
+together, sorted, and presented in Emacs. They can be viewed as a
+whole collection or individually, or both. Configurable and
+user-defined actions can be run on the results. Every aspect of Easi's
+operation is meant to be highly configurable.
