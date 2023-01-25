@@ -491,10 +491,11 @@ different presenters.")
    (easi-results-presenter-after presenter))))
 
 (defun easi--get-current-result ()
-  (let ((getter
-	 (easi-results-presenter-current-result-getter
-	  easi-current-results-presenter)))
-    (funcall getter)))
+  (cl-labels ((get-getter (presenter)
+		(if (symbolp presenter)
+		    (get-getter (symbol-value presenter))
+		  (easi-results-presenter-current-result-getter presenter))))
+    (funcall (get-getter easi-current-results-presenter))))
 
 ;;;;; (Current) Result
 
