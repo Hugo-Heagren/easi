@@ -496,20 +496,6 @@ different presenters.")
 	  easi-current-results-presenter)))
     (funcall getter)))
 
-(defun easi--print-results (presenter results buffer)
-  (if (symbolp presenter)
-      ;; Account symbols-as-presenters
-      (easi--print-results (symbol-value presenter) results buffer)
-  (mapcan
-   (lambda (fun) (funcall fun results buffer))
-   (easi-results-presenter-before presenter))
-  (mapcan
-   (lambda (fun) (funcall fun results buffer))
-   (easi-results-presenter-result-printer presenter))
-  (mapcan
-   (lambda (fun) (funcall fun results buffer))
-   (easi-results-presenter-after presenter))))
-
 ;;;;; (Current) Result
 
 (defvar-keymap easi-result-mode-map
