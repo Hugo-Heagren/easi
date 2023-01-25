@@ -328,8 +328,8 @@ engine in SEARCHABLE to NUMBER.")
 
 Each field returned must be a string.")
 
-(defalias 'easi--structured-object-get-field
-  'easi-result-get-field)
+(defalias 'easi-result-get-field
+  'easi--structured-object-get-field)
 
 ;;;; Presenters
 
