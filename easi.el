@@ -425,12 +425,24 @@ Each field returned must be a string.")
       ,@easi-default-result-presenters))))
 
 ;;;; Results user interface
+;; TODO Make it possible to have more than one EASI results
+;; buffer/session at once.
 
-;; TODO This will need to be more complex in future (kill both
-;; buffers, if more than one exist)
-(defun easi-quit ()
-  (interactive nil easi-results-mode easi-result-mode)
-  (kill-this-buffer))
+;; Infrastructure variables
+(defvar-local easi-current-query nil
+  "Query which produced current buffer's EASI results.")
+
+(defvar-local easi-current-searchables nil
+  "Searchables which produced current buffer's EASI results.")
+
+(defvar-local easi-results-buffer nil
+  "Buffer displaying collection of EASI results.")
+
+(defvar-local easi-result-buffer nil
+  "Buffer displaying current EASI result.")
+
+(defvar-local easi-current-results-presenter nil
+  "`easi-results-presenter' used in current buffer.")
 
 ;; Define commands useful in every presenter
 ;; TODO Define lots of these commands...
@@ -441,6 +453,14 @@ Each field returned must be a string.")
   "R" #'easi-rerun-with-new-engines
   "s" #'easi-search
   "q" #'easi-quit)
+
+;;;;; Results
+
+;; TODO This will need to be more complex in future (kill both
+;; buffers, if more than one exist)
+(defun easi-quit ()
+  (interactive nil easi-results-mode easi-result-mode)
+  (kill-this-buffer))
 
 (defvar-keymap easi-results-mode-map
   :parent easi-base-map
@@ -455,34 +475,6 @@ Turned on automatically in EASI results buffers. This mode exists
 to ensure consistency of various features between different
 results presenters, like rerunning queries and switching between
 different presenters.")
-
-(defvar-keymap easi-result-mode-map
-  :parent easi-base-map
-  "w" #'easi-view-results)
-
-(define-minor-mode easi-result-mode
-  "Minor mode for viewing a single EASI result.
-
-Turned on automatically in EASI result buffers. This mode exists
-to ensure consistency of various features between different
-result presenters, like rerunning queries and switching between
-different presenters.")
-
-;; TODO Make it possible to have more than one EASI results
-;; buffer/session at once.
-
-;; Infrastructure variables
-(defvar-local easi-current-query nil
-  "Query which produced current buffer's EASI results.")
-
-(defvar-local easi-current-searchables nil
-  "Searchables which produced current buffer's EASI results.")
-
-(defvar-local easi-results-buffer nil
-  "Buffer displaying collection of EASI results.")
-
-(defvar-local easi-current-results-presenter nil
-  "`easi-results-presenter' used in current buffer.")
 
 (defun easi--print-results (presenter results buffer)
   (if (symbolp presenter)
@@ -503,6 +495,34 @@ different presenters.")
 	 (easi-results-presenter-current-result-getter
 	  easi-current-results-presenter)))
     (funcall getter)))
+
+(defun easi--print-results (presenter results buffer)
+  (if (symbolp presenter)
+      ;; Account symbols-as-presenters
+      (easi--print-results (symbol-value presenter) results buffer)
+  (mapcan
+   (lambda (fun) (funcall fun results buffer))
+   (easi-results-presenter-before presenter))
+  (mapcan
+   (lambda (fun) (funcall fun results buffer))
+   (easi-results-presenter-result-printer presenter))
+  (mapcan
+   (lambda (fun) (funcall fun results buffer))
+   (easi-results-presenter-after presenter))))
+
+;;;;; (Current) Result
+
+(defvar-keymap easi-result-mode-map
+  :parent easi-base-map
+  "w" #'easi-view-results)
+
+(define-minor-mode easi-result-mode
+  "Minor mode for viewing a single EASI result.
+
+Turned on automatically in EASI result buffers. This mode exists
+to ensure consistency of various features between different
+result presenters, like rerunning queries and switching between
+different presenters.")
 
 ;;;; Search functions
 
