@@ -473,11 +473,13 @@ Each field returned must be a string.")
 
 ;;;;; Results
 
-;; TODO This will need to be more complex in future (kill both
-;; buffers, if more than one exist)
 (defun easi-quit ()
+  "Quit Easi.
+
+Deletes all Easi buffers."
   (interactive nil easi-results-mode easi-result-mode)
-  (kill-this-buffer))
+  (and (kill-buffer easi-result-buffer)
+       (kill-buffer easi-results-buffer)))
 
 (defvar-keymap easi-results-mode-map
   :parent easi-base-map
