@@ -639,8 +639,15 @@ passed."
 		 ((functionp easi-result-default-buffer-name)
 		  (funcall easi-result-default-buffer-name
 			   searchable query result)))))
-      ;; TODO Some way of configuring how the results-buffer is displayed
-      (display-buffer result-buffer)
+      ;; TODO This is wrong -- we assume that a symbol points at a
+      ;; struct, but the definition says that a symbol could point at
+      ;; a symbol or a struct, so long as the chain ends in a struct.
+      (let ((action (or (easi-result-presenter-display-action
+			 (if (symbolp result-presenter)
+			     (symbol-value result-presenter)
+			   result-presenter))
+			easi-result-default-display-action)))
+      (display-buffer result-buffer action))
       (easi--print-result result-presenter result result-buffer)
       (with-current-buffer result-buffer
 	(easi-result-mode)
