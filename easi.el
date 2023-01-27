@@ -488,6 +488,16 @@ results presenters, like rerunning queries and switching between
 different presenters.")
 
 (defun easi--print-results (presenter results buffer)
+  "Present RESULTS in BUFFER with PRESENTER.
+
+PRESENTER is either an `easi-results-presenter' or a symbol. If a
+symbol this function is just called again with the value of that
+symbol.
+
+If an `easi-results-presenter' object, then with BUFFER current,
+call each of the functions in the \"before\", then
+\"result-printer\", then \"after\" slots, passing RESULT and
+BUFFER to each."
   (if (symbolp presenter)
       ;; Account symbols-as-presenters
       (easi--print-results (symbol-value presenter) results buffer)
