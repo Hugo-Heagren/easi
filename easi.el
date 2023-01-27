@@ -538,6 +538,15 @@ BUFFER to each."
 
 ;;;;; (Current) Result
 
+(defun easi-view-results ()
+  "Select window of `easi-results-buffer'."
+  (interactive)
+  (if easi-results-buffer
+      (if-let ((window (get-buffer-window easi-results-buffer)))
+	  (select-window window)
+	(error "Results buffer not displayed in a window"))
+    (error "No results buffer")))
+
 (defvar-keymap easi-result-mode-map
   :parent easi-base-map
   "w" #'easi-view-results)
