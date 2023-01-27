@@ -481,6 +481,15 @@ Deletes all Easi buffers."
 
 ;;;;; Results
 
+(defun easi-view-result ()
+  "Select window of `easi-result-buffer'"
+  (interactive)
+  (if easi-result-buffer
+      (if-let ((window (get-buffer-window easi-result-buffer)))
+	  (select-window window)
+	(error "Result buffer not displayed in a window"))
+    (error "No result buffer")))
+
 (defvar-keymap easi-results-mode-map
   :parent easi-base-map
   "w" #'easi-view-result)
