@@ -114,6 +114,10 @@ called with the current result as its sole argument."
   :group 'easi
   :type '(choice string function))
 
+(defcustom easi-result-default-display-action nil
+  "ACTION arg for `display-buffer' when displaying a result buffer."
+  :type display-buffer--action-custom-type)
+
 ;;;; Basic searchable
 
 (cl-defstruct (easi-search-engine
