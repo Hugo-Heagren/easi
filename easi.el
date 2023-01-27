@@ -452,6 +452,9 @@ Each field returned must be a string.")
 (defvar-local easi-current-results-presenter nil
   "`easi-results-presenter' used in current buffer.")
 
+(defvar-local easi-current-result-presenter nil
+  "`easi-results-presenter' used in current buffer.")
+
 ;; Define commands useful in every presenter
 ;; TODO Define lots of these commands...
 (defvar-keymap easi-base-map
