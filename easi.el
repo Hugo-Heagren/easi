@@ -620,15 +620,30 @@ passed."
 		easi-results-buffer buffer
 		easi-current-results-presenter results-presenter)
     (easi-results-mode)
-    (when-let (;; Get a results buffer in a similar way to above
-	       (result-presenter (car (easi-get-result-presenters searchable))))
+    ;; Don't assume that there is a result presenter
+    (when-let ((result-presenter (car (easi-get-result-presenters searchable)))
+	       (result (easi--get-current-result))
+	       ;; Get a results buffer in a similar way to above
+	       (result-buffer
+		(cond
+		 (easi-result-buffer)
+		 ((stringp easi-result-default-buffer-name)
+		  (generate-new-buffer easi-result-default-buffer-name))
+		 ((functionp easi-result-default-buffer-name)
+		  (funcall easi-result-default-buffer-name
+			   searchable query result)))))
       ;; TODO Some way of configuring how the buffer is displayed
-
-      ;; Display the buffer
-
-      ;; Run a function which in a generic way updates the result
-      ;; presenter to display the current result
-      )))
+      (display-buffer result-buffer)
+      (easi--print-result result-presenter result result-buffer)
+      (with-current-buffer result-buffer
+	(easi-result-mode)
+	(setq-local easi-current-query query
+		    easi-current-searchables searchable
+		    easi-results-buffer buffer
+		    easi-current-results-presenter results-presenter))
+      ;; Set variable in results buffer pointing at result buffer
+      (with-current-buffer buffer
+	(setq-local easi-result-buffer result-buffer)))))
 
 ;;;###autoload
 (defun easi-rerun-with-new-engines (searchable)
