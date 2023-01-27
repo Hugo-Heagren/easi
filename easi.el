@@ -372,7 +372,9 @@ Each field returned must be a string.")
 
   ;; For getting current field. Should return a result object (i.e.
   ;; not necessarily a string)
-  current-field-getter)
+  current-field-getter
+  ;; ACTION arg to pass to `display-buffer'
+  display-action)
 
 ;;;;; Getting Presenters
 
