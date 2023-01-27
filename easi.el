@@ -523,6 +523,31 @@ to ensure consistency of various features between different
 result presenters, like rerunning queries and switching between
 different presenters.")
 
+(defun easi--print-result (presenter result buffer)
+  "Present RESULT in BUFFER with PRESENTER.
+
+PRESENTER is either an `easi-result-presenter' or a symbol. If a
+symbol this function is just called again with the value of that
+symbol.
+
+If an `easi-result-presenter' object, then with BUFFER current,
+call each of the functions in the \"before\", then
+\"field-printer\", then \"after\" slots, passing RESULT and
+BUFFER to each."
+  (if (symbolp presenter)
+      ;; Account for symbols-as-presenters
+      (easi--print-result (symbol-value presenter) result buffer)
+    (with-current-buffer buffer
+      (mapcan
+       (lambda (fun) (funcall fun result buffer))
+       (easi-result-presenter-before presenter))
+      (mapcan
+       (lambda (fun) (funcall fun result buffer))
+       (easi-result-presenter-field-printer presenter))
+      (mapcan
+       (lambda (fun) (funcall fun result buffer))
+       (easi-result-presenter-after presenter)))))
+
 ;;;; Search functions
 
 (defun easi--prompt-for-searchable ()
