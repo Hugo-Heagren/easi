@@ -461,6 +461,14 @@ Each field returned must be a string.")
 (defvar-local easi-current-result-presenter nil
   "`easi-results-presenter' used in current buffer.")
 
+(defun easi-quit ()
+  "Quit Easi.
+
+Deletes all Easi buffers."
+  (interactive nil easi-results-mode easi-result-mode)
+  (and (kill-buffer easi-result-buffer)
+       (kill-buffer easi-results-buffer)))
+
 ;; Define commands useful in every presenter
 ;; TODO Define lots of these commands...
 (defvar-keymap easi-base-map
@@ -472,14 +480,6 @@ Each field returned must be a string.")
   "q" #'easi-quit)
 
 ;;;;; Results
-
-(defun easi-quit ()
-  "Quit Easi.
-
-Deletes all Easi buffers."
-  (interactive nil easi-results-mode easi-result-mode)
-  (and (kill-buffer easi-result-buffer)
-       (kill-buffer easi-results-buffer)))
 
 (defvar-keymap easi-results-mode-map
   :parent easi-base-map
