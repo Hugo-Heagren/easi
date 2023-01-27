@@ -591,39 +591,40 @@ passed."
 		      (query (easi--prompt-for-query searchable)))
 		 `(,searchable ,query)))
   (let* ((results (easi-searchable-results query searchable))
-	 (buffer (cond
-		  (easi-results-buffer)
-		  ((stringp easi-results-default-buffer-name)
-		   (generate-new-buffer easi-results-default-buffer-name))
-		  ;; MAYBE Users might want to set the buffer name
-		  ;; depending on the results (e.g. on how many there
-		  ;; are). Do we want to update the buffer name on
-		  ;; this basis even we reuse the buffer (e.g. if they
-		  ;; rerun, reusing the buffer, with a new query and
-		  ;; there are a different number of results)
-		  ((functionp easi-results-default-buffer-name)
-		   (funcall easi-results-default-buffer-name
-			    searchable query results))))
+	 (results-buffer
+	  (cond
+	   (easi-results-buffer)
+	   ((stringp easi-results-default-buffer-name)
+	    (generate-new-buffer easi-results-default-buffer-name))
+	   ;; MAYBE Users might want to set the results-buffer name
+	   ;; depending on the results (e.g. on how many there
+	   ;; are). Do we want to update the results-buffer name on
+	   ;; this basis even we reuse the results-buffer (e.g. if they
+	   ;; rerun, reusing the results-buffer, with a new query and
+	   ;; there are a different number of results)
+	   ((functionp easi-results-default-buffer-name)
+	    (funcall easi-results-default-buffer-name
+		     searchable query results))))
 	 (results-presenter (car (easi-get-results-presenters searchable))))
     ;; TODO This might have to move, so that I can run easi-search
     ;; from inside the result buffer...
     ;; TODO Hard coding this is going to make it difficult to do
     ;; different types of rerunning...
-    (switch-to-buffer buffer)
-    (easi--print-results results-presenter results buffer)
+    (switch-to-buffer results-buffer)
+    (easi--print-results results-presenter results results-buffer)
     ;; NOTE Doing this before printing results didn't work because the
     ;; printing somehow set them all to nil again. I don't know why
     ;; and I should probably sort out what was wrong, but for now,
     ;; I'll just leave them here.
     (setq-local easi-current-query query
 		easi-current-searchables searchable
-		easi-results-buffer buffer
+		easi-results-buffer results-buffer
 		easi-current-results-presenter results-presenter)
     (easi-results-mode)
     ;; Don't assume that there is a result presenter
     (when-let ((result-presenter (car (easi-get-result-presenters searchable)))
 	       (result (easi--get-current-result))
-	       ;; Get a results buffer in a similar way to above
+	       ;; Get a results results-buffer in a similar way to above
 	       (result-buffer
 		(cond
 		 (easi-result-buffer)
@@ -632,17 +633,17 @@ passed."
 		 ((functionp easi-result-default-buffer-name)
 		  (funcall easi-result-default-buffer-name
 			   searchable query result)))))
-      ;; TODO Some way of configuring how the buffer is displayed
+      ;; TODO Some way of configuring how the results-buffer is displayed
       (display-buffer result-buffer)
       (easi--print-result result-presenter result result-buffer)
       (with-current-buffer result-buffer
 	(easi-result-mode)
 	(setq-local easi-current-query query
 		    easi-current-searchables searchable
-		    easi-results-buffer buffer
+		    easi-results-buffer results-buffer
 		    easi-current-results-presenter results-presenter))
       ;; Set variable in results buffer pointing at result buffer
-      (with-current-buffer buffer
+      (with-current-buffer results-buffer
 	(setq-local easi-result-buffer result-buffer)))))
 
 ;;;###autoload
