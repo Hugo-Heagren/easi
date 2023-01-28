@@ -559,30 +559,32 @@ to ensure consistency of various features between different
 result presenters, like rerunning queries and switching between
 different presenters.")
 
-(defun easi--print-result (presenter result buffer)
-  "Present RESULT in BUFFER with PRESENTER.
 
-PRESENTER is either an `easi-result-presenter' or a symbol. If a
-symbol this function is just called again with the value of that
-symbol.
+(defun easi--result-present (presenter result buffer &rest slots)
+  "Run all functions from PRESENTER's SLOTS, with RESULT and BUFFER.
 
-If an `easi-result-presenter' object, then with BUFFER current,
-call each of the functions in the \"before\", then
-\"field-printer\", then \"after\" slots, passing RESULT and
-BUFFER to each."
+For each one of SLOTS, get the value of that slot in PRESENTER,
+and map over it, calling each element as a function, passing
+RESULT and BUFFER as arguments.
+
+SLOTS are symbols, the names of slots in a
+`easi-result-presenter' object. The only slots which make sense
+for this function are `before', `field-printer' and `after'.
+
+Returns nil -- this function is only useful for its side effects."
   (if (symbolp presenter)
       ;; Account for symbols-as-presenters
-      (easi--print-result (symbol-value presenter) result buffer)
+      (apply 'easi--result-present
+	     (symbol-value presenter) result buffer slots)
     (with-current-buffer buffer
-      (mapcan
-       (lambda (fun) (funcall fun result buffer))
-       (easi-result-presenter-before presenter))
-      (mapcan
-       (lambda (fun) (funcall fun result buffer))
-       (easi-result-presenter-field-printer presenter))
-      (mapcan
-       (lambda (fun) (funcall fun result buffer))
-       (easi-result-presenter-after presenter)))))
+      (dolist (slot slots)
+	(let ((accessor
+	       (intern
+		(concat "easi-result-presenter-"
+			(symbol-name slot)))))
+	  (mapcan
+	   (lambda (fun) (funcall fun result buffer))
+	   (funcall accessor presenter)))))))
 
 ;;;; Search functions
 
