@@ -346,7 +346,11 @@ If NUMBER is non-nil, limit the number of results from each
 engine in SEARCHABLE to NUMBER.")
 
 (cl-defmethod easi-searchable-results (query (searchable easi-search-engine) &optional number)
-  (easi-get-results query (easi-search-engine-results-getter searchable) number))
+  (when-let ((getter (easi-search-engine-results-getter searchable))
+	     (raw-results (easi-get-results query getter number)))
+    (if-let (post-proc (easi-search-engine-results-post-processor searchable))
+	(easi--structured-object-get-field post-proc raw-results)
+      raw-results)))
 (cl-defmethod easi-searchable-results (query (searchable easi-search-engine-group) &optional number)
   (mapcar (apply-partially #'easi-searchable-results query)
 	  (easi-search-engine-group-searchables searchable)))
