@@ -368,6 +368,19 @@ engine in SEARCHABLE to NUMBER.")
 
 Each field returned must be a string.")
 
+(cl-defmethod easi-result-list-fields ((result list))
+  "RESULT is a list.
+
+If every element of RESULT is a cons, `mapcar' `car' over RESULT.
+If not, and RESULT passes `plistp', return a list of every second
+element of RESUlT, beginning with the first."
+  (cond
+   ((cl-every #'consp result)
+    (mapcar #'car result))
+   ((plistp result)
+    (cl-loop for x in result by cddr
+	     collect x))))
+
 (defalias 'easi-result-get-field
   'easi--structured-object-get-field)
 
