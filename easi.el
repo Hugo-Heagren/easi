@@ -680,18 +680,23 @@ passed."
 			     (symbol-value result-presenter)
 			   result-presenter))
 			easi-result-default-display-action)))
-      (display-buffer result-buffer action))
-      (easi--print-result result-presenter result result-buffer)
+	(display-buffer result-buffer action))
+      (easi--result-present
+       result-presenter result result-buffer
+       'before 'field-printer 'after 'hook)
       (with-current-buffer result-buffer
 	(easi-result-mode)
 	(setq-local easi-current-query query
 		    easi-current-searchables searchable
+		    easi-result-buffer result-buffer
 		    easi-results-buffer results-buffer
-		    easi-current-results-presenter results-presenter))
-      ;; Set variable in results buffer pointing at result buffer
+		    easi-current-results-presenter results-presenter
+		    easi-current-result-presenter result-presenter))
+      ;; Set variables in results buffer pointing at result buffer
       (with-current-buffer results-buffer
-	(setq-local easi-result-buffer result-buffer)))))
-
+	(setq-local easi-current-result-presenter result-presenter
+		    easi-result-buffer result-buffer)))))
+ 
 ;;;###autoload
 (defun easi-rerun-with-new-engines (searchable)
   (interactive `(,(easi--prompt-for-searchable))
