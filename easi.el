@@ -528,7 +528,8 @@ BUFFER to each."
    (easi-results-presenter-result-printer presenter))
   (mapcan
    (lambda (fun) (funcall fun results buffer))
-   (easi-results-presenter-after presenter))))
+   (easi-results-presenter-after presenter))
+  (mapcan #'funcall (easi-results-presenter-hook presenter))))
 
 (defun easi--get-current-result ()
   "Return the result at point."
