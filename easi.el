@@ -260,16 +260,17 @@ returning the first which is non-nil:
 
 If OBJECT fails `plistp', assume it is an alist, and call
 `alist-get', with TESTFN set to `string='."
-  (cond
-   ((cl-every #'consp object)
-    (alist-get field object nil nil #'string=))
-   ((plistp object)
-    (plist-get
-     field object
-     (lambda (x y)
-       (or
-	(eq x y)
-	(eq (intern x) y)))))))
+  (let ((comp-func
+	 (lambda (x y)
+	   (or
+	    (string= x y)
+	    (eq x y)))))
+    (cond
+     ((cl-every #'consp object)
+      (alist-get field object nil nil comp-func))
+     ((plistp object)
+      (plist-get
+       field object comp-func)))))
 
 (cl-defmethod easi--structured-object-get-field (field (object hash-table))
   (gethash field object))
