@@ -144,6 +144,11 @@ KEY is a " ;; TODO Better docstring
    (:documentation
     "Way of getting a list of results. Must be a of a type for which
 `easi-get-results' has a method."))
+  (results-post-processor nil
+   (:documentation
+    "Processing to be done to the results, after retrieval but
+    before they are used by anything else in EASI. Takes the same
+    form as FIELD in `easi-result-get-field'."))
   (field-aliases nil
    (:documentation
     "Alist of field aliases.
