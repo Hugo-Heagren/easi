@@ -191,7 +191,11 @@ return value of each previous invocation as OBJECT.
 This is useful for getting data from objects with more than one
 level of structure (e.g. with a cl-struct with an `age' slot,
 which itself is an alist with `years' and `days', the value of
-`years' could be accessed with the list (\"age\" \"years\").)")
+`years' could be accessed with the list (\"age\" \"years\").)
+
+The default implementation returns nil, so that nil is returned
+when there is no applicable method."
+  nil)
 ;; NOTE Interestingly, the way this is implemented means that any
 ;; level of nesting is equivalent to no nesting. I.e. FIELD being
 ;; '((("foo") "bar") baz) will deliver the same objects as '("foo"
