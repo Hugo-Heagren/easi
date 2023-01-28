@@ -212,6 +212,18 @@ FIELD in turn."
 	(easi--structured-object-get-field (cdr field) with-first)
       with-first)))
 
+(cl-defmethod easi--structured-object-get-field ((field integer) (object cons))
+  "Get element at index FIELD in OBJECT
+
+(This method is for list objects.)"
+  (nth field object))
+
+(cl-defmethod easi--structured-object-get-field ((field integer) (object vector))
+  "Get element at index FIELD in OBJECT.
+
+(This method is for vector objects.)"
+  (aref object field))
+
 ;; TODO Allow FIELD to be a lambda, not just a symbol for a function
 ;; The easiest way to do this might be to just fix the Emacs bug with
 ;; cl-lib---other types are meant to be supported.
