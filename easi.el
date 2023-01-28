@@ -520,16 +520,16 @@ BUFFER to each."
   (if (symbolp presenter)
       ;; Account symbols-as-presenters
       (easi--print-results (symbol-value presenter) results buffer)
-  (mapcan
-   (lambda (fun) (funcall fun results buffer))
-   (easi-results-presenter-before presenter))
-  (mapcan
-   (lambda (fun) (funcall fun results buffer))
-   (easi-results-presenter-result-printer presenter))
-  (mapcan
-   (lambda (fun) (funcall fun results buffer))
-   (easi-results-presenter-after presenter))
-  (mapcan #'funcall (easi-results-presenter-hook presenter))))
+    (mapcan
+     (lambda (fun) (funcall fun results buffer))
+     (easi-results-presenter-before presenter))
+    (mapcan
+     (lambda (fun) (funcall fun results buffer))
+     (easi-results-presenter-result-printer presenter))
+    (mapcan
+     (lambda (fun) (funcall fun results buffer))
+     (easi-results-presenter-after presenter))
+    (mapcan #'funcall (easi-results-presenter-hook presenter))))
 
 (defun easi--get-current-result ()
   "Return the result at point."
