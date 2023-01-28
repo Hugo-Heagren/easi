@@ -572,7 +572,8 @@ RESULT and BUFFER as arguments.
 
 SLOTS are symbols, the names of slots in a
 `easi-result-presenter' object. The only slots which make sense
-for this function are `before', `field-printer' and `after'.
+for this function are `before', `field-printer' and `after'. As a
+special case, if slot is `hook', call each element with no args.
 
 Returns nil -- this function is only useful for its side effects."
   (if (symbolp presenter)
@@ -585,9 +586,11 @@ Returns nil -- this function is only useful for its side effects."
 	       (intern
 		(concat "easi-result-presenter-"
 			(symbol-name slot)))))
+	  (if (eq slot 'hook)
+	      (mapcan #'funcall (funcall accessor presenter))
 	  (mapcan
 	   (lambda (fun) (funcall fun result buffer))
-	   (funcall accessor presenter)))))))
+	   (funcall accessor presenter))))))))
 
 (defun easi--update-result ()
   "Update Easi's result buffer to display the current result."
