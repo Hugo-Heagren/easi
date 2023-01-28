@@ -359,7 +359,8 @@ Each field returned must be a string.")
 
   ;; For getting current result. Should return a result object (i.e.
   ;; not necessarily a string)
-  current-result-getter)
+  current-result-getter
+  hook)
 
 (cl-defstruct (easi-result-presenter
 	       (:constructor easi-result-presenter-create))
@@ -374,7 +375,8 @@ Each field returned must be a string.")
   ;; not necessarily a string)
   current-field-getter
   ;; ACTION arg to pass to `display-buffer'
-  display-action)
+  display-action
+  hook)
 
 ;;;;; Getting Presenters
 
