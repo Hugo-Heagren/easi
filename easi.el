@@ -586,6 +586,17 @@ Returns nil -- this function is only useful for its side effects."
 	   (lambda (fun) (funcall fun result buffer))
 	   (funcall accessor presenter)))))))
 
+(defun easi--update-result ()
+  "Update Easi's result buffer to display the current result."
+  (pcase-let ((`(,result ,result-buffer)
+	       (with-current-buffer easi-results-buffer
+		 `(,(easi--get-current-result)
+		   ,easi-result-buffer))))
+    (easi--result-present
+     easi-current-result-presenter
+     result result-buffer
+     'field-printer)))
+
 ;;;; Search functions
 
 (defun easi--prompt-for-searchable ()
