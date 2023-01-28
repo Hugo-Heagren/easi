@@ -11,3 +11,7 @@ together, sorted, and presented in Emacs. They can be viewed as a
 whole collection or individually, or both. Configurable and
 user-defined actions can be run on the results. Every aspect of Easi's
 operation is meant to be highly configurable.
+
+* Prior art
+This package was largely inspired by [[https://github.com/hrs/engine-mode/][engine mode]], and the search
+facilities in w3m.
