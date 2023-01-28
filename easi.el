@@ -212,6 +212,13 @@ FIELD in turn."
 	(easi--structured-object-get-field (cdr field) with-first)
       with-first)))
 
+(cl-defmethod easi--structured-object-get-field ((field (head lambda)) object)
+  "FIELD is a list.
+
+Call `easi--structured-object-get-field' recursively using each element of
+FIELD in turn."
+  (funcall field object))
+
 (cl-defmethod easi--structured-object-get-field ((field integer) (object cons))
   "Get element at index FIELD in OBJECT
 
