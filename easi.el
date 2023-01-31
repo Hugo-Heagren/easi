@@ -218,7 +218,7 @@ Call `easi--structured-object-get-field' recursively using each element of
 FIELD in turn."
   (let ((with-first (easi--structured-object-get-field (car field) object)))
     (if-let ((next (cdr field)))
-	(easi--structured-object-get-field (cdr field) with-first)
+	(easi--structured-object-get-field next with-first)
       with-first)))
 
 (cl-defmethod easi--structured-object-get-field ((field vector) (object sequence))
