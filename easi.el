@@ -221,6 +221,21 @@ FIELD in turn."
 	(easi--structured-object-get-field (cdr field) with-first)
       with-first)))
 
+(cl-defmethod easi--structured-object-get-field ((field vector) (object sequence))
+  "FIELD is a vector and OBJECT is a sequence.
+
+Map each element of FIELD over the elements of OBJECT, and pass
+the result as OBJECT to another call to
+`easi--structured-object-get-field'."
+  (let ((with-first
+	 (seq-map
+	  (apply-partially #'easi--structured-object-get-field (aref field 0))
+	  object))
+	(next (seq-drop field 1)))
+    (if (or (null next) (eq next []))
+	with-first
+      (easi--structured-object-get-field next with-first))))
+
 (cl-defmethod easi--structured-object-get-field ((field (head lambda)) object)
   "FIELD is a list.
 
