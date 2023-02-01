@@ -790,17 +790,20 @@ passed."
 		   (easi-search-engine-group-name searchable))))
 	      (name-prop (searchable)
 		(propertize (get-name searchable)
-			    'easi-searchable
-			    (if (symbolp searchable)
-				(symbol-value searchable)
-			      searchable))))
+			    'easi-searchable searchable)))
     (let* ((s-list (flatten-list searchables))
 	   (name-s-alist (mapcar #'name-prop s-list))
 	   (minibuffer-allow-text-properties t)
 	   (selected
 	    (completing-read-multiple
 	     "Searchables: " name-s-alist nil t)))
-      (mapcar (lambda (str) (get-text-property 0 'easi-searchable str)) selected))))
+      ;; This is a HACK
+      (mapcar
+       (lambda (str)
+	 (seq-find
+	  (lambda (searchable) (string= str (get-name searchable)))
+	  searchables))
+       selected))))
 
 (provide 'easi)
 
