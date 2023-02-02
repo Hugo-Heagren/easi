@@ -403,6 +403,15 @@ element of RESUlT, beginning with the first."
 
 (defalias 'easi-result-get-field
   'easi--structured-object-get-field)
+(cl-defgeneric easi-result-attach-search-engine (engine result)
+  "Attach ENGINE to RESULT.
+
+For certain features (such as field aliasing) to work, this
+function (and `easi-result-retrieve-search-engine') must have an
+implementation for every type of result.
+
+Must return RESULT with ENGINE attached.")
+
 
 ;;;; Presenters
 
