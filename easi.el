@@ -412,6 +412,14 @@ implementation for every type of result.
 
 Must return RESULT with ENGINE attached.")
 
+(cl-defmethod easi-result-attach-search-engine (engine (result cons))
+  (cond
+   ((cl-every #'consp result)
+    (setf (alist-get "easi-search-engine" result) engine))
+   ((plistp result)
+    (setf (plist-get result "easi-search-engine") engine)))
+  result)
+
 
 ;;;; Presenters
 
