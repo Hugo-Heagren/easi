@@ -420,6 +420,13 @@ Must return RESULT with ENGINE attached.")
     (setf (plist-get result "easi-search-engine") engine)))
   result)
 
+(cl-defgeneric easi-result-retrieve-search-engine (result)
+  "Return the engine attached to RESULT.
+
+For certain features (such as field aliasing) to work, this
+function (and `easi-result-attach-search-engine') must have an
+implementation for every type of result.")
+
 
 ;;;; Presenters
 
