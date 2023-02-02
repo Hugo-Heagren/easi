@@ -423,7 +423,8 @@ element of RESUlT, beginning with the first."
 	     collect x))))
 
 (defalias 'easi-result-get-field
-  'easi--structured-object-get-field)
+  'easi-structured-object-get-field)
+
 (cl-defgeneric easi-result-attach-search-engine (engine result)
   "Attach ENGINE to RESULT.
 
