@@ -298,6 +298,25 @@ If OBJECT fails `plistp', assume it is an alist, and call
 ;; TODO Write a few other obvious methods for different types of
 ;; object (alist, plist, cl-struct, hash-table, maybe json)
 
+(defun easi-structured-object-get-field (field object)
+  "Get FIELD or its alias in OBJECT.
+
+Check if FIELD has an alias in the search engine which returned
+OBJECT. If so, pass that as FIELD to
+`easi--structured-object-get-field', and OBJECT as OBJECT. If
+not, pass FIELD as FIELD.
+
+Only strings are supported as aliases, so that other selectors
+always behave in predictable ways."
+  (easi--structured-object-get-field
+   (if-let (((stringp field))
+	    ;; TODO does `easi-result-aliases' need renaming? It
+	    ;; doesn't necessarily /only/ operate on results
+	    (alias-list (easi-result-aliases object))
+	    (alias (alist-get field alias-list nil nil #'string=)))
+       alias field)
+   object))
+
 ;;;; Getting suggestions
 
 (cl-defgeneric easi-get-suggestions (query suggestions-getter &optional number)
