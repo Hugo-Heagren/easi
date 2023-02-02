@@ -427,6 +427,14 @@ For certain features (such as field aliasing) to work, this
 function (and `easi-result-attach-search-engine') must have an
 implementation for every type of result.")
 
+(cl-defmethod easi-result-retrieve-search-engine ((result cons))
+  (cond
+   ((cl-every #'consp result)
+    ;; TODO Do I need to abstract out the comparison function above?
+    (alist-get "easi-search-engine" result nil nil #'string=))
+   ((plistp result)
+    (plist-get result "easi-search-engine"))))
+
 
 ;;;; Presenters
 
