@@ -345,13 +345,13 @@ If SEARCHABLE is an `easi-search-engine' with a defined
 \"suggestion-post-processor\" slot, then the value of that slot
 will be applied to the suggestions before they are returned. If
 the slot's value is PROC, and the unprocessed results are RAW,
-then the call is (easi--structured-object-get-field PROC RAW).")
+then the call is (easi-structured-object-get-field PROC RAW).")
 
 (cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine) &optional number)
   (when-let ((getter (easi-search-engine-suggestions-getter searchable))
 	     (raw-results (easi-get-suggestions query getter number)))
     (if-let (post-proc (easi-search-engine-suggestion-post-processor searchable))
-	(easi--structured-object-get-field post-proc raw-results)
+	(easi-structured-object-get-field post-proc raw-results)
       raw-results)))
 (cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine-group) &optional number)
   (mapcar (apply-partially #'easi-searchable-suggestions query)
