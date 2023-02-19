@@ -615,7 +615,7 @@ Deletes all Easi buffers."
 ;;;;; Results
 
 (defun easi-view-result ()
-  "Select window of `easi-result-buffer'"
+  "Select window of `easi-result-buffer'."
   (interactive)
   (if easi-result-buffer
       (if-let ((window (get-buffer-window easi-result-buffer)))
