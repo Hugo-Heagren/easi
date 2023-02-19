@@ -24,5 +24,16 @@
 
 ;;; Code:
 
+;;;; Customizables
+
+(defcustom easi-default-sort-function nil
+  "Function for sorting results.
+
+Takes two arguments: a list of lists of results, and a query (a
+string) which was used to get those results. The function must
+return a flat list of results, in the desired order. This could,
+but need not, be based on the query."
+  :type '(repeat function))
+
 (provide 'easi-sort)
 ;;; easi-sort.el ends here
