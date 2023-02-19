@@ -850,6 +850,10 @@ Interactively, prompt for SEARCHABLE with
 
 ;;;###autoload
 (defun easi-rerun-with-new-query (query)
+  "Run new QUERY on the same search engines as previously used.
+
+Interactively, prompt for QUERY with `easi--prompt-for-query',
+passing `easi-current-searchables' as argument."
   (interactive `(,(easi--prompt-for-query easi-current-searchables))
 	       easi-results-mode easi-result-mode)
   (easi-search easi-current-searchables query))
