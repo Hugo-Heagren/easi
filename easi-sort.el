@@ -35,5 +35,16 @@ return a flat list of results, in the desired order. This could,
 but need not, be based on the query."
   :type '(repeat function))
 
+;;;; Driver Functions
+
+(defun easi-sort-results (sorter results query)
+  "Call SORTER on RESULTS and QUERY.
+
+RESULTS is a list of lists of results. QUERY is the string used
+to get the results. SORTER is a function which takes RESULTS and
+QUERY, and must return a flat list of results, in the desired
+order. This could, but need not, be based on the query."
+  (funcall sorter results query))
+
 (provide 'easi-sort)
 ;;; easi-sort.el ends here
