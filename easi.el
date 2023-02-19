@@ -419,7 +419,7 @@ element of RESUlT, beginning with the first."
    ((cl-every #'consp result)
     (mapcar #'car result))
    ((plistp result)
-    (cl-loop for x in result by cddr
+    (cl-loop for x in result by 'cddr
 	     collect x))))
 
 (defalias 'easi-result-get-field
