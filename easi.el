@@ -67,7 +67,7 @@ A searchable is anything which is:
   nested list of such objects)
 - a symbol whose value is a valid searchable
 
-Where `engine-foo' and `engine-bar' are `easi-search-engines', and
+Where `engine-foo' and `engine-bar' are `easi-search-engine's, and
 `group-foo' and `group-bar' are easi-search-engine-groups, all the
 following are valid elements of this list:
 - engine-foo
