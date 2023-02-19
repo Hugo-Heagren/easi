@@ -840,6 +840,10 @@ passed."
  
 ;;;###autoload
 (defun easi-rerun-with-new-engines (searchable)
+  "Run last query again, but against a different SEARCHABLE.
+
+Interactively, prompt for SEARCHABLE with
+`easi--prompt-for-searchable'."
   (interactive `(,(easi--prompt-for-searchable))
 	       easi-results-mode easi-result-mode)
   (easi-search searchable easi-current-query))
