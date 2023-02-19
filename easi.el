@@ -503,6 +503,9 @@ implementation for every type of result.")
   "Return a list of results presenters supported by SEARCHABLE.")
 
 (cl-defmethod easi-searchable-results-presenters ((searchable cons))
+  "Map `easi-searchable-results-presenters' over SEARCHABLE.
+
+Delete duplicates before returning."
   (delete-dups
    (mapcar #'easi-searchable-results-presenters searchable)))
 
