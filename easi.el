@@ -170,7 +170,9 @@ symbol.
 If an `easi-results-presenter' object, then with BUFFER current,
 call each of the functions in the \"before\", then
 \"result-printer\", then \"after\" slots, passing RESULT and
-BUFFER to each."
+BUFFER to each.
+
+RESULTS is a list of results. BUFFER is a buffer to print in."
   (if (symbolp presenter)
       ;; Account symbols-as-presenters
       (easi--print-results (symbol-value presenter) results buffer)
