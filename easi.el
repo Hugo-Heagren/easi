@@ -743,6 +743,10 @@ Returns nil -- this function is only useful for its side effects."
 	       (user-error "No searchables available. Consider setting `easi-searchables'"))))
 
 (defun easi--prompt-for-query (searchable)
+  "Prompt user for query for SEARCHABLE.
+
+Get suggestions from SEARCHABLE and present them, reading a query
+with `completing-read'."
   ;; TODO More flexible sorting of suggestions
   ;; TODO Is this right? (does it work if the suggestions change?)
   ;; Test it with a google/youtube suggestions api
