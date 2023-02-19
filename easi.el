@@ -862,7 +862,7 @@ passing `easi-current-searchables' as argument."
 
 ;; TODO This is awful (and should probably live somewhere else!)
 (defun easi--completing-read-multiple-searchables (searchables)
-  ""
+  "Read multiple SEARCHABLES from `easi-searchables'."
   (cl-labels ((get-name (searchable)
 		;; TODO Surely there is a more elegant way to do this!! (generics?)
 		(pcase (type-of searchable)
