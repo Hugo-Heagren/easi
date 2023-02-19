@@ -42,7 +42,7 @@
 
 (defgroup easi nil
   "The Emacs Advanced Searching Interface."
-  ;; :group ;; TODO
+  :group 'emacs
   :prefix "easi")
 
 ;; TODO Write a better default (current one is TEMP)
