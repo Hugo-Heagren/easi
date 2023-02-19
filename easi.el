@@ -550,6 +550,7 @@ Delete duplicates before returning."
   (easi-searchable-result-presenters (symbol-value searchable)))
 
 (cl-defmethod easi-searchable-result-presenters ((searchable easi-search-engine))
+  "Call `easi-search-engine-results-presenters' on SEARCHABLE."
   (easi-search-engine-result-presenters searchable))
 
 (cl-defmethod easi-searchable-result-presenters ((searchable easi-search-engine-group))
