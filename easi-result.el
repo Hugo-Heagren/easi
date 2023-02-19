@@ -54,7 +54,7 @@ element of RESUlT, beginning with the first."
   "Return the engine attached to RESULT.
 
 For certain features (such as field aliasing) to work, this
-function (and `easi-result-attach-search-engine') must have an
+function (and `easi-utils-result-attach-search-engine') must have an
 implementation for every type of result.")
 
 (cl-defmethod easi-result-retrieve-search-engine ((result cons))

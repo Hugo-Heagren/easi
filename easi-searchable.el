@@ -171,7 +171,7 @@ engine in SEARCHABLE to NUMBER.")
   (when-let ((getter (easi-search-engine-results-getter searchable))
 	     (raw-results (easi-get-results query getter number)))
     (mapcar
-     (apply-partially #'easi-result-attach-search-engine searchable)
+     (apply-partially #'easi-utils-result-attach-search-engine searchable)
      (if-let (post-proc (easi-search-engine-results-post-processor searchable))
 	 (easi-structured-object-get-field post-proc raw-results)
        raw-results))))

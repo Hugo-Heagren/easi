@@ -23,8 +23,7 @@
 
 ;;; Code:
 
-;; TODO Rename this to reflect UTIL namespace
-(cl-defgeneric easi-result-attach-search-engine (engine result)
+(cl-defgeneric easi-utils-result-attach-search-engine (engine result)
   "Attach ENGINE to RESULT.
 
 For certain features (such as field aliasing) to work, this
@@ -33,7 +32,7 @@ implementation for every type of result.
 
 Must return RESULT with ENGINE attached.")
 
-(cl-defmethod easi-result-attach-search-engine (engine (result cons))
+(cl-defmethod easi-utils-result-attach-search-engine (engine (result cons))
   (cond
    ((cl-every #'consp result)
     (setf (alist-get "easi-search-engine" result) engine))
