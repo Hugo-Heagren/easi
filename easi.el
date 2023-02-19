@@ -546,6 +546,7 @@ Delete duplicates before returning."
    (mapcar #'easi-searchable-result-presenters searchable)))
 
 (cl-defmethod easi-searchable-result-presenters ((searchable symbol))
+  "Call recursively on `symbol-value' of SEARCHABLE."
   (easi-searchable-result-presenters (symbol-value searchable)))
 
 (cl-defmethod easi-searchable-result-presenters ((searchable easi-search-engine))
