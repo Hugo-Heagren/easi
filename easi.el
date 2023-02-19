@@ -507,6 +507,7 @@ implementation for every type of result.")
    (mapcar #'easi-searchable-results-presenters searchable)))
 
 (cl-defmethod easi-searchable-results-presenters ((searchable symbol))
+  "Call recursively on `symbol-value' of SEARCHABLE."
   (easi-searchable-results-presenters (symbol-value searchable)))
 
 (cl-defmethod easi-searchable-results-presenters ((searchable easi-search-engine))
