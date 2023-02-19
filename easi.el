@@ -554,6 +554,7 @@ Delete duplicates before returning."
   (easi-search-engine-result-presenters searchable))
 
 (cl-defmethod easi-searchable-result-presenters ((searchable easi-search-engine-group))
+  "Get searchables from group SEARCHABLE, and call on that list."
   ;; This works because a list of searchables is a searchables, so
   ;; there is a method for lists, and the value of the :searchables
   ;; slot is always a list.
