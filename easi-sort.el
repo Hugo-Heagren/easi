@@ -67,5 +67,16 @@ element of that. If not, return first element of
   (car `(,@(easi-searchable-sorters searchable)
 	 ,@easi-default-sort-functions)))
 
+;;;; Sorters
+
+(defun easi-sort-append (results _query)
+  "Append lists in RESULTS to each other.
+
+This \\='sorter\\=' is useful for quickly \\='sorting\\=' a set
+of results where order is not important (such as data which is
+always presented with a 2D graphical presenter). It just returns
+RESULTS."
+  results)
+
 (provide 'easi-sort)
 ;;; easi-sort.el ends here
