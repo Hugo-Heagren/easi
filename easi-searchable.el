@@ -180,7 +180,7 @@ engine in SEARCHABLE to NUMBER.")
 	  (easi-search-engine-group-searchables searchable)))
 (cl-defmethod easi-searchable-results (query (searchable cons) &optional number)
   "SEARCHABLE is a list."
-  (append
+  (apply 'append
    (mapcar (apply-partially #'easi-searchable-results query) searchable)))
 (cl-defmethod easi-searchable-results (query (searchable symbol) &optional number)
   (easi-searchable-results query (symbol-value searchable) number))
