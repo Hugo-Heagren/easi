@@ -14,6 +14,16 @@ whole collection or individually, or both. Configurable and
 user-defined actions can be run on the results. Every aspect of Easi's
 operation is meant to be highly configurable.
 
+* Installation
+The project is not currently on MELPA or Gnu ELPA. You can install it
+manually, or with a helper like [[https://github.com/radian-software/straight.el][straight]]. A pure straight form might
+look like this:
+
+#+begin_src elisp
+  (straight-use-package
+   '(easi :type git :host github :repo "Hugo-Heagren/easi"))
+#+end_src
+
 * Prior art
 This package was largely inspired by [[https://github.com/hrs/engine-mode/][engine mode]], and the search
 facilities in w3m. I am also indebted to the frankly astonishing
