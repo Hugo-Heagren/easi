@@ -262,5 +262,25 @@ Delete duplicates before returning."
     `(,@(easi-searchable-result-presenters searchables)
       ,@easi-default-result-presenters))))
 
+;;;; Getting sorter list
+
+(cl-defgeneric easi-searchable-sorters (searchable)
+  "Return a list of sorting functions compatible with SEARCHABLE.")
+
+(cl-defmethod easi-searchable-sorters ((searchable cons))
+  (seq-reduce
+   #'seq-intersection
+   (mapcar #'easi-searchable-sorters (cdr searchable))
+   (easi-searchable-sorters (car searchable))))
+
+(cl-defmethod easi-searchable-sorters ((searchable symbol))
+  (easi-searchable-sorters (symbol-value searchable)))
+
+(cl-defmethod easi-searchable-sorters ((searchable easi-search-engine))
+  (easi-search-engine-sorters searchable))
+
+(cl-defmethod easi-searchable-sorters ((searchable easi-search-engine-group))
+  (easi-searchable-sorters (easi-search-engine-group-searchables searchable)))
+
 (provide 'easi-searchable)
 ;;; easi-searchable.el ends here
