@@ -24,6 +24,115 @@ look like this:
    '(easi :type git :host github :repo "Hugo-Heagren/easi"))
 #+end_src
 
+* Basic Configuration
+Easi aggregates ('federates') results obtained by sending the same
+query to multiple search engines. When called interactively, it
+prompts for search engines to use from a customisable list
+~easi-searchables~. A searchable is any of:
+- an ~easi-search-engine~ object (the most basic searchable type)
+- an ~easi-search-engine-group~ object (when certain combinations of
+  searchables are used together often, a group can be defined. The
+  group is effectively an alias for just using them all as usual)
+- a list of searchables
+- a symbol whose value is a searchable
+
+So if ~engine-foo~ and ~engine-bar~ are ~easi-search-engine~ s, and
+~group-foo~ and ~group-bar~ are ~easi-search-engine-group~ s, all the
+following are valid searchables:
+- ~engine-foo~
+- ~(engine-foo engine-bar)~
+- ~(group-foo (engine-foo group-bar))~
+- ~(engine-foo ((engine-foo) engine-bar) (group-foo group-bar))~
+
+
+*The most important configuration is to populate ~easi-searchables~.*
+
+Easi is designed so that searchables can be defined and shared as
+Emacs packages. Eventually I might get round to doing that, but for
+now there aren't any. As an example though, you might define a
+searchable like this:
+
+#+begin_src elisp
+    (require 'url)
+    (require 'easi-result)
+
+  (cl-defmethod easi-get-results (query (results-getter string) &optional number)
+	"RESULTS-GETTER is a string.
+
+      Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
+      specified) in RESULTS-GETTER, then make an https request on
+      the result. Return a buffer holding the response text (this is
+      intended to be post-processed)."
+	(let* ((request-string
+		(url-encode-url
+		 (format-spec results-getter
+			      `((?s . ,query)
+				;; TODO Should this default to something
+				;; more configurable? (e.g. a customizable
+				;; default var)
+				(?n . ,(or number 10))))))
+	       (request-url (url-generic-parse-url request-string))
+	       (response-buffer (url-retrieve-synchronously
+				 request-url 'silent 'inhibit-cookies)))
+	  response-buffer))
+
+      (cl-defmethod easi-get-suggestions (query (suggestions-getter string) &optional number)
+	"SUGGESTIONS-GETTER is a string.
+
+      Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
+      specified) in SUGGESTIONS-GETTER, then make an https request on
+      the result. Return a buffer holding the response text (this is
+      intended to be post-processed)."
+	(let* ((request-string
+		(url-encode-url
+		 (format-spec suggestions-getter
+			      `((?s . ,query)
+				;; TODO Should this default to something
+				;; more configurable? (e.g. a customizable
+				;; default var)
+				(?n . ,(or number 10))))))
+	       (request-url (url-generic-parse-url request-string))
+	       (response-buffer (url-retrieve-synchronously
+				 request-url 'silent 'inhibit-cookies)))
+	  response-buffer))
+
+      (defun my/ddg-get-result-from-divs (divs)
+	(cl-loop for div in divs
+		 collect
+		 (let* ((raw (easi--structured-object-get-field '(cdr 2 cdr) div))
+			(title (easi--structured-object-get-field
+				'(4 3 2) raw))
+			(url (easi--structured-object-get-field
+			      '(8 1 "href" url-generic-parse-url url-path-and-query
+				  cdr url-parse-query-string "uddg" car)
+			      raw)))
+		   `(("title" . ,title)
+		     ("url" . ,url)))))
+
+      (setq my/duckduckgo-search-engine
+	    (easi-search-engine-create
+	     :name "DuckDuckGo"
+	     :suggestions-getter "https://duckduckgo.com/ac/?q=%s&client=opensearch&type=list"
+	     :suggestion-post-processor
+	     '(my/get-http-body my/json-parse-with-lists 1)
+	     :results-getter "https://html.duckduckgo.com/html/?q=%s&client=opensearch&type=list"
+	     :results-post-processor
+	     '(my/parse-html-body
+	       2 20 9 3 3
+	       cddr
+	       (lambda (ls) (cl-delete-if #'stringp ls))
+	       (lambda (ls) (butlast ls 3))
+	       my/ddg-get-result-from-divs)
+	     :field-aliases '(("id" . "url"))))
+
+      (add-to-list 'easi-searchables 'my/duckduckgo-search-engine)
+#+end_src
+
+* Usage
+Easi's main entry point is ~easi-search~. Once ~easi-searchables~ is
+[[* Basic Configuration][configured]], call this function, select some search engines, and enter
+a query.
+
 * Prior art
 This package was largely inspired by [[https://github.com/hrs/engine-mode/][engine mode]], and the search
 facilities in w3m. I am also indebted to the frankly astonishing
