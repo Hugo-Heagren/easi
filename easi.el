@@ -30,6 +30,7 @@
 (require 'easi-structured-object-getter)
 (require 'easi-result)
 (require 'easi-presenter)
+(require 'easi-sort)
 
 ;;;; Customizables
 
@@ -295,7 +296,10 @@ passed."
   (interactive (let* ((searchable (easi--prompt-for-searchable))
 		      (query (easi--prompt-for-query searchable)))
 		 `(,searchable ,query)))
-  (let* ((results (easi-searchable-results query searchable))
+  (let* ((raw-results (easi-searchable-results query searchable))
+	 (results (easi-sort-results
+		   (easi--sort-get-searchable-sorter searchable)
+		   raw-results query))
 	 (results-buffer
 	  (cond
 	   (easi-results-buffer)
