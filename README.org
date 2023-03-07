@@ -1,6 +1,8 @@
 #+title: EASI: the Emacs Advanced Searching Interface
 
-*THIS PROJECT IS IN A VERY ALPHA STATE*
+#+begin_center
+⚠️ *THIS PROJECT IS IN A VERY EARLY STATE* ⚠️
+#+end_center
 
 * Overview
 Easi lets you search multiple information sources at once---it is a
