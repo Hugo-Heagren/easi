@@ -35,6 +35,18 @@ return a flat list of results, in the desired order. This could,
 but need not, be based on the query."
   :type '(repeat function))
 
+;;;; Utility functions
+
+(defun easi--group-results-by-engine (results)
+  "Group RESULTS into lists by search engine.
+
+Retrieve search engine from each member of RESULTS, then group
+all results with the same search-engine into a list. Return a
+list of lists of results."
+  (mapcar #'cdr
+	  (seq-group-by
+	   #'easi-result-retrieve-search-engine results)))
+
 ;;;; Driver Functions
 
 (defun easi-sort-results (sorter results query)
