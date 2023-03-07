@@ -14,4 +14,6 @@ operation is meant to be highly configurable.
 
 * Prior art
 This package was largely inspired by [[https://github.com/hrs/engine-mode/][engine mode]], and the search
-facilities in w3m.
+facilities in w3m. I am also indebted to the frankly astonishing
+documentation of [[https://github.com/swirlai/swirl-search][SWIRL]], the only other generic federated searching
+package I have found so far.
