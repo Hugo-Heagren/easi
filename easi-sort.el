@@ -24,6 +24,11 @@
 
 ;;; Code:
 
+(require 'seq)
+(require 'cl-lib)
+(require 'easi-result)
+(require 'easi-searchable)
+
 ;;;; Customizables
 
 (defcustom easi-default-sort-function nil
