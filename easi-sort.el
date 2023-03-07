@@ -78,5 +78,17 @@ always presented with a 2D graphical presenter). It just returns
 RESULTS."
   results)
 
+(defun easi-sort-round-robin (results _query)
+  "Take one element of each list in RESULTS in order."
+   (cl-loop for i from 0
+	    with newelts = nil with output = nil
+	    do (setq newelts (mapcar (apply-partially #'nth i)
+				     (easi--group-results-by-engine results)))
+	    until (cl-every #'null newelts)
+	    do (setq output (append output newelts))
+	    finally return output))
+
+;; TODO Implement a relevance sorter
+
 (provide 'easi-sort)
 ;;; easi-sort.el ends here
