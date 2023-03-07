@@ -83,7 +83,10 @@ See `easi-result-list-fields' and `easi-result-get-field'."))
   (result-presenters nil
    (:documentation
     "List of compatible result presenters (need not include those in
-    `easi-default-result-presenters'.)")))
+    `easi-default-result-presenters'.)"))
+  (sorters nil
+   (:documentation
+    "List of compatible results sorters.")))
 
 (cl-defstruct (easi-search-engine-group
 	       (:constructor easi-search-engine-group-create))
