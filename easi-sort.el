@@ -31,13 +31,19 @@
 
 ;;;; Customizables
 
-(defcustom easi-default-sort-function nil
-  "Function for sorting results.
+(defcustom easi-default-sort-functions
+  '(easi-sort-round-robin
+    easi-sort-append)
+  "List of functions for sorting results.
 
-Takes two arguments: a list of lists of results, and a query (a
-string) which was used to get those results. The function must
-return a flat list of results, in the desired order. This could,
-but need not, be based on the query."
+Each function takes two arguments: a list of results, and a
+query (a string) which was used to get those results. The
+function must return a flat list of results, in the desired
+order. This could, but need not, be based on the query.
+
+The function `easi--group-results-by-engine' may be helpful for
+writing sorters."
+  :group 'easi
   :type '(repeat function))
 
 ;;;; Utility functions
