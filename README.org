@@ -56,16 +56,16 @@ searchable like this:
     (require 'url)
     (require 'easi-result)
 
-  (cl-defmethod easi-get-results (query (results-getter string) &optional number)
-	"RESULTS-GETTER is a string.
+  (cl-defmethod easi-get-results (query (queryable-results-getter string) &optional number)
+	"QUERYABLE-RESULTS-GETTER is a string.
 
       Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
-      specified) in RESULTS-GETTER, then make an https request on
+      specified) in QUERYABLE-RESULTS-GETTER, then make an https request on
       the result. Return a buffer holding the response text (this is
       intended to be post-processed)."
 	(let* ((request-string
 		(url-encode-url
-		 (format-spec results-getter
+		 (format-spec queryable-results-getter
 			      `((?s . ,query)
 				;; TODO Should this default to something
 				;; more configurable? (e.g. a customizable
@@ -115,7 +115,7 @@ searchable like this:
 	     :suggestions-getter "https://duckduckgo.com/ac/?q=%s&client=opensearch&type=list"
 	     :suggestion-post-processor
 	     '(my/get-http-body my/json-parse-with-lists 1)
-	     :results-getter "https://html.duckduckgo.com/html/?q=%s&client=opensearch&type=list"
+	     :queryable-results-getter "https://html.duckduckgo.com/html/?q=%s&client=opensearch&type=list"
 	     :results-post-processor
 	     '(my/parse-html-body
 	       2 20 9 3 3

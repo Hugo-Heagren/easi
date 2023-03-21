@@ -62,7 +62,7 @@ KEY is a " ;; TODO Better docstring
     "Processing to be done to the suggestions, after retrieval but
     before they are used by anything else in EASI. Takes the same
     form as FIELD in `easi-result-get-field'."))
-  (results-getter nil
+  (queryable-results-getter nil
    (:documentation
     "Way of getting a list of results. Must be a of a type for which
 `easi-get-results' has a method."))
@@ -151,16 +151,16 @@ then the call is (easi-structured-object-get-field PROC RAW).")
 
 ;;;; Getting results
 
-(cl-defgeneric easi-get-results (query results-getter &optional number)
-  "Get a list of by querying RESULTS-GETTER with QUERY.
+(cl-defgeneric easi-get-results (query queryable-results-getter &optional number)
+  "Get a list of by querying QUERYABLE-RESULTS-GETTER with QUERY.
 
 QUERY is always string. If NUMBER is non-nil, no more than NUMBER
 results should be returned.")
 
 ;; Simplest case
-(cl-defmethod easi-get-results (query (results-getter symbol) &optional number)
-  "RESULTS-GETTER is a function."
-  (funcall results-getter query number))
+(cl-defmethod easi-get-results (query (queryable-results-getter symbol) &optional number)
+  "QUERYABLE-RESULTS-GETTER is a function."
+  (funcall queryable-results-getter query number))
 
 ;; TODO Some more interesting implementations of this ^
 
@@ -171,7 +171,7 @@ If NUMBER is non-nil, limit the number of results from each
 engine in SEARCHABLE to NUMBER.")
 
 (cl-defmethod easi-searchable-results (query (searchable easi-search-engine) &optional number)
-  (when-let ((getter (easi-search-engine-results-getter searchable))
+  (when-let ((getter (easi-search-engine-queryable-results-getter searchable))
 	     (raw-results (easi-get-results query getter number)))
     (mapcar
      (apply-partially #'easi-utils-result-attach-search-engine searchable)
