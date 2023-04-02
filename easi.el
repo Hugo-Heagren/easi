@@ -95,6 +95,21 @@ called with the current result as its sole argument."
   "ACTION arg for `display-buffer' when displaying a result buffer."
   :type display-buffer--action-custom-type)
 
+(defcustom easi-default-non-queryable-skip nil
+  "How query functions should handle non-queryable searchables.
+
+If non-nil, functions which query searchables will skip non-queryable
+ones.
+
+If nil, get all results from the a search-engine's
+\"all-results-getter\" and otherwise treat the results the same.
+
+This is only a default. It can be overridden by some functions
+which need to specify certain behaviour."
+  :group 'easi
+  :type '(choice (const :tag "Get all results" nil)
+		 (const :tag "Skip" t)))
+
 ;;;; Results user interface
 ;; TODO Make it possible to have more than one EASI results
 ;; buffer/session at once.
