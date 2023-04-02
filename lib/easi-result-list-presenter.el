@@ -26,7 +26,7 @@
 
 (require 'tabulated-list)
 (require 'cl-lib)
-(require 'easi-result)
+(require 'easi-presenter)
 
 (defgroup easi-result-list nil
   "Group for EASI result presenter based on `tabulated-list-mode'."
@@ -46,10 +46,10 @@ At the moment this is just a list of strings."
 presenting columns of field names and values. Derived from
 ‘tabulated-list-mode’."
   :group 'easi-result-list
-  ;; NOTE This isn't really needed, because this mode is always (?)
-  ;; called from a freshly created buffer. But calling it first is one
-  ;; of the Emacs major mode conventions.
-  (kill-all-local-variables)
+  ;; NOTE There is a convention to start new major modes with
+  ;; `kill-all-local-variables'. We don't do this here because EASI
+  ;; relies heavily on local variables for storing data (and they may
+  ;; already be set).
   ;; Setup format
   (setq tabulated-list-format [("Field" 30 t)
 			       ("Value" 30 t)]))
@@ -74,20 +74,6 @@ value of that field as DESC2."
 		   (t ""))))])
 	   ;; End unless
 	   end))
-
-;; (defun easi-result-list--mode-setup (result _buffer)
-;;   "Initialisation function for `easi-result-list-mode'.
-
-;; - run `easi-result-list-mode'
-;; - run `tabulated-list-init-header'"
-;;   (easi-result-list-mode)
-;;   (setq tabulated-list-entries
-;; 	(easi-result-list--result-to-tabulated-list result))
-;;   (tabulated-list-init-header))
-
-;; (defun easi-result-list--print (result _buffer)
-;;   ""
-;;   (tabulated-list-print 'remember-pos))
 
 (defun easi-result-list--mode-setup (result _buffer)
   "Initialisation function for `easi-result-list-mode'.
