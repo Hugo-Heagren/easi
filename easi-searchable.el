@@ -66,6 +66,10 @@ KEY is a " ;; TODO Better docstring
    (:documentation
     "Way of getting a list of results. Must be a of a type for which
 `easi-get-results' has a method."))
+  (all-results-getter nil
+   (:documentation
+    "Way of getting a list of results. Must be of a type for which
+`easi-all-results' has a method."))
   (results-post-processor nil
    (:documentation
     "Processing to be done to the results, after retrieval but
