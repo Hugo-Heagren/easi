@@ -50,6 +50,7 @@ engines.")
 ;; TODO These need to be of the same type, or class, or whatever, so
 ;; that it is possible to define a results printer which is also a
 ;; result printer (this will enable e.g. three-column file layouts)
+;;;###autoload
 (cl-defstruct (easi-results-presenter
 	       (:constructor easi-results-presenter-create))
   name key
@@ -64,6 +65,7 @@ engines.")
   current-result-getter
   hook)
 
+;;;###autoload
 (cl-defstruct (easi-result-presenter
 	       (:constructor easi-result-presenter-create))
   name key
