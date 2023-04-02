@@ -168,7 +168,6 @@ results should be returned.")
 
 ;; TODO Some more interesting implementations of this ^
 
-(cl-defgeneric easi-searchable-results (query searchable &optional number)
 (cl-defgeneric easi-all-results (all-results-getter)
   "Get a list of all results from ALL-RESULTS-GETTER.
 
@@ -182,6 +181,7 @@ the ones which match a query).")
 
 ;; TODO Some more interesting implementations of this ^
 
+(cl-defgeneric easi-searchable-results (searchable &optional query number)
   "Get a list of results from querying SEARCHABLE with QUERY.
 
 If NUMBER is non-nil, limit the number of results from each
