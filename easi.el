@@ -110,6 +110,25 @@ which need to specify certain behaviour."
   :type '(choice (const :tag "Get all results" nil)
 		 (const :tag "Skip" t)))
 
+(defcustom easi-default-non-all-results-skip t
+  "How all-results functions should handle query-only searchables.
+
+If t, functions which get all results from searchables will skip
+ones which can only be queried (i.e. which do not have a facility
+for returning all results -- often because this would not make
+sense for the data being queried).
+
+If a string, use that as the query.
+
+Anything else is treated as equivalent to t, though this may
+change, so setting to t or a string is recommended.
+
+This is only a default. It can be overridden by some functions
+which need to specify certain behaviour."
+  :group 'easi
+  :type '(choice (string :tag "Use this as a query")
+		 (const :tag "Skip" t)))
+
 ;;;; Results user interface
 ;; TODO Make it possible to have more than one EASI results
 ;; buffer/session at once.
