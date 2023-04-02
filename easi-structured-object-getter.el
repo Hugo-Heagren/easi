@@ -23,6 +23,9 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+(require 'seq)
+
 ;;;; Structured object field getter
 ;; A field is an object which can be used to query a structured object
 ;; (such as a result, an HTTP response, an alist, etc.) A field is:
