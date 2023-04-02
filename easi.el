@@ -424,6 +424,22 @@ the engine does not specify any presenters) the first in
       (with-current-buffer results-buffer
 	(setq-local easi-current-result-presenter result-presenter
 		    easi-result-buffer result-buffer)))))
+;;;###autoload
+(defun easi-search (searchable query)
+  "Search for QUERY in SEARCHABLE, and display results.
+
+Interactively, prompt for SEARCHABLE and QUERY if they are not
+passed. Results will be retrieved using the contents of the
+\"queryable-results-getter\" slot in the search engine(s)
+referenced by SEARCHABLE. If this slot is nil, behaviour is
+controlled by `easi-default-non-queryable-skip'."
+  (interactive (let* ((searchable (easi--prompt-for-searchable))
+		      (query (easi--prompt-for-query searchable)))
+		 `(,searchable ,query)))
+  ;; TODO Is there a place to get limiting `number' arguments for
+  ;; these functions?
+  (let ((raw-results (easi-searchable-results searchable query)))
+    (easi-present-results searchable raw-results query)))
  
 ;;;###autoload
 (defun easi-rerun-with-new-engines (searchable)
