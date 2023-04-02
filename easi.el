@@ -118,13 +118,21 @@ called with the current result as its sole argument."
 (defvar-local easi-current-result-presenter nil
   "`easi-results-presenter' used in current buffer.")
 
+(defvar easi--saved-window-config nil
+  "Stores the window configuration when Easi is called.")
+
 (defun easi-quit ()
   "Quit Easi.
 
 Deletes all Easi buffers."
   (interactive nil easi-results-mode easi-result-mode)
   (and (kill-buffer easi-result-buffer)
-       (kill-buffer easi-results-buffer)))
+       (kill-buffer easi-results-buffer)
+       ;; Restore window configuration to previous state
+       (when easi--saved-window-config
+	 (set-window-configuration easi--saved-window-config)
+	 ;; Reset stored window config
+	 (setq easi--saved-window-config nil))))
 
 ;; Define commands useful in every presenter
 ;; TODO Define lots of these commands...
@@ -315,6 +323,7 @@ passed."
 	    (funcall easi-results-default-buffer-name
 		     searchable query results))))
 	 (results-presenter (car (easi-get-results-presenters searchable))))
+    (setq easi--saved-window-config (current-window-configuration))
     ;; TODO This might have to move, so that I can run easi-search
     ;; from inside the result buffer...
     ;; TODO Hard coding this is going to make it difficult to do
