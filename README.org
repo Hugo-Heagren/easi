@@ -56,7 +56,7 @@ searchable like this:
     (require 'url)
     (require 'easi-result)
 
-  (cl-defmethod easi-get-results (query (queryable-results-getter string) &optional number)
+  (cl-defmethod easi-query-results (query (queryable-results-getter string) &optional number)
 	"QUERYABLE-RESULTS-GETTER is a string.
 
       Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
