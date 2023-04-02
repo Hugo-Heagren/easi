@@ -29,6 +29,7 @@
 (require 'tabulated-list)
 (require 'easi)
 (require 'easi-presenter)
+(require 'easi-result)
 
 (defgroup easi-results-list nil
   "Group for EASI results presenter based on `tabulated-list-mode'."
@@ -71,10 +72,10 @@ result is an acceptable value for `tabulated-list-format'."
   "Major mode for viewing EASI results in a tabulated list. Derived
 from `tabulated-list-mode'."
   :group 'easi-results-list
-  ;; NOTE This isn't really needed, because this mode is always (?)
-  ;; called from a freshly created buffer. But calling it first is one
-  ;; of the Emacs major mode conventions.
-  (kill-all-local-variables)
+  ;; NOTE There is a convention to start new major modes with
+  ;; `kill-all-local-variables'. We don't do this here because EASI
+  ;; relies heavily on local variables for storing data (and they may
+  ;; already be set).
   (setq major-mode 'easi-results-list-mode)
   (setq tabulated-list-format
 	(seq--into-vector
