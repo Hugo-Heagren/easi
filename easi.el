@@ -424,6 +424,21 @@ the engine does not specify any presenters) the first in
       (with-current-buffer results-buffer
 	(setq-local easi-current-result-presenter result-presenter
 		    easi-result-buffer result-buffer)))))
+
+;;;###autoload
+(defun easi-all (searchable)
+  "Display all results from SEARCHABLE.
+
+Interactively, prompt for SEARCHABLE.
+
+Results will be retrieved using the contents of the
+\"all-results-getter\" slot in the search engine(s) referenced by
+SEARCHABLE. If this slot is nil, behaviour is controlled by
+`easi-default-non-all-results-skip'."
+  (interactive `(,(easi--prompt-for-searchable)))
+  (let ((raw-results (easi-searchable-results searchable)))
+    (easi-present-results searchable raw-results)))
+
 ;;;###autoload
 (defun easi-search (searchable query)
   "Search for QUERY in SEARCHABLE, and display results.
