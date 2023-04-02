@@ -187,23 +187,42 @@ the ones which match a query).")
 If NUMBER is non-nil, limit the number of results from each
 engine in SEARCHABLE to NUMBER.")
 
-(cl-defmethod easi-searchable-results (query (searchable easi-search-engine) &optional number)
-  (when-let ((getter (easi-search-engine-queryable-results-getter searchable))
-	     (raw-results (easi-get-results query getter number)))
+(defvar easi-default-non-all-results-skip)
+(defvar easi-default-non-queryable-skip)
+
+(cl-defmethod easi-searchable-results ((searchable easi-search-engine) &optional query number)
+  "Get results from "
+  (when-let ((getter
+	      ;; Whether query is non-nil is an indication of whether
+	      ;; a query was originally passed by the user. If so, we
+	      ;; are doing something like `easi-search'. If not,
+	      ;; something more like `easi-all'.
+	      (if query
+		  (or (easi-search-engine-queryable-results-getter searchable)
+		      (not easi-default-non-queryable-skip
+			   (easi-search-engine-all-results-getter searchable)))
+		(or (easi-search-engine-all-results-getter searchable)
+		    (and (stringp easi-default-non-all-results-skip)
+			 (setq query easi-default-non-all-results-skip)
+			 (easi-search-engine-queryable-results-getter searchable)))))
+	     (raw-results
+	      (if query
+		  (easi-query-results query getter number)
+		(easi-all-results getter))))
     (mapcar
      (apply-partially #'easi-utils-result-attach-search-engine searchable)
      (if-let (post-proc (easi-search-engine-results-post-processor searchable))
 	 (easi-structured-object-get-field post-proc raw-results)
        raw-results))))
-(cl-defmethod easi-searchable-results (query (searchable easi-search-engine-group) &optional number)
-  (mapcar (apply-partially #'easi-searchable-results query)
+(cl-defmethod easi-searchable-results ((searchable easi-search-engine-group) &optional query number)
+  (mapcar (lambda (searchable) (easi-searchable-results searchable query))
 	  (easi-search-engine-group-searchables searchable)))
-(cl-defmethod easi-searchable-results (query (searchable cons) &optional number)
+(cl-defmethod easi-searchable-results ((searchable cons) &optional query number)
   "SEARCHABLE is a list."
   (apply 'append
-   (mapcar (apply-partially #'easi-searchable-results query) searchable)))
-(cl-defmethod easi-searchable-results (query (searchable symbol) &optional number)
-  (easi-searchable-results query (symbol-value searchable) number))
+   (mapcar (lambda (searchable) (easi-searchable-results searchable query)) searchable)))
+(cl-defmethod easi-searchable-results ((searchable symbol) &optional query number)
+  (easi-searchable-results (symbol-value searchable) query number))
 
 ;;;; Getting presenters
 
