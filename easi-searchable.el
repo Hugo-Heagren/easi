@@ -169,6 +169,13 @@ results should be returned.")
 ;; TODO Some more interesting implementations of this ^
 
 (cl-defgeneric easi-searchable-results (query searchable &optional number)
+(cl-defgeneric easi-all-results (all-results-getter)
+  "Get a list of all results from ALL-RESULTS-GETTER.
+
+Used for searchables which can return \"everything\" in some
+meaningful sense (i.e. all the notes in my collection, not just
+the ones which match a query).")
+
   "Get a list of results from querying SEARCHABLE with QUERY.
 
 If NUMBER is non-nil, limit the number of results from each
