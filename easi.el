@@ -327,19 +327,34 @@ with `completing-read'."
      (completion-table-dynamic
       (lambda (str) (easi-searchable-suggestions str searchable))))))
 
-;;;###autoload
-(defun easi-search (searchable query)
-  "Search for QUERY in SEARCHABLE, and display results.
+(defun easi-present-results (searchable raw-results &optional query)
+  "Present RAW-RESULTS from SEARCHABLE.
 
-Interactively, prompt for SEARCHABLE and QUERY if they are not
-passed."
-  ;; TODO Is there a place to get limiting `number' arguments for
-  ;; these functions?
-  (interactive (let* ((searchable (easi--prompt-for-searchable))
-		      (query (easi--prompt-for-query searchable)))
-		 `(,searchable ,query)))
-  (let* ((raw-results (easi-searchable-results query searchable))
-	 (results (easi-sort-results
+Main user-interface driver function for Easi.
+
+Uses `easi-results-buffer' to list the results if it exists, or
+creates a new buffer according to
+`easi-results-default-buffer-name' if not. Similarly for
+`easi-result-buffer' and `easi-results-default-buffer-name' for
+displaying the selected result.
+
+RAW-RESULTS is an unsorted list of result objects which Easi can
+handle. It is sorted using the result of
+`easi--sort-get-searchable-sorter'. The results are then printed
+using an appropriate presenter. If all the results are from
+search engines which specify particular presenters, then the
+first presenter to specified by all of those searchables is used.
+Otherwise the first in `easi-default-results-presenters' is used.
+
+`easi-results-mode' is always active in the results buffer.
+
+The currently selected result is printed using either the first
+presenter specified by the search engine it comes from, or (if
+the engine does not specify any presenters) the first in
+`easi-default-result-presenters'.
+
+`easi-result-mode' is always active in the result buffer."
+  (let* ((results (easi-sort-results
 		   (easi--sort-get-searchable-sorter searchable)
 		   raw-results query))
 	 (results-buffer
