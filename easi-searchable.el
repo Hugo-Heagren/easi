@@ -122,6 +122,26 @@ suggestions should be returned."
   "SUGGESTIONS-GETTER is a function."
   (funcall suggestions-getter query number))
 
+(cl-defmethod easi-get-suggestions (query (suggestions-getter string) &optional number)
+  "SUGGESTIONS-GETTER is a string.
+
+Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
+specified) in SUGGESTIONS-GETTER, then make an https request on
+the result. Return a buffer holding the response text (this is
+intended to be post-processed)."
+  (let* ((request-string
+	  (url-encode-url
+	   (format-spec suggestions-getter
+			`((?s . ,query)
+			  ;; TODO Should this default to something
+			  ;; more configurable? (e.g. a customizable
+			  ;; default var)
+		          (?n . ,(or number 10))))))
+	 (request-url (url-generic-parse-url request-string))
+	 (response-buffer (url-retrieve-synchronously
+			   request-url 'silent 'inhibit-cookies)))
+    response-buffer))
+
 ;; TODO Some more interesting implementations of this ^
 
 (cl-defgeneric easi-searchable-suggestions (query searchable &optional number)
