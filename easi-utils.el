@@ -53,5 +53,13 @@ Written principally to be used in EASI post-processors."
       (buffer-substring-no-properties
        url-http-end-of-headers (point-max)))))
 
+(when (libxml-available-p)
+  (defun easi-utils-parse-html-body (buffer)
+    "Parse BUFFER with `libxml-parse-html-region'."
+    (with-current-buffer buffer
+      (save-restriction
+	(widen)
+	(libxml-parse-html-region (point-min) (point-max))))))
+
 (provide 'easi-utils)
 ;;; easi-utils.el ends here
