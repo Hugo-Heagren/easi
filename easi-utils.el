@@ -19,7 +19,8 @@
 
 ;;; Commentary:
 
-;; Utilities used throughout the rest of EASI.
+;; Utilities used throughout the rest of EASI and functions which are
+;; often useful when building EASI searhchables.
 
 ;;; Code:
 
