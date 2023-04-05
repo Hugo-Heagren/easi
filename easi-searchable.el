@@ -310,7 +310,7 @@ Delete duplicates before returning."
 
 Delete duplicates before returning."
   (delete-dups
-   (mapcar #'easi-searchable-result-presenters searchable)))
+   (mapcan #'easi-searchable-result-presenters searchable)))
 
 (cl-defmethod easi-searchable-result-presenters ((searchable symbol))
   "Call recursively on `symbol-value' of SEARCHABLE."
