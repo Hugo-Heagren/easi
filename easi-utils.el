@@ -62,5 +62,20 @@ Written principally to be used in EASI post-processors."
 	(widen)
 	(libxml-parse-html-region (point-min) (point-max))))))
 
+(when (json-available-p)
+  (defun easi-utils-json-parse-with-lists (string)
+    "Parse STRING as a JSON object.
+
+Uses `json-parse-string' with:
+- OBJECT-TYPE set to `alist'
+- ARRAY-TYPE set to `list'
+- null-object set to nil
+- false-object set to nil"
+    (json-parse-string string
+		       :object-type 'alist
+		       :array-type 'list
+		       :null-object nil
+		       :false-object nil)))
+
 (provide 'easi-utils)
 ;;; easi-utils.el ends here
