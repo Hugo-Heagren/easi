@@ -40,5 +40,18 @@ Must return RESULT with ENGINE attached.")
     (setf (plist-get result "easi-search-engine") engine)))
   result)
 
+;;; Utils for writing search engines
+
+(defun easi-utils-get-http-body (buffer)
+  "Return HTTP response body in BUFFER.
+
+Written principally to be used in EASI post-processors."
+  (defvar url-http-end-of-headers)
+  (with-current-buffer buffer
+    (save-restriction
+      (widen)
+      (buffer-substring-no-properties
+       url-http-end-of-headers (point-max)))))
+
 (provide 'easi-utils)
 ;;; easi-utils.el ends here
