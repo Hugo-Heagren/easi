@@ -166,6 +166,26 @@ results should be returned.")
   "QUERYABLE-RESULTS-GETTER is a function."
   (funcall queryable-results-getter query number))
 
+(cl-defmethod easi-query-results (query (queryable-results-getter string) &optional number)
+  "QUERYABLE-RESULTS-GETTER is a string.
+
+Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
+specified) in QUERYABLE-RESULTS-GETTER, then make an https request on
+the result. Return a buffer holding the response text (this is
+intended to be post-processed)."
+  (let* ((request-string
+	  (url-encode-url
+	   (format-spec queryable-results-getter
+			`((?s . ,query)
+			  ;; TODO Should this default to something
+			  ;; more configurable? (e.g. a customizable
+			  ;; default var)
+		          (?n . ,(or number 10))))))
+	 (request-url (url-generic-parse-url request-string))
+	 (response-buffer (url-retrieve-synchronously
+		    request-url 'silent 'inhibit-cookies)))
+    response-buffer))
+
 ;; TODO Some more interesting implementations of this ^
 
 (cl-defgeneric easi-all-results (all-results-getter)
