@@ -53,79 +53,39 @@ now there aren't any. As an example though, you might define a
 searchable like this:
 
 #+begin_src elisp
-    (require 'url)
-    (require 'easi-result)
+  (require 'url)
+  (require 'easi-result)
 
-  (cl-defmethod easi-query-results (query (queryable-results-getter string) &optional number)
-	"QUERYABLE-RESULTS-GETTER is a string.
+  (defun my/ddg-get-result-from-divs (divs)
+    (cl-loop for div in divs
+	     collect
+	     (let* ((raw (easi--structured-object-get-field '(cdr 2 cdr) div))
+		    (title (easi--structured-object-get-field
+			    '(4 3 2) raw))
+		    (url (easi--structured-object-get-field
+			  '(8 1 "href" url-generic-parse-url url-path-and-query
+			      cdr url-parse-query-string "uddg" car)
+			  raw)))
+	       `(("title" . ,title)
+		 ("url" . ,url)))))
 
-      Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
-      specified) in QUERYABLE-RESULTS-GETTER, then make an https request on
-      the result. Return a buffer holding the response text (this is
-      intended to be post-processed)."
-	(let* ((request-string
-		(url-encode-url
-		 (format-spec queryable-results-getter
-			      `((?s . ,query)
-				;; TODO Should this default to something
-				;; more configurable? (e.g. a customizable
-				;; default var)
-				(?n . ,(or number 10))))))
-	       (request-url (url-generic-parse-url request-string))
-	       (response-buffer (url-retrieve-synchronously
-				 request-url 'silent 'inhibit-cookies)))
-	  response-buffer))
+  (setq my/duckduckgo-search-engine
+	(easi-search-engine-create
+	 :name "DuckDuckGo"
+	 :suggestions-getter "https://duckduckgo.com/ac/?q=%s&client=opensearch&type=list"
+	 :suggestion-post-processor
+	 '(easi-utils-get-http-body easi-utils-json-parse-with-lists 1)
+	 :queryable-results-getter "https://html.duckduckgo.com/html/?q=%s&client=opensearch&type=list"
+	 :results-post-processor
+	 '(easi-utils-parse-html-body
+	   2 20 9 3 3
+	   cddr
+	   (lambda (ls) (cl-delete-if #'stringp ls))
+	   (lambda (ls) (butlast ls 3))
+	   my/ddg-get-result-from-divs)
+	 :field-aliases '(("id" . "url"))))
 
-      (cl-defmethod easi-get-suggestions (query (suggestions-getter string) &optional number)
-	"SUGGESTIONS-GETTER is a string.
-
-      Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
-      specified) in SUGGESTIONS-GETTER, then make an https request on
-      the result. Return a buffer holding the response text (this is
-      intended to be post-processed)."
-	(let* ((request-string
-		(url-encode-url
-		 (format-spec suggestions-getter
-			      `((?s . ,query)
-				;; TODO Should this default to something
-				;; more configurable? (e.g. a customizable
-				;; default var)
-				(?n . ,(or number 10))))))
-	       (request-url (url-generic-parse-url request-string))
-	       (response-buffer (url-retrieve-synchronously
-				 request-url 'silent 'inhibit-cookies)))
-	  response-buffer))
-
-      (defun my/ddg-get-result-from-divs (divs)
-	(cl-loop for div in divs
-		 collect
-		 (let* ((raw (easi--structured-object-get-field '(cdr 2 cdr) div))
-			(title (easi--structured-object-get-field
-				'(4 3 2) raw))
-			(url (easi--structured-object-get-field
-			      '(8 1 "href" url-generic-parse-url url-path-and-query
-				  cdr url-parse-query-string "uddg" car)
-			      raw)))
-		   `(("title" . ,title)
-		     ("url" . ,url)))))
-
-      (setq my/duckduckgo-search-engine
-	    (easi-search-engine-create
-	     :name "DuckDuckGo"
-	     :suggestions-getter "https://duckduckgo.com/ac/?q=%s&client=opensearch&type=list"
-	     :suggestion-post-processor
-	     '(my/get-http-body my/json-parse-with-lists 1)
-	     :queryable-results-getter "https://html.duckduckgo.com/html/?q=%s&client=opensearch&type=list"
-	     :results-post-processor
-	     '(my/parse-html-body
-	       2 20 9 3 3
-	       cddr
-	       (lambda (ls) (cl-delete-if #'stringp ls))
-	       (lambda (ls) (butlast ls 3))
-	       my/ddg-get-result-from-divs)
-	     :field-aliases '(("id" . "url"))))
-
-      (add-to-list 'easi-searchables 'my/duckduckgo-search-engine)
+  (add-to-list 'easi-searchables 'my/duckduckgo-search-engine)
 #+end_src
 
 * Usage
