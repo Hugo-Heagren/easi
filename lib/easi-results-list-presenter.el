@@ -36,37 +36,40 @@
   :group 'easi)
 
 (defcustom easi-results-list-fields nil
-  "List of fields for `easi-results-list-presenter' to display.
+  "Plist of fields for `easi-results-list-presenter' to display.
 
-Each element is of the form (FIELD WIDTH SORT).
-
-FIELD is a string, the name of the field from each result to
-include.
-
-WIDTH is an integer, the maximum width to print.
-
-If SORT is non-nil, this field can be sorted. It is either
-t (indicating to sort alphabetically on strings), or a predicate."
+`easi-results-list-presenter' gets it's value for
+`tabulated-list-format' by transforming this variable. Each element
+represents a column and is a plist with the following keys:
+- `:name' the title of the column. Must be a string. Used as NAME in
+  `tabulated-list-format'.
+- `:getter' the value of this key is used to get the value to display
+  in the column for each result. The value of `:getter' is passed as
+  FIELD, and the result as OBJECT to `easi-result-get-field'.
+- `:width' maximum width to print. Used as WIDTH in
+  `tabulated-list-format'.
+- `:sort' if non-nil, this field can be sorted. It is either t
+  (indicating to sort alphabetically on strings), or a predicate. Used
+  as WIDTH in `tabulated-list-format'.
+- `:props' used as PROPS in `tabulated-list-format' without
+  alteration."
   :group 'easi-results-list
-  :type '(repeat (list
-		  (string :tag "Field")
-		  (integer :tag "Width")
-		  (choice :tag "Sort"
-		   (const :tag "Sort on strings" t)
-		   function))))
+  :type '(repeat plist))
 
 (defun easi-results-list--convert-field-list (list)
-  "Make easi-results-list field tabulated-list compatible.
+  "Make `easi-results-list' field compatible with tabulated-list.
 
-If the first element of LIST is a list, return a list of the
-first non-list item in LIST, then the cdr of LIST. (i.e. for
-'(((foo bar)) baz qux)) return (foo baz qux). Otherwise return LIST.
+Extract values for properties `:name', `:width', `:sort' and
+`:props' from LIST, and return a list of the result values
+\\='(NAME WIDTH SORT . PROPS).
 
 If this function is mapped over `easi-results-list-fields', the
 result is an acceptable value for `tabulated-list-format'."
-  (if (listp (car list))
-      (cons (car (flatten-list list)) (cdr list))
-    list))
+  (let ((name (plist-get list :name))
+	(width (plist-get list :width))
+	(sort (plist-get list :sort))
+	(props (plist-get list :props)))
+    `(,name ,width ,sort . ,props)))
 
 (define-derived-mode easi-results-list-mode tabulated-list-mode "easi-results-list-mode"
   "Major mode for viewing EASI results in a tabulated list. Derived
@@ -115,7 +118,7 @@ able to print."
 	   ;; `tabulated-list-get-id' to get the current result
 	   `(,res
 	     ,(seq--into-vector
-	       (mapcar (lambda (field) (or (easi-result-get-field (car field) res)
+	       (mapcar (lambda (field) (or (easi-result-get-field (plist-get field :getter) res)
 				      ;; Use an empty string, for
 				      ;; cases without a field value
 				      ""))
