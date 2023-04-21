@@ -278,7 +278,7 @@ to ensure consistency of various features between different
 result presenters, like rerunning queries and switching between
 different presenters.")
 
-(defun easi--result-present (result &rest slots)
+(defun easi--present-result (result &rest slots)
   "(maybe) Display RESULT in a buffer in appropriate way.
 Use `easi-get-result-presenters' to get a list of result
 presenters compatible with RESULT, and treat the first one as
@@ -364,7 +364,7 @@ in later operations."
   "Update Easi's result buffer to display the current result."
   (let ((result (with-current-buffer easi-results-buffer
 		  (easi--get-current-result))))
-    (easi--result-present result 'field-printer)))
+    (easi--present-result result 'field-printer)))
 
 ;;;; Search functions and entry points
 
@@ -413,7 +413,7 @@ Otherwise the first in `easi-default-results-presenters' is used.
 `easi-results-mode' is always active in the results buffer.
 
 The currently selected result is (maybe) printed according to
-`easi--result-present'.
+`easi--present-result'.
 
 `easi-result-mode' is always active in the result buffer."
   (let* ((results (easi-sort-results
@@ -450,7 +450,7 @@ The currently selected result is (maybe) printed according to
     (easi-results-mode)
     ;; Use `when-let' because nothing in the body is worth doing if
     ;; `result-buffer' is nil.
-    (when-let ((result-buffer (easi--result-present
+    (when-let ((result-buffer (easi--present-result
 			       (easi--get-current-result)
 			       'before 'field-printer 'after 'hook)))
       (with-current-buffer result-buffer
