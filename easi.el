@@ -421,20 +421,18 @@ the engine does not specify any presenters) the first in
   (let* ((results (easi-sort-results
 		   (easi--sort-get-searchable-sorter searchable)
 		   raw-results query))
+	 ;; Reuse current buffer, if it exists
 	 (results-buffer
-	  (cond
-	   (easi-results-buffer)
-	   ((stringp easi-results-default-buffer-name)
-	    (generate-new-buffer easi-results-default-buffer-name))
-	   ;; MAYBE Users might want to set the results-buffer name
-	   ;; depending on the results (e.g. on how many there
-	   ;; are). Do we want to update the results-buffer name on
-	   ;; this basis even we reuse the results-buffer (e.g. if they
-	   ;; rerun, reusing the results-buffer, with a new query and
-	   ;; there are a different number of results)
-	   ((functionp easi-results-default-buffer-name)
-	    (funcall easi-results-default-buffer-name
-		     searchable query results))))
+	  (or easi-results-buffer
+	      ;; MAYBE Users might want to set the results-buffer name
+	      ;; depending on the results (e.g. on how many there
+	      ;; are). Do we want to update the results-buffer name on
+	      ;; this basis even we reuse the results-buffer (e.g. if they
+	      ;; rerun, reusing the results-buffer, with a new query and
+	      ;; there are a different number of results)
+	      (easi--buffer-from-default
+	       easi-results-default-buffer-name
+	       searchable query results)))
 	 (results-presenter (car (easi-get-results-presenters searchable))))
     (setq easi--saved-window-config (current-window-configuration))
     ;; TODO This might have to move, so that I can run easi-search
