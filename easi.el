@@ -391,7 +391,7 @@ with `completing-read'."
      (completion-table-dynamic
       (lambda (str) (easi-searchable-suggestions str searchable))))))
 
-(defun easi-present-results (searchable raw-results &optional query)
+(defun easi--present-results (searchable raw-results &optional query)
   "Present RAW-RESULTS from SEARCHABLE.
 
 Main user-interface driver function for Easi.
@@ -472,7 +472,7 @@ SEARCHABLE. If this slot is nil, behaviour is controlled by
 `easi-default-non-all-results-skip'."
   (interactive `(,(easi--prompt-for-searchable)))
   (let ((raw-results (easi-searchable-results searchable)))
-    (easi-present-results searchable raw-results)))
+    (easi--present-results searchable raw-results)))
 
 ;;;###autoload
 (defun easi-search (searchable query)
@@ -489,7 +489,7 @@ controlled by `easi-default-non-queryable-skip'."
   ;; TODO Is there a place to get limiting `number' arguments for
   ;; these functions?
   (let ((raw-results (easi-searchable-results searchable query)))
-    (easi-present-results searchable raw-results query)))
+    (easi--present-results searchable raw-results query)))
  
 ;;;###autoload
 (defun easi-rerun-with-new-engines (searchable)
