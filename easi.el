@@ -412,10 +412,8 @@ Otherwise the first in `easi-default-results-presenters' is used.
 
 `easi-results-mode' is always active in the results buffer.
 
-The currently selected result is printed using either the first
-presenter specified by the search engine it comes from, or (if
-the engine does not specify any presenters) the first in
-`easi-default-result-presenters'.
+The currently selected result is (maybe) printed according to
+`easi--result-present'.
 
 `easi-result-mode' is always active in the result buffer."
   (let* ((results (easi-sort-results
@@ -450,42 +448,17 @@ the engine does not specify any presenters) the first in
 		easi-results-buffer results-buffer
 		easi-current-results-presenter results-presenter)
     (easi-results-mode)
-    ;; Don't assume that there is a result presenter
-    (when-let ((result-presenter (car (easi-get-result-presenters searchable)))
-	       (result (easi--get-current-result))
-	       ;; Get a results results-buffer in a similar way to above
-	       (result-buffer
-		(cond
-		 (easi-result-buffer)
-		 ((stringp easi-result-default-buffer-name)
-		  (generate-new-buffer easi-result-default-buffer-name))
-		 ((functionp easi-result-default-buffer-name)
-		  (funcall easi-result-default-buffer-name
-			   searchable query result)))))
-      ;; TODO This is wrong -- we assume that a symbol points at a
-      ;; struct, but the definition says that a symbol could point at
-      ;; a symbol or a struct, so long as the chain ends in a struct.
-      (let ((action (or (easi-result-presenter-display-action
-			 (if (symbolp result-presenter)
-			     (symbol-value result-presenter)
-			   result-presenter))
-			easi-result-default-display-action)))
-	(display-buffer result-buffer action))
-      (easi--result-present
-       result-presenter result result-buffer
-       'before 'field-printer 'after 'hook)
+    ;; Use `when-let' because nothing in the body is worth doing if
+    ;; `result-buffer' is nil.
+    (when-let ((result-buffer (easi--result-present
+			       (easi--get-current-result)
+			       'before 'field-printer 'after 'hook)))
       (with-current-buffer result-buffer
-	(easi-result-mode)
-	(setq-local easi-current-query query
-		    easi-current-searchables searchable
-		    easi-result-buffer result-buffer
+	(setq-local easi-result-buffer result-buffer
 		    easi-results-buffer results-buffer
-		    easi-current-results-presenter results-presenter
-		    easi-current-result-presenter result-presenter))
-      ;; Set variables in results buffer pointing at result buffer
+		    easi-current-query query))
       (with-current-buffer results-buffer
-	(setq-local easi-current-result-presenter result-presenter
-		    easi-result-buffer result-buffer)))))
+	(setq-local easi-result-buffer result-buffer)))))
 
 ;;;###autoload
 (defun easi-all (searchable)
