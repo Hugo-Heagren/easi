@@ -362,14 +362,9 @@ in later operations."
 
 (defun easi--update-result ()
   "Update Easi's result buffer to display the current result."
-  (pcase-let ((`(,result ,result-buffer)
-	       (with-current-buffer easi-results-buffer
-		 `(,(easi--get-current-result)
-		   ,easi-result-buffer))))
-    (easi--result-present
-     easi-current-result-presenter
-     result result-buffer
-     'field-printer)))
+  (let ((result (with-current-buffer easi-results-buffer
+		  (easi--get-current-result))))
+    (easi--result-present result 'field-printer)))
 
 ;;;; Search functions and entry points
 
