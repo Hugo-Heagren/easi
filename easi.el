@@ -278,35 +278,87 @@ to ensure consistency of various features between different
 result presenters, like rerunning queries and switching between
 different presenters.")
 
+(defun easi--result-present (result &rest slots)
+  "(maybe) Display RESULT in a buffer in appropriate way.
+Use `easi-get-result-presenters' to get a list of result
+presenters compatible with RESULT, and treat the first one as
+default. If that is nil, then bury any current result
+buffer (`easi-result-buffer') with `quit-restore-window' and
+return nil. If non-nil, then:
+- get a result buffer (either `easi-result-buffer' or a new one, with
+  `easi--buffer-from-default')
+- switch to result buffer
+- For each one of SLOTS, get the value of that slot in the presenter,
+  and map over it, calling each element as a function, passing RESULT
+  and the buffer as arguments. SLOTS are symbols, the names of slots
+  in a `easi-result-presenter' object. The only slots which make sense
+  for this function are `before', `field-printer' and `after'. As a
+  special case, if slot is `hook', call each element with no args.
+- return the buffer
 
-(defun easi--result-present (presenter result buffer &rest slots)
-  "Run all functions from PRESENTER's SLOTS, with RESULT and BUFFER.
-
-For each one of SLOTS, get the value of that slot in PRESENTER,
-and map over it, calling each element as a function, passing
-RESULT and BUFFER as arguments.
-
-SLOTS are symbols, the names of slots in a
-`easi-result-presenter' object. The only slots which make sense
-for this function are `before', `field-printer' and `after'. As a
-special case, if slot is `hook', call each element with no args.
-
-Returns nil -- this function is only useful for its side effects."
-  (if (symbolp presenter)
-      ;; Account for symbols-as-presenters
-      (apply 'easi--result-present
-	     (symbol-value presenter) result buffer slots)
-    (with-current-buffer buffer
-      (dolist (slot slots)
-	(let ((accessor
-	       (intern
-		(concat "easi-result-presenter-"
-			(symbol-name slot)))))
-	  (if (eq slot 'hook)
-	      (mapcan #'funcall (funcall accessor presenter))
-	  (mapcan
-	   (lambda (fun) (funcall fun result buffer))
-	   (funcall accessor presenter))))))))
+This function assumes it is called from a buffer where
+`easi-current-query' is non-nil (i.e. a results buffer, or a
+previously setup result buffer). Getting this value is the first
+thing the function does, so you need not worry about retaining it
+in later operations."
+  (let* ((query easi-current-query)
+	 (searchable (easi-result-retrieve-search-engine result))
+	 ;; Resolve presenter as symbol
+	 ;; FIXME This is a really ugly and should be altered.
+	 (presenter
+	  (cl-loop with pres = (car (easi-get-result-presenters searchable))
+		   ;; Checking presenter is non-nil stops loop hanging
+		   while (and pres (symbolp pres))
+		   do (setq pres (symbol-value pres))
+		   finally return pres))
+	 (result-buffer
+	  ;; Reuse existing buffer if it exists
+	  (or easi-result-buffer
+	      ;; Otherwise only make a new buffer if we are going to
+	      ;; use it (i.e. when presenter is non-nil).
+	      (when presenter
+		(easi--buffer-from-default
+		 easi-result-default-buffer-name
+		 searchable query result)))))
+    (if presenter
+	;; Non-nil presenter -- present result accordingly
+	(with-current-buffer result-buffer
+	  (dolist (slot slots)
+	    (let ((accessor
+		   (intern
+		    (concat "easi-result-presenter-"
+			    (symbol-name slot)))))
+	      (if (eq slot 'hook)
+		  (mapcan #'funcall (funcall accessor presenter))
+		(mapcan
+		 (lambda (fun) (funcall fun result result-buffer))
+		 (funcall accessor presenter)))))
+	  ;; Set mode in result buffer
+	  (easi-result-mode)
+	  ;; Set important values in result-buffer
+	  (setq-local easi-current-query query
+		      easi-current-searchables searchable
+		      easi-result-buffer result-buffer
+		      easi-current-result-presenter presenter)
+	  ;; Display result buffer
+	  (display-buffer result-buffer
+			  (or (easi-result-presenter-display-action presenter)
+			      easi-result-default-display-action))
+	  ;; Return result-buffer
+	  result-buffer)
+      ;; nil presenter -- don't present result, but do hide any
+      ;; previously-presented results
+      ;; TODO Should this behaviour be controlled with a user variable?
+      ;; NOTE We have to get and check the window separately like
+      ;; this, because if there is no result buffer window, then
+      ;; `window' will be nil, and passing nil to
+      ;; `quit-restore-window' just quits the current window---so the
+      ;; results buffer would often be buried.
+      (when-let ((result-buffer)
+		 (window (get-buffer-window result-buffer)))
+	(quit-restore-window window)
+	;; Return nil -- no (active/useful) result buffer
+	nil))))
 
 (defun easi--update-result ()
   "Update Easi's result buffer to display the current result."
