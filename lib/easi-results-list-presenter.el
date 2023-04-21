@@ -25,7 +25,6 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'seq)
 (require 'tabulated-list)
 (require 'easi)
 (require 'easi-presenter)
