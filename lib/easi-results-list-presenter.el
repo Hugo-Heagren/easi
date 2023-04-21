@@ -117,7 +117,7 @@ able to print."
 	   ;; Using the result object as the id allows us to use
 	   ;; `tabulated-list-get-id' to get the current result
 	   `(,res
-	     ,(seq--into-vector
+	     ,(vconcat
 	       (mapcar (lambda (field) (or (easi-result-get-field (plist-get field :getter) res)
 				      ;; Use an empty string, for
 				      ;; cases without a field value
