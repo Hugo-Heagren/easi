@@ -330,13 +330,11 @@ Delete duplicates before returning."
 
 (defun easi-get-result-presenters (searchables)
   "List all result presenters compatible with SEARCHABLES."
-  (cl-delete-if
-   #'null
    ;; TODO Do I want to use `cl-delete-duplicates' and test for cases
    ;; of an object and a symbol pointing at the object?
    (delete-dups
     `(,@(easi-searchable-result-presenters searchables)
-      ,@easi-default-result-presenters))))
+      ,@easi-default-result-presenters)))
 
 ;;;; Getting sorter list
 
