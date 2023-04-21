@@ -155,6 +155,21 @@ which need to specify certain behaviour."
 (defvar easi--saved-window-config nil
   "Stores the window configuration when Easi is called.")
 
+(defun easi--buffer-from-default (default searchable query result)
+  "Get an appropriate buffer given DEFAULT.
+
+If DEFAULT is a string, pass it to `generate-new-buffer'. If
+DEFAULT is a function, call it with SEARCHABLE, QUERY and RESULT
+as args.
+
+Return the result of whatever is done. If DEFAULT is neither a
+string nor a function, return nil."
+  (cond
+   ((stringp default)
+    (generate-new-buffer default))
+   ((functionp default)
+    (funcall default searchable query result))))
+
 (defun easi-quit ()
   "Quit Easi.
 
