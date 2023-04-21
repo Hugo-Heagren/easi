@@ -160,13 +160,15 @@ which need to specify certain behaviour."
 
 Deletes all Easi buffers."
   (interactive nil easi-results-mode easi-result-mode)
-  (and (kill-buffer easi-result-buffer)
-       (kill-buffer easi-results-buffer)
-       ;; Restore window configuration to previous state
-       (when easi--saved-window-config
-	 (set-window-configuration easi--saved-window-config)
-	 ;; Reset stored window config
-	 (setq easi--saved-window-config nil))))
+  ;; NOTE Checking for each buffer stops us ever passing nil to
+  ;; `kill-buffer', which just kills the current buffer.
+  (when easi-result-buffer (kill-buffer easi-result-buffer))
+  (when easi-results-buffer (kill-buffer easi-results-buffer))
+  ;; Restore window configuration to previous state
+  (when easi--saved-window-config
+    (set-window-configuration easi--saved-window-config)
+    ;; Reset stored window config
+    (setq easi--saved-window-config nil)))
 
 ;; Define commands useful in every presenter
 ;; TODO Define lots of these commands...
