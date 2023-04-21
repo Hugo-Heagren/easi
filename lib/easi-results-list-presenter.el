@@ -81,7 +81,7 @@ from `tabulated-list-mode'."
   ;; already be set).
   (setq major-mode 'easi-results-list-mode)
   (setq tabulated-list-format
-	(seq--into-vector
+	(vconcat
 	 (mapcar #'easi-results-list--convert-field-list
 		 easi-results-list-fields))))
 
