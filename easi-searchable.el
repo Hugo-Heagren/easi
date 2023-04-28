@@ -114,6 +114,8 @@ more sense.")))
 
 ;;;; Getting suggestions
 
+(defvar easi-default-max-suggestions)
+
 (cl-defgeneric easi-get-suggestions (query suggestions-getter &optional number)
   "Get a list of by querying SUGGESTIONS-GETTER with QUERY.
 
@@ -139,10 +141,7 @@ intended to be post-processed)."
 	  (url-encode-url
 	   (format-spec suggestions-getter
 			`((?s . ,query)
-			  ;; TODO Should this default to something
-			  ;; more configurable? (e.g. a customizable
-			  ;; default var)
-		          (?n . ,(or number 10))))))
+		          (?n . number)))))
 	 (request-url (url-generic-parse-url request-string))
 	 (response-buffer (url-retrieve-synchronously
 			   request-url 'silent 'inhibit-cookies)))
@@ -165,21 +164,27 @@ then the call is (easi-structured-object-get-field PROC RAW).")
 (cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine) &optional number)
   "TODO DOCS"
   (when-let ((getter (easi-search-engine-suggestions-getter searchable))
-	     (raw-results (easi-get-suggestions query getter number)))
+	     (raw-results
+	      (easi-get-suggestions query getter
+				    (or number
+					(easi-search-engine-max-results searchable)
+					easi-default-max-suggestions))))
     (if-let (post-proc (easi-search-engine-suggestion-post-processor searchable))
 	(easi-structured-object-get-field post-proc raw-results)
       raw-results)))
 (cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine-group) &optional number)
-  (mapcar (apply-partially #'easi-searchable-suggestions query)
+  (mapcar (lambda (sch) (easi-searchable-suggestions query sch number))
 	  (easi-search-engine-group-searchables searchable)))
 (cl-defmethod easi-searchable-suggestions (query (searchable cons) &optional number)
   "SEARCHABLE is a list."
   (flatten-list
-   (mapcar (apply-partially #'easi-searchable-suggestions query) searchable)))
+   (mapcar (lambda (sch) (easi-searchable-suggestions query sch number)) searchable)))
 (cl-defmethod easi-searchable-suggestions (query (searchable symbol) &optional number)
   (easi-searchable-suggestions query (symbol-value searchable) number))
 
 ;;;; Getting results
+
+(defvar easi-default-max-results)
 
 (cl-defgeneric easi-query-results (query queryable-results-getter &optional number)
   "Get a list of by querying QUERYABLE-RESULTS-GETTER with QUERY.
@@ -195,18 +200,15 @@ results should be returned.")
 (cl-defmethod easi-query-results (query (queryable-results-getter string) &optional number)
   "QUERYABLE-RESULTS-GETTER is a string.
 
-Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
-specified) in QUERYABLE-RESULTS-GETTER, then make an https request on
-the result. Return a buffer holding the response text (this is
+Replace %s with QUERY, and %n with NUMBER in
+QUERYABLE-RESULTS-GETTER, then make an https request on the
+result. Return a buffer holding the response text (this is
 intended to be post-processed)."
   (let* ((request-string
 	  (url-encode-url
 	   (format-spec queryable-results-getter
 			`((?s . ,query)
-			  ;; TODO Should this default to something
-			  ;; more configurable? (e.g. a customizable
-			  ;; default var)
-		          (?n . ,(or number 10))))))
+		          (?n . ,number)))))
 	 (request-url (url-generic-parse-url request-string))
 	 (response-buffer (url-retrieve-synchronously
 		    request-url 'silent 'inhibit-cookies)))
@@ -253,7 +255,10 @@ engine in SEARCHABLE to NUMBER.")
 			 (easi-search-engine-queryable-results-getter searchable)))))
 	     (raw-results
 	      (if query
-		  (easi-query-results query getter number)
+		  (easi-query-results query getter
+				      (or number
+					  (easi-search-engine-max-results searchable)
+					  easi-default-max-results))
 		(easi-all-results getter))))
     (mapcar
      (apply-partially #'easi-utils-result-attach-search-engine searchable)
@@ -261,12 +266,12 @@ engine in SEARCHABLE to NUMBER.")
 	 (easi-structured-object-get-field post-proc raw-results)
        raw-results))))
 (cl-defmethod easi-searchable-results ((searchable easi-search-engine-group) &optional query number)
-  (mapcar (lambda (searchable) (easi-searchable-results searchable query))
+  (mapcar (lambda (searchable) (easi-searchable-results searchable query number))
 	  (easi-search-engine-group-searchables searchable)))
 (cl-defmethod easi-searchable-results ((searchable cons) &optional query number)
   "SEARCHABLE is a list."
   (apply 'append
-   (mapcar (lambda (searchable) (easi-searchable-results searchable query)) searchable)))
+   (mapcar (lambda (searchable) (easi-searchable-results searchable query number)) searchable)))
 (cl-defmethod easi-searchable-results ((searchable symbol) &optional query number)
   (easi-searchable-results (symbol-value searchable) query number))
 
