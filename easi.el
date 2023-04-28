@@ -48,7 +48,16 @@ of those selected."
   :group 'easi
   :type 'function)
 
-;; TODO Define a proper custom type for this.
+(define-widget 'easi-searchable 'lazy
+  "Widget for customising `easi-searchables'."
+  :tag "Easi searchable"
+  :type '(choice (restricted-sexp :tag "Search engine"
+				  :match-alternatives (easi-search-engine-p))
+		 (restricted-sexp :tag "Search engine group"
+				  :match-alternatives (easi-search-engine-group-p))
+		 symbol
+		 (repeat easi-searchable)))
+
 (defcustom easi-searchables nil
   "List of available searchables.
 
