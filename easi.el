@@ -129,6 +129,14 @@ which need to specify certain behaviour."
   :type '(choice (string :tag "Use this as a query")
 		 (const :tag "Skip" t)))
 
+(defcustom easi-default-max-results 10
+  "Default maximum number of results to get.
+
+Used as a default NUMBER argument in functions such as
+`easi-searchable-results'."
+  :group 'easi
+  :type 'integer)
+
 ;;;; Results user interface
 ;; TODO Make it possible to have more than one EASI results
 ;; buffer/session at once.
