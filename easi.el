@@ -137,6 +137,14 @@ Used as a default NUMBER argument in functions such as
   :group 'easi
   :type 'integer)
 
+(defcustom easi-default-max-suggestions 10
+  "Default maximum number of suggestions to get.
+
+Used as a default NUMBER argument in functions such as
+`easi-searchable-suggestions'."
+  :group 'easi
+  :type 'integer)
+
 ;;;; Results user interface
 ;; TODO Make it possible to have more than one EASI results
 ;; buffer/session at once.
