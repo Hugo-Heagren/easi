@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2022  Hugo Heagren
 
-;; Author: Hugo Heagren <hugo@undertown>
+;; Author: Hugo Heagren <hugo@heagren.com>
 ;; Keywords:hypermedia, matching
 
 ;; This program is free software; you can redistribute it and/or modify

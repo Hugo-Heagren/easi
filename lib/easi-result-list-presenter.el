@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2023  Hugo Heagren
 
-;; Author: Hugo Heagren <hugo@undertown>
+;; Author: Hugo Heagren <hugo@heagren.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
