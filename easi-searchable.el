@@ -93,7 +93,10 @@ See `easi-result-list-fields' and `easi-result-get-field'."))
     "List of compatible results sorters."))
   (max-results nil
    (:documentation
-    "Maximum number of results to retrieve at once.")))
+    "Maximum number of results to retrieve at once."))
+  (max-suggestions nil
+   (:documentation
+    "Maximum number of suggestions to retrieve at once.")))
 
 (cl-defstruct (easi-search-engine-group
 	       (:constructor easi-search-engine-group-create))
