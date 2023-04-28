@@ -81,7 +81,8 @@ following are valid elements of this list:
 Notice that one valid element (in the last case `engine-foo' can
 appear more than once. This will have no effect on the user
 experience)."
-  :group 'easi)
+  :group 'easi
+  :type 'easi-searchable)
 
 (defcustom easi-results-default-buffer-name "EASI Results"
   "Default name for EASI buffer displaying collected results.
