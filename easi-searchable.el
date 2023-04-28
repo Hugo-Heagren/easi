@@ -90,7 +90,10 @@ See `easi-result-list-fields' and `easi-result-get-field'."))
     `easi-default-result-presenters'.)"))
   (sorters nil
    (:documentation
-    "List of compatible results sorters.")))
+    "List of compatible results sorters."))
+  (max-results nil
+   (:documentation
+    "Maximum number of results to retrieve at once.")))
 
 (cl-defstruct (easi-search-engine-group
 	       (:constructor easi-search-engine-group-create))
