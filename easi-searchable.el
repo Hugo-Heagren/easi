@@ -224,8 +224,15 @@ meaningful sense (i.e. all the notes in my collection, not just
 the ones which match a query).")
 
 (cl-defmethod easi-all-results ((all-results-getter symbol))
-  "ALL-RESULTS-GETTER is a function."
-  (funcall all-results-getter))
+  "ALL-RESULTS-GETTER is a symbol.
+
+If ALL-RESULTS-GETTER is a function (i.e. passes `functionp')
+then call it with `funcall'. If not a function, get its
+`symbol-value' (this allows using a variable which contains a
+list of objects, where no function exists to return them all)."
+  (if (functionp all-results-getter)
+      (funcall all-results-getter)
+    (symbol-value all-results-getter)))
 
 ;; TODO Some more interesting implementations of this ^
 
