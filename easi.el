@@ -155,6 +155,16 @@ Used as a default NUMBER argument in functions such as
   :group 'easi
   :type 'integer)
 
+;;;; Session management
+
+(cl-defstruct (easi-session-state
+	       (:constructor easi-session-state-create))
+  "Holds current easi search and presentation state."
+  window-config
+  query searchables results
+  results-buffers result-buffers
+  results-buffer-presenters)
+
 ;;;; Results user interface
 ;; TODO Make it possible to have more than one EASI results
 ;; buffer/session at once.
