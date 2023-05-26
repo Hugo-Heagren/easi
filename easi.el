@@ -165,16 +165,38 @@ Used as a default NUMBER argument in functions such as
   results-buffers result-buffers
   results-buffer-presenters)
 
+;; TODO this should probably be a method, and be elsewhere?
+(defun easi--session-state-buffer-presenter (session)
+  "Get results presenter for current buffer in SESSION."
+  (alist-get (current-buffer)
+	     (easi-session-state-results-buffer-presenters session)))
+
+(defvar easi-session-list nil
+  "List of easi sessions. Each is an `easi-session-state'.")
+
+(defun easi--get-current-session ()
+  "Return first session with current buffer.
+
+Search the \"result-buffers\" and \"results-buffers\" slots of
+each item in `easi-session-list' and return first where current
+buffer appears."
+  (let ((buf (current-buffer)))
+    (cl-find-if
+     (lambda (session)
+       (or (memq buf (easi-session-state-result-buffers session))
+	   (memq buf (easi-session-state-results-buffers session))))
+     easi-session-list)))
+
+(defun easi--get-create-current-session ()
+  "Get current session, creating one if necessary.
+
+If a session is created, it is added to `easi-session-list'."
+  (or (easi--get-current-session)
+      (let* ((session (easi-session-state-create)))
+	 (push session easi-session-list)
+	 session)))
+
 ;;;; Results user interface
-;; TODO Make it possible to have more than one EASI results
-;; buffer/session at once.
-
-;; Infrastructure variables
-(defvar-local easi-current-query nil
-  "Query which produced current buffer's EASI results.")
-
-(defvar-local easi-current-searchables nil
-  "Searchables which produced current buffer's EASI results.")
 
 (defvar-local easi-results-buffer nil
   "Buffer displaying collection of EASI results.")
@@ -182,21 +204,15 @@ Used as a default NUMBER argument in functions such as
 (defvar-local easi-result-buffer nil
   "Buffer displaying current EASI result.")
 
-(defvar-local easi-current-results-presenter nil
-  "`easi-results-presenter' used in current buffer.")
-
-(defvar-local easi-current-result-presenter nil
-  "`easi-results-presenter' used in current buffer.")
-
 (defvar easi--saved-window-config nil
   "Stores the window configuration when Easi is called.")
 
-(defun easi--buffer-from-default (default searchable query result)
+(defun easi--buffer-from-default (default session)
   "Get an appropriate buffer given DEFAULT.
 
-If DEFAULT is a string, pass it to `generate-new-buffer'. If
-DEFAULT is a function, call it with SEARCHABLE, QUERY and RESULT
-as args.
+SESSION If DEFAULT is a string, pass it to `generate-new-buffer'.
+If DEFAULT is a function, call it passing SESSION as the sole
+argument.
 
 Return the result of whatever is done. If DEFAULT is neither a
 string nor a function, return nil."
@@ -204,7 +220,7 @@ string nor a function, return nil."
    ((stringp default)
     (generate-new-buffer default))
    ((functionp default)
-    (funcall default searchable query result))))
+    (funcall default session))))
 
 (defun easi-quit ()
   "Quit Easi.
@@ -289,7 +305,8 @@ RESULTS is a list of results. BUFFER is a buffer to print in."
 		(if (symbolp presenter)
 		    (get-getter (symbol-value presenter))
 		  (easi-results-presenter-current-result-getter presenter))))
-    (funcall (get-getter easi-current-results-presenter))))
+    (funcall (get-getter (easi--session-state-buffer-presenter
+			  (easi--get-current-session))))))
 
 ;;;;; (Current) Result
 
@@ -314,7 +331,7 @@ to ensure consistency of various features between different
 result presenters, like rerunning queries and switching between
 different presenters.")
 
-(defun easi--present-result (result &rest slots)
+(defun easi--present-result (result session &rest slots)
   "(maybe) Display RESULT in a buffer in appropriate way.
 Use `easi-get-result-presenters' to get a list of result
 presenters compatible with RESULT, and treat the first one as
@@ -336,26 +353,42 @@ This function assumes it is called from a buffer where
 `easi-current-query' is non-nil (i.e. a results buffer, or a
 previously setup result buffer). Getting this value is the first
 thing the function does, so you need not worry about retaining it
-in later operations."
-  (let* ((query easi-current-query)
-	 (searchable (easi-result-retrieve-search-engine result))
-	 ;; Resolve presenter as symbol
+in later operations.
+
+SESSION is the current easi session state object.
+TODO Rewrite docs!"
+  (let* (;; Resolve presenter as symbol
 	 ;; FIXME This is a really ugly and should be altered.
 	 (presenter
-	  (cl-loop with pres = (car (easi-get-result-presenters searchable))
+	  (cl-loop with pres = (car (easi-get-result-presenters
+				     (easi-result-retrieve-search-engine result)))
 		   ;; Checking presenter is non-nil stops loop hanging
 		   while (and pres (symbolp pres))
 		   do (setq pres (symbol-value pres))
 		   finally return pres))
 	 (result-buffer
 	  ;; Reuse existing buffer if it exists
-	  (or easi-result-buffer
-	      ;; Otherwise only make a new buffer if we are going to
-	      ;; use it (i.e. when presenter is non-nil).
-	      (when presenter
-		(easi--buffer-from-default
-		 easi-result-default-buffer-name
-		 searchable query result)))))
+	   (or
+	   ;; Is the current results buffer in the session's list? (if
+	   ;; so, use it)
+	   (and (memq (current-buffer)
+		      (easi-session-state-result-buffers session))
+		(current-buffer))
+	   ;; Otherwise use the first buffer in that list
+	   (car (easi-session-state-result-buffers session))
+	   ;; No buffer exists already,so create one.
+	   ;; TODO this logic can all be wrapped up in one function,
+	   ;; which just takes a session and a buffer.
+	   ;; MAYBE Users might want to set the results-buffer name
+	   ;; depending on the results (e.g. on how many there
+	   ;; are). Do we want to update the results-buffer name on
+	   ;; this basis even we reuse the results-buffer (e.g. if they
+	   ;; rerun, reusing the results-buffer, with a new query and
+	   ;; there are a different number of results)
+	   (easi--buffer-from-default
+	    easi-result-default-buffer-name session))))
+    (cl-pushnew result-buffer
+		(easi-session-state-result-buffers session))
     (if presenter
 	;; Non-nil presenter -- present result accordingly
 	(with-current-buffer result-buffer
@@ -369,14 +402,7 @@ in later operations."
 		(mapcan
 		 (lambda (fun) (funcall fun result result-buffer))
 		 (funcall accessor presenter)))))
-	  ;; Set mode in result buffer
 	  (easi-result-mode)
-	  ;; Set important values in result-buffer
-	  (setq-local easi-current-query query
-		      easi-current-searchables searchable
-		      easi-result-buffer result-buffer
-		      easi-current-result-presenter presenter)
-	  ;; Display result buffer
 	  (display-buffer result-buffer
 			  (or (easi-result-presenter-display-action presenter)
 			      easi-result-default-display-action))
@@ -427,7 +453,7 @@ with `completing-read'."
      (completion-table-dynamic
       (lambda (str) (easi-searchable-suggestions str searchable))))))
 
-(defun easi--present-results (searchable raw-results &optional query)
+(defun easi--present-results (session raw-results)
   "Present RAW-RESULTS from SEARCHABLE.
 
 Main user-interface driver function for Easi.
@@ -451,50 +477,66 @@ Otherwise the first in `easi-default-results-presenters' is used.
 The currently selected result is (maybe) printed according to
 `easi--present-result'.
 
-`easi-result-mode' is always active in the result buffer."
+`easi-result-mode' is always active in the result buffer.
+
+This function should only be run for its side-effects -- do not
+rely on its return value (this is because what it returns may
+change during development, and subsequent versions behave
+differently).
+
+TODO Rewrite docs SESSION"
   (let* ((results (easi-sort-results
-		   (easi--sort-get-searchable-sorter searchable)
-		   raw-results query))
+		   (easi--sort-get-searchable-sorter
+		    (easi-session-state-searchables session))
+		   raw-results
+		   (easi-session-state-query session)))
 	 ;; Reuse current buffer, if it exists
+	 ;; TODO This assumes there is only one results buffer. In
+	 ;; future, there may be more. Rewrite this to use ALL results
+	 ;; buffers, in a list, and update them all.
+	 ;; NOTE This ensures that the session is linked to buffer we
+	 ;; are printing into.
 	 (results-buffer
-	  (or easi-results-buffer
-	      ;; MAYBE Users might want to set the results-buffer name
-	      ;; depending on the results (e.g. on how many there
-	      ;; are). Do we want to update the results-buffer name on
-	      ;; this basis even we reuse the results-buffer (e.g. if they
-	      ;; rerun, reusing the results-buffer, with a new query and
-	      ;; there are a different number of results)
-	      (easi--buffer-from-default
-	       easi-results-default-buffer-name
-	       searchable query results)))
-	 (results-presenter (car (easi-get-results-presenters searchable))))
-    (setq easi--saved-window-config (current-window-configuration))
+	  (or
+	   ;; Use current buffer if in session' list
+	   (and (memq (current-buffer)
+		      (easi-session-state-results-buffers session))
+		(current-buffer))
+	   ;; Otherwise use the first buffer in that list
+	   (car (easi-session-state-results-buffers session))
+	   ;; No buffer exists already,so create one.
+	   ;; TODO this logic can all be wrapped up in one function,
+	   ;; which just takes a session and a buffer.
+	   ;; MAYBE Users might want to set the results-buffer name
+	   ;; depending on the results (e.g. on how many there
+	   ;; are). Do we want to update the results-buffer name on
+	   ;; this basis even we reuse the results-buffer (e.g. if they
+	   ;; rerun, reusing the results-buffer, with a new query and
+	   ;; there are a different number of results)
+	   (easi--buffer-from-default
+	    easi-results-default-buffer-name session)))
+	 (results-presenter (car (easi-get-results-presenters
+				  (easi-session-state-searchables session)))))
+    ;; TODO Should I save windows earlier, at the initial session definition?
+    (setf (easi-session-state-window-config session)
+	  (current-window-configuration))
+    (setf (easi-session-state-results session) results)
+    (setf (easi-session-state-query session) (easi-session-state-query session))
+    (cl-pushnew results-buffer (easi-session-state-results-buffers session))
+    (setf (alist-get results-buffer
+		     (easi-session-state-results-buffer-presenters
+		      session))
+	  results-presenter)
     ;; TODO This might have to move, so that I can run easi-search
     ;; from inside the result buffer...
     ;; TODO Hard coding this is going to make it difficult to do
     ;; different types of rerunning...
     (switch-to-buffer results-buffer)
     (easi--print-results results-presenter results results-buffer)
-    ;; NOTE Doing this before printing results didn't work because the
-    ;; printing somehow set them all to nil again. I don't know why
-    ;; and I should probably sort out what was wrong, but for now,
-    ;; I'll just leave them here.
-    (setq-local easi-current-query query
-		easi-current-searchables searchable
-		easi-results-buffer results-buffer
-		easi-current-results-presenter results-presenter)
     (easi-results-mode)
-    ;; Use `when-let' because nothing in the body is worth doing if
-    ;; `result-buffer' is nil.
-    (when-let ((result-buffer (easi--present-result
-			       (easi--get-current-result)
-			       'before 'field-printer 'after 'hook)))
-      (with-current-buffer result-buffer
-	(setq-local easi-result-buffer result-buffer
-		    easi-results-buffer results-buffer
-		    easi-current-query query))
-      (with-current-buffer results-buffer
-	(setq-local easi-result-buffer result-buffer)))))
+    (easi--present-result
+     (easi--get-current-result) session
+     'before 'field-printer 'after 'hook)))
 
 ;;;###autoload
 (defun easi-all (searchable)
@@ -507,8 +549,10 @@ Results will be retrieved using the contents of the
 SEARCHABLE. If this slot is nil, behaviour is controlled by
 `easi-default-non-all-results-skip'."
   (interactive `(,(easi--prompt-for-searchable)))
-  (let ((raw-results (easi-searchable-results searchable)))
-    (easi--present-results searchable raw-results)))
+  (let ((session (easi--get-create-current-session))
+	(raw-results (easi-searchable-results searchable)))
+    (setf (easi-session-state-searchables session) searchable)
+    (easi--present-results session raw-results)))
 
 ;;;###autoload
 (defun easi-search (searchable query)
@@ -524,8 +568,11 @@ controlled by `easi-default-non-queryable-skip'."
 		 `(,searchable ,query)))
   ;; TODO Is there a place to get limiting `number' arguments for
   ;; these functions?
-  (let ((raw-results (easi-searchable-results searchable query)))
-    (easi--present-results searchable raw-results query)))
+  (let ((session (easi--get-create-current-session))
+	(raw-results (easi-searchable-results searchable query)))
+    (setf (easi-session-state-query session) query)
+    (setf (easi-session-state-searchables session) searchable)
+    (easi--present-results session raw-results)))
  
 ;;;###autoload
 (defun easi-rerun-with-new-engines (searchable)
@@ -535,7 +582,9 @@ Interactively, prompt for SEARCHABLE with
 `easi--prompt-for-searchable'."
   (interactive `(,(easi--prompt-for-searchable))
 	       easi-results-mode easi-result-mode)
-  (easi-search searchable easi-current-query))
+  (easi-search searchable
+	       (easi-session-state-query
+		(easi--get-current-session))))
 
 ;;;###autoload
 (defun easi-rerun-with-new-query (query)
@@ -543,9 +592,13 @@ Interactively, prompt for SEARCHABLE with
 
 Interactively, prompt for QUERY with `easi--prompt-for-query',
 passing `easi-current-searchables' as argument."
-  (interactive `(,(easi--prompt-for-query easi-current-searchables))
+  (interactive `(,(easi--prompt-for-query
+		   (easi-session-state-searchables
+		    (easi--get-current-session))))
 	       easi-results-mode easi-result-mode)
-  (easi-search easi-current-searchables query))
+  (easi-search
+   (easi-session-state-searchables (easi--get-current-session))
+   query))
 
 ;;; Examples (not part of infrastructure) (to be eventually removed)
 
