@@ -237,6 +237,23 @@ Deletes all Easi buffers."
     ;; Reset stored window config
     (setq easi--saved-window-config nil)))
 
+(defun easi-quit-session (&optional session)
+  "Kill Easi session SESSION.
+
+Delete all buffers in the session, restore any saved window
+config, and remove the session from `easi-session-list'.
+
+If SESSION is not specified, default to current session."
+  (interactive `(,(easi--get-current-session))
+   easi-results-mode easi-result-mode)
+  (let* ((window-config (easi-session-state-window-config session)))
+    (dolist (buf `(,@(easi-session-state-results-buffers session)
+		   ,@(easi-session-state-result-buffers session)))
+      (when buf (kill-buffer buf)))
+    (when window-config
+      (set-window-configuration window-config))
+    (setq easi-session-list (delq session easi-session-list))))
+
 ;; Define commands useful in every presenter
 ;; TODO Define lots of these commands...
 (defvar-keymap easi-base-map
