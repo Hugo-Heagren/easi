@@ -41,6 +41,14 @@ Must return RESULT with ENGINE attached.")
     (setf (plist-get result "easi-search-engine") engine)))
   result)
 
+(defun easi-utils-resolve-symbol (symbol)
+  "Iteratively get value of SYMBOL until it is not a symbol."
+  (cl-loop
+   while (and symbol (symbolp symbol))
+   do (setq symbol (symbol-value symbol))
+   and
+   finally return symbol))
+
 ;;; Utils for writing search engines
 
 (defun easi-utils-get-http-body (buffer)
