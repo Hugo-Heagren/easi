@@ -458,33 +458,30 @@ with `completing-read'."
 
 Main user-interface driver function for Easi.
 
-Uses `easi-results-buffer' to list the results if it exists, or
-creates a new buffer according to
-`easi-results-default-buffer-name' if not. Similarly for
-`easi-result-buffer' and `easi-results-default-buffer-name' for
-displaying the selected result.
-
 RAW-RESULTS is an unsorted list of result objects which Easi can
 handle. It is sorted using the result of
-`easi--sort-get-searchable-sorter'. The results are then printed
-using an appropriate presenter. If all the results are from
-search engines which specify particular presenters, then the
-first presenter to specified by all of those searchables is used.
-Otherwise the first in `easi-default-results-presenters' is used.
+`easi--sort-get-searchable-sorter' (called on the searchables in
+SESSION). The results are then printed using an appropriate
+presenter. If all the results are from search engines which
+specify particular presenters, then the first presenter to
+specified by all of those searchables is used. Otherwise the
+first in `easi-default-results-presenters' is used.
 
+If the current buffer appears in the \"results-buffers\" slot of
+SESSION, use it. If not, use the first buffer in that list. If
+the list is empty, create a new buffer with
+`easi--buffer-from-default', passing
+`easi-results-default-buffer-name' and SESSION.
 `easi-results-mode' is always active in the results buffer.
 
-The currently selected result is (maybe) printed according to
-`easi--present-result'.
-
-`easi-result-mode' is always active in the result buffer.
+The currently selected result is (maybe) printed with to
+`easi--present-result'. `easi-result-mode' is always active in
+the result buffer.
 
 This function should only be run for its side-effects -- do not
 rely on its return value (this is because what it returns may
 change during development, and subsequent versions behave
-differently).
-
-TODO Rewrite docs SESSION"
+differently)."
   (let* ((results (easi-sort-results
 		   (easi--sort-get-searchable-sorter
 		    (easi-session-state-searchables session))
