@@ -262,7 +262,8 @@ If SESSION is not specified, default to current session."
   "r" #'easi-rerun-with-new-query
   "R" #'easi-rerun-with-new-engines
   "s" #'easi-search
-  "q" #'easi-quit)
+  "q" #'easi-quit
+  "Q" #'easi-quit-session)
 
 ;;;;; Results
 
