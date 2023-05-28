@@ -223,19 +223,14 @@ string nor a function, return nil."
     (funcall default session))))
 
 (defun easi-quit ()
-  "Quit Easi.
-
-Deletes all Easi buffers."
+  "Quit current Easi buffer."
   (interactive nil easi-results-mode easi-result-mode)
-  ;; NOTE Checking for each buffer stops us ever passing nil to
-  ;; `kill-buffer', which just kills the current buffer.
-  (when easi-result-buffer (kill-buffer easi-result-buffer))
-  (when easi-results-buffer (kill-buffer easi-results-buffer))
-  ;; Restore window configuration to previous state
-  (when easi--saved-window-config
-    (set-window-configuration easi--saved-window-config)
-    ;; Reset stored window config
-    (setq easi--saved-window-config nil)))
+  (let ((buffer (current-buffer))
+	(session (easi--get-current-session)))
+    (if (or (memq buffer (easi-session-state-result-buffers session))
+	    (memq buffer (easi-session-state-results-buffers session)))
+	(kill-buffer buffer)
+      (user-error "Not in an Easi buffer"))))
 
 (defun easi-quit-session (&optional session)
   "Kill Easi session SESSION.
