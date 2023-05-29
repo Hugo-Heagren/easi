@@ -362,7 +362,9 @@ each function in the \"hook\" slot."
 Turned on automatically in EASI result buffers. This mode exists
 to ensure consistency of various features between different
 result presenters, like rerunning queries and switching between
-different presenters.")
+different presenters."
+  :interactive nil
+  (add-hook 'kill-buffer-hook 'easi-kill-buffer-manage-sessions nil 'local))
 
 (defun easi--present-result (result session &rest slots)
   "(maybe) Display RESULT in a buffer in appropriate way.
