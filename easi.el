@@ -275,6 +275,30 @@ If SESSION is not specified, default to current session."
   :parent easi-base-map
   "w" #'easi-view-result)
 
+(defun easi-kill-buffer-manage-sessions ()
+  "For use in `kill-buffer-hook'.
+
+Get the current buffer, and remove it from all lists in the
+current session. If it was the last buffer in that session, then
+call `easi-quit-session', passing the session."
+  (let* ((session (easi--get-current-session))
+	 (buffer (current-buffer))
+	 (new-results-buffers (delq buffer (easi-session-state-results-buffers session)))
+	 (new-result-buffers (delq buffer (easi-session-state-result-buffers session))))
+    ;; remove buffer from session
+    (setf (easi-session-state-results-buffers session)
+	  new-results-buffers)
+    (setf (easi-session-state-result-buffers session)
+	  new-result-buffers)
+    (setf (alist-get
+	   buffer
+	   (easi-session-state-results-buffer-presenters session)
+	   nil 'remove)
+	  nil)
+    ;; If session now empty, delete it
+    (unless (or new-results-buffers new-result-buffers)
+      (easi-quit-session session))))
+
 ;; ;; TODO Enforce minor mode conventions (see info node (elisp)Minor
 ;; ;; Mode Conventions)
 (define-minor-mode easi-results-mode
