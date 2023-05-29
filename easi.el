@@ -307,7 +307,9 @@ call `easi-quit-session', passing the session."
 Turned on automatically in EASI results buffers. This mode exists
 to ensure consistency of various features between different
 results presenters, like rerunning queries and switching between
-different presenters.")
+different presenters."
+  :interactive nil
+  (add-hook 'kill-buffer-hook 'easi-kill-buffer-manage-sessions nil 'local))
 
 (defun easi--print-results (session)
   "Present SESSION's results in current buffers.
