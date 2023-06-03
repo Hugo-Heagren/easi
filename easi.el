@@ -226,12 +226,8 @@ string nor a function, return nil."
 (defun easi-quit ()
   "Quit current Easi buffer."
   (interactive nil easi-results-mode easi-result-mode)
-  (let ((buffer (current-buffer))
-	(session (easi--get-current-session)))
-    (if (or (memq buffer (easi-session-state-result-buffers session))
-	    (memq buffer (easi-session-state-results-buffers session)))
-	(kill-buffer buffer)
-      (user-error "Not in an Easi buffer"))))
+  (when (easi--get-current-session)
+    (kill-buffer (current-buffer))))
 
 (defun easi-quit-session (&optional session)
   "Kill Easi session SESSION.
