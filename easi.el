@@ -351,13 +351,21 @@ each function in the \"hook\" slot."
 ;;;;; (Current) Result
 
 (defun easi-view-results ()
-  "Select window of `easi-results-buffer'."
+  "Select window of current results."
   (interactive)
-  (if easi-results-buffer
-      (if-let ((window (get-buffer-window easi-results-buffer)))
-	  (select-window window)
-	(error "Results buffer not displayed in a window"))
-    (error "No results buffer")))
+  (let* ((session (easi--get-current-session))
+	 (buf-ls (easi-session-state-results-buffers session))
+	 (buf1 (car buf-ls))
+	 (buf (cond
+	       ((null buf1) (error "No results buffer(s)"))
+	       ((cdr buf-ls)
+		(read-buffer
+		 "Results buffer: " nil 'require-match
+		 (lambda (buffer) (memq (cdr buffer) buf-ls))))
+	       (t buf1))))
+    (if-let ((window (get-buffer-window buf)))
+	(select-window window)
+      (error "Results buffer not displayed in a window"))))
 
 (defvar-keymap easi-result-mode-map
   :parent easi-base-map
