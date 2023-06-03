@@ -377,6 +377,11 @@ different presenters."
 
 (defun easi--present-result (result session &rest slots)
   "(maybe) Display RESULT in a buffer in appropriate way.
+
+RESULT is a result object to display.
+
+
+
 Use `easi-get-result-presenters' to get a list of result
 presenters compatible with RESULT, and treat the first one as
 default. If that is nil, then bury any current result
@@ -393,23 +398,12 @@ return nil. If non-nil, then:
   special case, if slot is `hook', call each element with no args.
 - return the buffer
 
-This function assumes it is called from a buffer where
-`easi-current-query' is non-nil (i.e. a results buffer, or a
-previously setup result buffer). Getting this value is the first
-thing the function does, so you need not worry about retaining it
-in later operations.
-
 SESSION is the current easi session state object.
 TODO Rewrite docs!"
-  (let* (;; Resolve presenter as symbol
-	 ;; FIXME This is a really ugly and should be altered.
-	 (presenter
-	  (cl-loop with pres = (car (easi-get-result-presenters
-				     (easi-result-retrieve-search-engine result)))
-		   ;; Checking presenter is non-nil stops loop hanging
-		   while (and pres (symbolp pres))
-		   do (setq pres (symbol-value pres))
-		   finally return pres))
+  (let* ((presenter
+	  (easi-utils-resolve-symbol
+	   (car (easi-get-result-presenters
+		 (easi-result-retrieve-search-engine result)))))
 	 (result-buffer
 	  ;; Reuse existing buffer if it exists
 	   (or
