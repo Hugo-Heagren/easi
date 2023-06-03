@@ -257,13 +257,21 @@ If SESSION is not specified, default to current session."
 ;;;;; Results
 
 (defun easi-view-result ()
-  "Select window of `easi-result-buffer'."
+  "Select window of current result."
   (interactive)
-  (if easi-result-buffer
-      (if-let ((window (get-buffer-window easi-result-buffer)))
-	  (select-window window)
-	(error "Result buffer not displayed in a window"))
-    (error "No result buffer")))
+  (let* ((session (easi--get-current-session))
+	 (buf-ls (easi-session-state-result-buffers session))
+	 (buf1 (car buf-ls))
+	 (buf (cond
+	       ((null buf1) (error "No result buffer(s)"))
+	       ((cdr buf-ls)
+		(read-buffer
+		 "Result buffer: " nil 'require-match
+		 (lambda (buffer) (memq (cdr buffer) buf-ls))))
+	       (t buf1))))
+    (if-let ((window (get-buffer-window buf)))
+	(select-window window)
+      (error "Result buffer not displayed in a window"))))
 
 (defvar-keymap easi-results-mode-map
   :parent easi-base-map
