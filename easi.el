@@ -31,6 +31,7 @@
 (require 'easi-result)
 (require 'easi-presenter)
 (require 'easi-sort)
+(require 'easi-utils)
 
 ;;;; Customizables
 
@@ -464,9 +465,9 @@ TODO Rewrite docs!"
 
 (defun easi--update-result ()
   "Update Easi's result buffer to display the current result."
-  (let ((result (with-current-buffer easi-results-buffer
-		  (easi--get-current-result))))
-    (easi--present-result result 'field-printer)))
+  (let* ((session (easi--get-current-session))
+	 (result (easi--get-current-result session)))
+    (easi--present-result result session 'field-printer)))
 
 ;;;; Search functions and entry points
 
@@ -572,7 +573,8 @@ differently)."
     (easi--print-results session)
     (easi-results-mode)
     (easi--present-result
-     (easi--get-current-result) session
+     (easi--get-current-result session)
+     session
      'before 'field-printer 'after 'hook)))
 
 ;;;###autoload
