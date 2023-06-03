@@ -378,28 +378,26 @@ different presenters."
 (defun easi--present-result (result session &rest slots)
   "(maybe) Display RESULT in a buffer in appropriate way.
 
-RESULT is a result object to display.
-
-
+RESULT is a result object to display. SESSION is the current easi
+session state object.
 
 Use `easi-get-result-presenters' to get a list of result
 presenters compatible with RESULT, and treat the first one as
-default. If that is nil, then bury any current result
-buffer (`easi-result-buffer') with `quit-restore-window' and
-return nil. If non-nil, then:
-- get a result buffer (either `easi-result-buffer' or a new one, with
-  `easi--buffer-from-default')
-- switch to result buffer
+default.
+
+If that is nil, then bury any current result buffer with
+`quit-restore-window' and return nil. If non-nil, then:
+- get a result buffer (reuse the current buffer if it's a result
+  buffer in SESSION, otherwise use the first buffer in session,
+  otherwise create a new buffer with `easi--buffer-from-default')
+- switch to result buffer where necessary
 - For each one of SLOTS, get the value of that slot in the presenter,
   and map over it, calling each element as a function, passing RESULT
   and the buffer as arguments. SLOTS are symbols, the names of slots
   in a `easi-result-presenter' object. The only slots which make sense
   for this function are `before', `field-printer' and `after'. As a
   special case, if slot is `hook', call each element with no args.
-- return the buffer
-
-SESSION is the current easi session state object.
-TODO Rewrite docs!"
+ - return the buffer (or nil if nothing was presented)."
   (let* ((presenter
 	  (easi-utils-resolve-symbol
 	   (car (easi-get-result-presenters
