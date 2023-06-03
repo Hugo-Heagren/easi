@@ -199,9 +199,6 @@ If a session is created, it is added to `easi-session-list'."
 
 ;;;; Results user interface
 
-(defvar-local easi-results-buffer nil
-  "Buffer displaying collection of EASI results.")
-
 (defvar-local easi-result-buffer nil
   "Buffer displaying current EASI result.")
 
