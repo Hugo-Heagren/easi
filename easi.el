@@ -334,14 +334,17 @@ each function in the \"hook\" slot."
      (easi-results-presenter-after presenter))
     (mapcan #'funcall (easi-results-presenter-hook presenter))))
 
-(defun easi--get-current-result ()
-  "Return the result at point."
-  (cl-labels ((get-getter (presenter)
-		(if (symbolp presenter)
-		    (get-getter (symbol-value presenter))
-		  (easi-results-presenter-current-result-getter presenter))))
-    (funcall (get-getter (easi--session-state-buffer-presenter
-			  (easi--get-current-session))))))
+(defun easi--get-current-result (session)
+  "Return the result at point in SESSION."
+  (let ((buf-list (easi-session-state-results-buffers session)))
+    (if (memq (current-buffer) buf-list)
+	(funcall (easi-results-presenter-current-result-getter
+		  (easi-utils-resolve-symbol
+		   (easi--session-state-buffer-presenter session))))
+      (with-current-buffer (car buf-list)
+	(funcall (easi-results-presenter-current-result-getter
+		  (easi-utils-resolve-symbol
+		   (easi--session-state-buffer-presenter session))))))))
 
 ;;;;; (Current) Result
 
