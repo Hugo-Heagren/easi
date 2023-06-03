@@ -205,9 +205,6 @@ If a session is created, it is added to `easi-session-list'."
 (defvar-local easi-result-buffer nil
   "Buffer displaying current EASI result.")
 
-(defvar easi--saved-window-config nil
-  "Stores the window configuration when Easi is called.")
-
 (defun easi--buffer-from-default (default session)
   "Get an appropriate buffer given DEFAULT.
 
