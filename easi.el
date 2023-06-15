@@ -170,7 +170,7 @@ Used as a default NUMBER argument in functions such as
 (defun easi--session-state-buffer-presenter (session)
   "Get results presenter for current buffer in SESSION."
   (alist-get (current-buffer)
-	     (easi-session-state-results-buffer-presenters session)))
+	     (easi-session-state-buffer-presenters session)))
 
 (defvar easi-session-list nil
   "List of easi sessions. Each is an `easi-session-state'.")
@@ -288,7 +288,7 @@ call `easi-quit-session', passing the session."
 	  new-result-buffers)
     (setf (alist-get
 	   buffer
-	   (easi-session-state-results-buffer-presenters session)
+	   (easi-session-state-buffer-presenters session)
 	   nil 'remove)
 	  nil)
     ;; If session now empty, delete it
@@ -551,7 +551,7 @@ differently)."
     (setf (easi-session-state-query session) (easi-session-state-query session))
     (cl-pushnew results-buffer (easi-session-state-results-buffers session))
     (setf (alist-get results-buffer
-		     (easi-session-state-results-buffer-presenters
+		     (easi-session-state-buffer-presenters
 		      session))
 	  results-presenter)
     ;; TODO This might have to move, so that I can run easi-search
