@@ -456,7 +456,7 @@ If that is nil, then bury any current result buffer with
   "Update Easi's result buffer to display the current result."
   (let* ((session (easi--get-current-session))
 	 (result (easi--get-current-result session)))
-    (easi--present-result result session 'field-printer)))
+    (easi--present-result result session 'printer)))
 
 ;;;; Search functions and entry points
 
