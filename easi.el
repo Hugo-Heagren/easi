@@ -324,6 +324,23 @@ each function in the \"hook\" slot."
 	(mapc (lambda (fun) (funcall fun results buffer)) slot-val))
       (mapc #'funcall hook))))
 
+(defun easi--print-result (result session slots)
+  "Print RESULT in current buffer.
+
+Get presenter in SESSION for current buffer with
+`easi--session-state-buffer-presenter'. Then call each of the
+functions in each slot in SLOTS, passing RESULT and the current
+buffer to each. As a special case, no "
+  (let ((presenter (easi-utils-resolve-symbol
+		    (easi--session-state-buffer-presenter session)))
+	(buffer (current-buffer)))
+    (dolist (slot slots)
+      (if (eq slot 'hook)
+	  (mapc #'funcall (slot-value presenter slot))
+	(mapc
+	 (lambda (fun) (funcall fun result buffer))
+	 (slot-value presenter slot))))))
+
 (defun easi--get-current-result (session)
   "Return the result at point in SESSION."
   (let ((buf-list (easi-session-state-results-buffers session)))
