@@ -319,28 +319,22 @@ each function in the \"hook\" slot."
 	(presenter (easi-utils-resolve-symbol
 		    (easi--session-state-buffer-presenter session)))
 	(buffer (current-buffer)))
-    (mapcan
-     (lambda (fun) (funcall fun results buffer))
-     (easi-results-presenter-before presenter))
-    (mapcan
-     (lambda (fun) (funcall fun results buffer))
-     (easi-results-presenter-result-printer presenter))
-    (mapcan
-     (lambda (fun) (funcall fun results buffer))
-     (easi-results-presenter-after presenter))
-    (mapcan #'funcall (easi-results-presenter-hook presenter))))
+    (with-slots (before printer after hook) presenter
+      (dolist (slot-val `(,before ,printer ,after))
+	(mapc (lambda (fun) (funcall fun results buffer)) slot-val))
+      (mapc #'funcall hook))))
 
 (defun easi--get-current-result (session)
   "Return the result at point in SESSION."
   (let ((buf-list (easi-session-state-results-buffers session)))
     (if (memq (current-buffer) buf-list)
-	(funcall (easi-results-presenter-current-result-getter
-		  (easi-utils-resolve-symbol
-		   (easi--session-state-buffer-presenter session))))
+	(funcall (slot-value (easi-utils-resolve-symbol
+			(easi--session-state-buffer-presenter session))
+		       'current-getter))
       (with-current-buffer (car buf-list)
-	(funcall (easi-results-presenter-current-result-getter
-		  (easi-utils-resolve-symbol
-		   (easi--session-state-buffer-presenter session))))))))
+	(funcall (slot-value (easi-utils-resolve-symbol
+			(easi--session-state-buffer-presenter session))
+		       'current-getter))))))
 
 ;;;;; (Current) Result
 
