@@ -307,38 +307,27 @@ different presenters."
   :interactive nil
   (add-hook 'kill-buffer-hook 'easi-kill-buffer-manage-sessions nil 'local))
 
-(defun easi--print-results (session)
-  "Present SESSION's results in current buffers.
+(cl-defun easi--print (session &optional (printable (easi-session-state-results session))
+			       (slots '(before printer after hook)))
+  "Print PRINTABLE in current buffer.
+
+PRINTABLE is expected to be either a single result or a list of
+results. The relevant presenter should be prepared to handle
+this. It defaults to the list of result in SESSION.
 
 Get presenter for current buffer with
 `easi--session-state-buffer-presenter'. Then call each of the
-functions in the \"before\", then \"result-printer\", then
-\"after\" slots, passing RESULT and BUFFER to each. Finally call
-each function in the \"hook\" slot."
-  (let ((results (easi-session-state-results session))
-	(presenter (easi-utils-resolve-symbol
-		    (easi--session-state-buffer-presenter session)))
-	(buffer (current-buffer)))
-    (with-slots (before printer after hook) presenter
-      (dolist (slot-val `(,before ,printer ,after))
-	(mapc (lambda (fun) (funcall fun results buffer)) slot-val))
-      (mapc #'funcall hook))))
-
-(defun easi--print-result (result session slots)
-  "Print RESULT in current buffer.
-
-Get presenter in SESSION for current buffer with
-`easi--session-state-buffer-presenter'. Then call each of the
-functions in each slot in SLOTS, passing RESULT and the current
-buffer to each. As a special case, no "
+functions in each of SLOTS passing PRINTABLE and the current
+buffer to each. As a special case, no args are passed to the
+functions in the \"hook\" slot."
   (let ((presenter (easi-utils-resolve-symbol
 		    (easi--session-state-buffer-presenter session)))
 	(buffer (current-buffer)))
     (dolist (slot slots)
       (if (eq slot 'hook)
-	  (mapc #'funcall (slot-value presenter slot))
+	  (mapc #'funcall (slot-value presenter 'hook))
 	(mapc
-	 (lambda (fun) (funcall fun result buffer))
+	 (lambda (fun) (funcall fun printable buffer))
 	 (slot-value presenter slot))))))
 
 (defun easi--get-current-result (session)
@@ -403,7 +392,7 @@ If that is nil, then bury any current result buffer with
   otherwise create a new buffer with `easi--buffer-from-default').
 - set new state in SESSION (e.g. new result buffer)
 - switch to result buffer where necessary
-- call `easi--print-result', passing RESULT SESSION and SLOTS
+- call `easi--print', passing RESULT SESSION and SLOTS
 - return the buffer (or nil if nothing was presented)."
   (let* ((presenter
 	  (easi-utils-resolve-symbol
@@ -439,7 +428,7 @@ If that is nil, then bury any current result buffer with
     (if presenter
 	;; Non-nil presenter -- present result accordingly
 	(with-current-buffer result-buffer
-	  (easi--print-result result session slots)
+	  (easi--print session result slots)
 	  (easi-result-mode)
 	  ;; In `with-current-buffer' to stay inside first `if' arg
 	  (display-buffer result-buffer
@@ -567,12 +556,12 @@ differently)."
     ;; TODO Hard coding this is going to make it difficult to do
     ;; different types of rerunning...
     (switch-to-buffer results-buffer)
-    (easi--print-results session)
+    (easi--print session)
     (easi-results-mode)
     (easi--present-result
      (easi--get-current-result session)
      session
-     'before 'printer 'after 'hook)))
+     '(before printer after hook))))
 
 ;;;###autoload
 (defun easi-all (searchable)
