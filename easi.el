@@ -564,7 +564,7 @@ differently)."
     (easi--present-result
      (easi--get-current-result session)
      session
-     'before 'field-printer 'after 'hook)))
+     'before 'printer 'after 'hook)))
 
 ;;;###autoload
 (defun easi-all (searchable)
