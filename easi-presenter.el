@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(require 'cl-lib)
+(require 'eieio)
 
 ;;;; Customizables
 
@@ -45,42 +45,18 @@ machine. Presenters which are only compatible with some engines
 should be set in the \"result-presenters\" slot of those
 engines.")
 
-;;;; Presenter types
+;;;; Presenter type
 
-;; TODO These need to be of the same type, or class, or whatever, so
-;; that it is possible to define a results printer which is also a
-;; result printer (this will enable e.g. three-column file layouts)
-;;;###autoload
-(cl-defstruct (easi-results-presenter
-	       (:constructor easi-results-presenter-create))
-  name key
-  ;; ALL the following are hooks, passed two args: the results list, a
-  ;; buffer to display results in (if they want).
-  before ;; Only run once
-  result-printer
-  after ;; Only run once
-
-  ;; For getting current result. Should return a result object (i.e.
-  ;; not necessarily a string)
-  current-result-getter
-  hook)
-
-;;;###autoload
-(cl-defstruct (easi-result-presenter
-	       (:constructor easi-result-presenter-create))
-  name key
-  ;; ALL the following are hooks, passed two args: the results list, a
-  ;; buffer to display results in (if they want).
-  before ;; Only run once
-  field-printer
-  after ;; Only run once
-
-  ;; For getting current field. Should return a result object (i.e.
-  ;; not necessarily a string)
-  current-field-getter
-  ;; ACTION arg to pass to `display-buffer'
-  display-action
-  hook)
+(defclass easi-presenter ()
+  ((name :initarg :name :initform nil)
+   (key :initarg :key :initform nil)
+   (display-action :initarg :display-action :initform nil)
+   (before :initarg :before :initform nil)
+   (printer :initarg :printer :initform nil)
+   (after :initarg :after :initform nil)
+   (current-getter :initarg :current-getter :initform nil)
+   (hook :initarg :hook :initform nil))
+  "Base class for Easi presenters.")
 
 (provide 'easi-presenter)
 ;;; easi-presenter.el ends here
