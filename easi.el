@@ -387,13 +387,16 @@ default.
 
 If that is nil, then bury any current result buffer with
 `quit-restore-window' and return nil. If non-nil, then:
-- get a result buffer (reuse the current buffer if it's a result
-  buffer in SESSION, otherwise use the first buffer in session,
-  otherwise create a new buffer with `easi--buffer-from-default').
-- set new state in SESSION (e.g. new result buffer)
-- switch to result buffer where necessary
-- call `easi--print', passing RESULT SESSION and SLOTS
-- return the buffer (or nil if nothing was presented)."
+- get a result buffer (reuse the current buffer if it's in
+  SESSION's \"result-buffers\" slot, otherwise use the first
+  buffer in that list, otherwise create a new buffer with
+  `easi--buffer-from-default').
+- set new state in SESSION (e.g. new result buffer).
+- switch to result buffer where necessary.
+- call `easi--print', passing SESSION, RESULT and SLOTS. This actually
+  prints the result.
+- turn on `easi-result-mode' in the result buffer.
+- return the result buffer or nil if nothing was presented."
   (let* ((presenter
 	  (easi-utils-resolve-symbol
 	   (car (easi-get-result-presenters
@@ -489,24 +492,26 @@ RAW-RESULTS is an unsorted list of result objects which Easi can
 handle. It is sorted using the result of
 `easi--sort-get-searchable-sorter' (called on the searchables in
 SESSION). The results are then printed using an appropriate
-presenter. If all the results are from search engines which
-specify particular presenters, then the first presenter to
-specified by all of those searchables is used. Otherwise the
-first in `easi-default-results-presenters' is used.
+presenter.
 
-If the current buffer appears in the \"results-buffers\" slot of
-SESSION, use it. If not, use the first buffer in that list. If
-the list is empty, create a new buffer with
-`easi--buffer-from-default', passing
-`easi-results-default-buffer-name' and SESSION.
-`easi-results-mode' is always active in the results buffer.
+Use `easi-get-results-presenters' to get a list of result
+presenters compatible with RESULTS, and treat the first one as
+default.
 
-The currently selected result is (maybe) printed with to
-`easi--present-result'. `easi-result-mode' is always active in
-the result buffer.
+Then:
+- get a results buffer (reuse the current buffer if it's in
+  SESSION's \"results-buffers\" slot, otherwise use the first
+  buffer in that list, otherwise create a new buffer with
+  `easi--buffer-from-default').
+- set new state in SESSION (e.g. new results buffer).
+- switch to results buffer where necessary.
+- call `easi--print', passing SESSION. This actually prints the
+  results.
+- turn on `easi-results-mode' in the results buffer.
+- (maybe) present current result `easi--present-result'.
 
-This function should only be run for its side-effects -- do not
-rely on its return value (this is because what it returns may
+N.B. This function should only be run for its side-effects -- do
+not rely on its return value (this is because what it returns may
 change during development, and subsequent versions behave
 differently)."
   (let* ((results (easi-sort-results
