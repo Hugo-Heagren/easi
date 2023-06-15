@@ -400,22 +400,18 @@ If that is nil, then bury any current result buffer with
 `quit-restore-window' and return nil. If non-nil, then:
 - get a result buffer (reuse the current buffer if it's a result
   buffer in SESSION, otherwise use the first buffer in session,
-  otherwise create a new buffer with `easi--buffer-from-default')
+  otherwise create a new buffer with `easi--buffer-from-default').
+- set new state in SESSION (e.g. new result buffer)
 - switch to result buffer where necessary
-- For each one of SLOTS, get the value of that slot in the presenter,
-  and map over it, calling each element as a function, passing RESULT
-  and the buffer as arguments. SLOTS are symbols, the names of slots
-  in a `easi-result-presenter' object. The only slots which make sense
-  for this function are `before', `field-printer' and `after'. As a
-  special case, if slot is `hook', call each element with no args.
- - return the buffer (or nil if nothing was presented)."
+- call `easi--print-result', passing RESULT SESSION and SLOTS
+- return the buffer (or nil if nothing was presented)."
   (let* ((presenter
 	  (easi-utils-resolve-symbol
 	   (car (easi-get-result-presenters
 		 (easi-result-retrieve-search-engine result)))))
 	 (result-buffer
 	  ;; Reuse existing buffer if it exists
-	   (or
+	  (or
 	   ;; Is the current results buffer in the session's list? (if
 	   ;; so, use it)
 	   (and (memq (current-buffer)
@@ -436,24 +432,19 @@ If that is nil, then bury any current result buffer with
 	    easi-result-default-buffer-name session))))
     (cl-pushnew result-buffer
 		(easi-session-state-result-buffers session))
+    (setf (alist-get result-buffer
+		     (easi-session-state-buffer-presenters
+		      session))
+	  presenter)
     (if presenter
 	;; Non-nil presenter -- present result accordingly
 	(with-current-buffer result-buffer
-	  (dolist (slot slots)
-	    (let ((accessor
-		   (intern
-		    (concat "easi-result-presenter-"
-			    (symbol-name slot)))))
-	      (if (eq slot 'hook)
-		  (mapcan #'funcall (funcall accessor presenter))
-		(mapcan
-		 (lambda (fun) (funcall fun result result-buffer))
-		 (funcall accessor presenter)))))
+	  (easi--print-result result session slots)
 	  (easi-result-mode)
+	  ;; In `with-current-buffer' to stay inside first `if' arg
 	  (display-buffer result-buffer
-			  (or (easi-result-presenter-display-action presenter)
+			  (or (slot-value presenter 'display-action)
 			      easi-result-default-display-action))
-	  ;; Return result-buffer
 	  result-buffer)
       ;; nil presenter -- don't present result, but do hide any
       ;; previously-presented results
