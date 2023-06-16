@@ -100,15 +100,15 @@ Set `tabulated-list-entries' on the basis of RESULT, then call
 
 ;;;###autoload
 (defvar easi-result-list-presenter
-  (easi-result-presenter-create
+  (easi-presenter
    :name "Tabulated list result presenter"
    :key "t"
    :before '(easi-result-list--mode-setup)
-   :field-printer '(easi-result-list--print)
-   :current-field-getter #'tabulated-list-get-id
+   :printer '(easi-result-list--print)
+   :current-getter #'tabulated-list-get-id
    :display-action '(display-buffer-at-bottom
 		     . ((inhibit-same-window . t) ;; Don't reuse same window
-			(window-height . 20)))) ;; 20 lines high
+			(window-height . 20))))	  ;; 20 lines high
   "Result presenter based on `tabulated-list-mode'.")
 
 (provide 'easi-result-list-presenter)
