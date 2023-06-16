@@ -375,11 +375,10 @@ different presenters."
   :interactive nil
   (add-hook 'kill-buffer-hook 'easi-kill-buffer-manage-sessions nil 'local))
 
-(defun easi--present-result (session result slots)
-  "(maybe) Display RESULT in a buffer in appropriate way.
+(defun easi--present-result (session slots)
+  "(maybe) Display current result in a buffer in appropriate way.
 
-RESULT is a result object to display. SESSION is the current easi
-session state object.
+SESSION is the current Easi session state object.
 
 Use `easi-get-result-presenters' to get a list of result
 presenters compatible with RESULT, and treat the first one as
@@ -397,7 +396,8 @@ If that is nil, then bury any current result buffer with
   prints the result.
 - turn on `easi-result-mode' in the result buffer.
 - return the result buffer or nil if nothing was presented."
-  (let* ((presenter
+  (let* ((result (easi--get-current-result session))
+	 (presenter
 	  (easi-utils-resolve-symbol
 	   (car (easi-get-result-presenters
 		 (easi-result-retrieve-search-engine result)))))
@@ -454,9 +454,8 @@ If that is nil, then bury any current result buffer with
 
 (defun easi--update-result ()
   "Update Easi's result buffer to display the current result."
-  (let* ((session (easi--get-current-session))
-	 (result (easi--get-current-result session)))
-    (easi--present-result session result '(printer))))
+  (let* ((session (easi--get-current-session)))
+    (easi--present-result session '(printer))))
 
 ;;;; Search functions and entry points
 
@@ -565,7 +564,6 @@ differently)."
     (easi-results-mode)
     (easi--present-result
      session
-     (easi--get-current-result session)
      '(before printer after hook))))
 
 ;;;###autoload
