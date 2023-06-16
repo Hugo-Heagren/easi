@@ -142,12 +142,12 @@ able to print."
 
 ;;;###autoload
 (defvar easi-results-list-presenter
-  (easi-results-presenter-create
+  (easi-presenter
    :name "Tabulated list presenter"
    :key "l"
    :before '(easi-results-list--mode-setup)
-   :result-printer '(easi-results-list--print)
-   :current-result-getter #'tabulated-list-get-id)
+   :printer '(easi-results-list--print)
+   :current-getter #'tabulated-list-get-id)
   "Results presenter based on `tabulated-list-mode'.")
 
 (provide 'easi-results-list-presenter)
