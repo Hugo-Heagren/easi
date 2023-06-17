@@ -598,8 +598,11 @@ controlled by `easi-default-non-queryable-skip'."
 		 `(,searchable ,query)))
   ;; TODO Is there a place to get limiting `number' arguments for
   ;; these functions?
-  (let ((session (easi--get-create-current-session))
-	(raw-results (easi-searchable-results searchable query)))
+  (let* ((session (easi--get-create-current-session))
+	 (raw-results (easi-searchable-results
+		       searchable
+		       :query query
+		       :page (easi-session-state-page session))))
     (setf (easi-session-state-query session) query)
     (setf (easi-session-state-searchables session) searchable)
     (easi--present-results session raw-results)))
