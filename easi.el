@@ -458,6 +458,33 @@ If that is nil, then bury any current result buffer with
   (let* ((session (easi--get-current-session)))
     (easi--present-result session '(printer))))
 
+;;;;; Pagination
+
+(cl-defun easi-get-next-page (&optional (num 1))
+  "Print NUM next pages of results from session's searchables.
+
+NUM defaults to 1."
+  (interactive "p" easi-results-mode)
+  (when-let* ((session (easi--get-current-session))
+	      (searchable (easi-session-state-searchables session))
+	      (query (easi-session-state-query session))
+	      (page (easi-session-state-page session)))
+    (dotimes (_ num)
+      (let* ((new-raw-results
+	      (easi-searchable-results
+	       searchable :query query :page (1+ page)))
+	     (_ (unless new-raw-results
+		  (error "No next page of results")))
+	     (new-results
+	      (easi-sort-results
+	       (easi--sort-get-searchable-sorter searchable)
+	       new-raw-results query))
+	     (old-results (easi-session-state-results session)))
+	(setf (easi-session-state-results session)
+	      `(,@old-results ,@new-results))
+	(easi--print session :slots '(printer))
+	(cl-incf (easi-session-state-page session))))))
+
 ;;;; Search functions and entry points
 
 (defun easi--prompt-for-searchable ()
