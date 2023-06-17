@@ -578,8 +578,9 @@ Results will be retrieved using the contents of the
 SEARCHABLE. If this slot is nil, behaviour is controlled by
 `easi-default-non-all-results-skip'."
   (interactive `(,(easi--prompt-for-searchable)))
-  (let ((session (easi--get-create-current-session))
-	(raw-results (easi-searchable-results searchable)))
+  (let* ((session (easi--get-create-current-session))
+	 (raw-results (easi-searchable-results
+		       searchable :page (easi-session-state-page session))))
     (setf (easi-session-state-searchables session) searchable)
     (easi--present-results session raw-results)))
 
