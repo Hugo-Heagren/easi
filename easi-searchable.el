@@ -163,7 +163,8 @@ then the call is (easi-structured-object-get-field PROC RAW).")
 
 (cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine) &optional number)
   "TODO DOCS"
-  (when-let ((getter (easi-search-engine-suggestions-getter searchable))
+  (when-let ((_ (not (string-empty-p query)))
+	     (getter (easi-search-engine-suggestions-getter searchable))
 	     (raw-results
 	      (easi-get-suggestions query getter
 				    (or number
