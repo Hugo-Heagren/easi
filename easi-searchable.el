@@ -141,7 +141,7 @@ intended to be post-processed)."
 	  (url-encode-url
 	   (format-spec suggestions-getter
 			`((?s . ,query)
-		          (?n . number)))))
+		          (?n . ,number)))))
 	 (request-url (url-generic-parse-url request-string))
 	 (response-buffer (url-retrieve-synchronously
 			   request-url 'silent 'inhibit-cookies)))
