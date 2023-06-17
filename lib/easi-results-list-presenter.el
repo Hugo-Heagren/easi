@@ -123,7 +123,7 @@ able to print."
 				      ""))
 		       easi-results-list-fields)))))
 
-(defun easi-results-list--mode-setup (results _buffer)
+(defun easi-results-list--mode-setup (_results _buffer)
   "Initialisation function for `easi-results-list-mode'.
 
 - Turn on `easi-results-list-mode' in the current buffer
@@ -132,12 +132,12 @@ able to print."
   `tabulated-list-entries' to the return value
 - evaluate `tabulated-list-init-header'"
   (easi-results-list-mode)
-  (setq tabulated-list-entries
-	(easi-results-list--results-to-tabulated-list results))
   (tabulated-list-init-header))
 
-(defun easi-results-list--print (_results _buffer)
+(defun easi-results-list--print (results _buffer)
   "Call `tabulated-list-print' with non-nil REMEMBER-POS."
+  (setq tabulated-list-entries
+	(easi-results-list--results-to-tabulated-list results))
   (tabulated-list-print 'remember-pos))
 
 ;;;###autoload
