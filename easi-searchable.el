@@ -241,7 +241,7 @@ list of objects, where no function exists to return them all)."
 
 ;; TODO Some more interesting implementations of this ^
 
-(cl-defgeneric easi-searchable-results (searchable &optional query number)
+(cl-defgeneric easi-searchable-results (searchable &key query number page)
   "Get a list of results from querying SEARCHABLE with QUERY.
 
 If NUMBER is non-nil, limit the number of results from each
@@ -250,7 +250,7 @@ engine in SEARCHABLE to NUMBER.")
 (defvar easi-default-non-all-results-skip)
 (defvar easi-default-non-queryable-skip)
 
-(cl-defmethod easi-searchable-results ((searchable easi-search-engine) &optional query number)
+(cl-defmethod easi-searchable-results ((searchable easi-search-engine) &key query number page)
   "Get results from "
   (when-let ((getter
 	      ;; Whether query is non-nil is an indication of whether
@@ -268,24 +268,33 @@ engine in SEARCHABLE to NUMBER.")
 	     (raw-results
 	      (if query
 		  (easi-query-results query getter
+				      :number
 				      (or number
 					  (easi-search-engine-max-results searchable)
-					  easi-default-max-results))
+					  easi-default-max-results)
+				      :page page)
 		(easi-all-results getter))))
     (mapcar
      (apply-partially #'easi-utils-result-attach-search-engine searchable)
      (if-let (post-proc (easi-search-engine-results-post-processor searchable))
 	 (easi-structured-object-get-field post-proc raw-results)
        raw-results))))
-(cl-defmethod easi-searchable-results ((searchable easi-search-engine-group) &optional query number)
-  (mapcar (lambda (searchable) (easi-searchable-results searchable query number))
+(cl-defmethod easi-searchable-results ((searchable easi-search-engine-group) &key query number page)
+  (mapcar (lambda (searchable)
+	    (easi-searchable-results
+	     searchable :query query :number number :page page))
 	  (easi-search-engine-group-searchables searchable)))
-(cl-defmethod easi-searchable-results ((searchable cons) &optional query number)
+(cl-defmethod easi-searchable-results ((searchable cons) &key query number page)
   "SEARCHABLE is a list."
   (apply 'append
-   (mapcar (lambda (searchable) (easi-searchable-results searchable query number)) searchable)))
-(cl-defmethod easi-searchable-results ((searchable symbol) &optional query number)
-  (easi-searchable-results (symbol-value searchable) query number))
+	 (mapcar (lambda (searchable)
+		   (easi-searchable-results
+		    searchable :query query :number number :page page))
+		 searchable)))
+(cl-defmethod easi-searchable-results ((searchable symbol) &key query number page)
+  (easi-searchable-results
+   (symbol-value searchable)
+   :query query :number number :page page))
 
 ;;;; Getting presenters
 
