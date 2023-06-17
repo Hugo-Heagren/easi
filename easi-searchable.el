@@ -187,18 +187,21 @@ then the call is (easi-structured-object-get-field PROC RAW).")
 
 (defvar easi-default-max-results)
 
-(cl-defgeneric easi-query-results (query queryable-results-getter &optional number)
+(cl-defgeneric easi-query-results (query queryable-results-getter &key number page)
   "Get a list of by querying QUERYABLE-RESULTS-GETTER with QUERY.
 
 QUERY is always string. If NUMBER is non-nil, no more than NUMBER
 results should be returned.")
 
 ;; Simplest case
-(cl-defmethod easi-query-results (query (queryable-results-getter symbol) &optional number)
-  "QUERYABLE-RESULTS-GETTER is a function."
-  (funcall queryable-results-getter query number))
+(cl-defmethod easi-query-results (query (queryable-results-getter symbol) &key number page)
+  "QUERYABLE-RESULTS-GETTER is a function.
 
-(cl-defmethod easi-query-results (query (queryable-results-getter string) &optional number)
+Pass QUERY, NUMBER and PAGE to QUERYABLE-RESULTS-GETTER, in that
+order."
+  (funcall queryable-results-getter query number page))
+
+(cl-defmethod easi-query-results (query (queryable-results-getter string) &key number page)
   "QUERYABLE-RESULTS-GETTER is a string.
 
 Replace %s with QUERY, and %n with NUMBER in
@@ -209,7 +212,8 @@ intended to be post-processed)."
 	  (url-encode-url
 	   (format-spec queryable-results-getter
 			`((?s . ,query)
-		          (?n . ,number)))))
+		          (?n . ,number)
+			  (?p . ,page)))))
 	 (request-url (url-generic-parse-url request-string))
 	 (response-buffer (url-retrieve-synchronously
 		    request-url 'silent 'inhibit-cookies)))
