@@ -164,7 +164,8 @@ Used as a default NUMBER argument in functions such as
   window-config
   query searchables results
   results-buffers result-buffers
-  buffer-presenters)
+  buffer-presenters
+  (page 1))
 
 ;; TODO this should probably be a method, and be elsewhere?
 (defun easi--session-state-buffer-presenter (session)
