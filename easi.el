@@ -308,7 +308,7 @@ different presenters."
   :interactive nil
   (add-hook 'kill-buffer-hook 'easi-kill-buffer-manage-sessions nil 'local))
 
-(cl-defun easi--print (session &optional (printable (easi-session-state-results session))
+(cl-defun easi--print (session &key (printable (easi-session-state-results session))
 			       (slots '(before printer after hook)))
   "Print PRINTABLE in current buffer.
 
@@ -432,7 +432,7 @@ If that is nil, then bury any current result buffer with
     (if presenter
 	;; Non-nil presenter -- present result accordingly
 	(with-current-buffer result-buffer
-	  (easi--print session result slots)
+	  (easi--print session :printable result :slots slots)
 	  (easi-result-mode)
 	  ;; In `with-current-buffer' to stay inside first `if' arg
 	  (display-buffer result-buffer
