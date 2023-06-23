@@ -324,14 +324,14 @@ Delete duplicates before returning."
   (easi-searchable-results-presenters
    (easi-search-engine-group-searchables searchable)))
 
-(defun easi-get-results-presenters (searchables)
+(defun easi-get-results-presenters (searchable)
   "List all results presenters compatible with SEARCHABLES."
   (cl-delete-if
    #'null
    ;; TODO Do I want to use `cl-delete-duplicates' and test for cases
    ;; of an object and a symbol pointing at the object?
    (delete-dups
-    `(,@(easi-searchable-results-presenters searchables)
+    `(,@(easi-searchable-results-presenters searchable)
       ,@easi-default-results-presenters))))
 
 (cl-defgeneric easi-searchable-result-presenters (searchable)
@@ -360,12 +360,12 @@ Delete duplicates before returning."
   (easi-searchable-result-presenters
    (easi-search-engine-group-searchables searchable)))
 
-(defun easi-get-result-presenters (searchables)
+(defun easi-get-result-presenters (searchable)
   "List all result presenters compatible with SEARCHABLES."
    ;; TODO Do I want to use `cl-delete-duplicates' and test for cases
    ;; of an object and a symbol pointing at the object?
    (delete-dups
-    `(,@(easi-searchable-result-presenters searchables)
+    `(,@(easi-searchable-result-presenters searchable)
       ,@easi-default-result-presenters)))
 
 ;;;; Getting sorter list

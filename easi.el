@@ -661,8 +661,8 @@ passing `easi-current-searchables' as argument."
 ;;; Examples (not part of infrastructure) (to be eventually removed)
 
 ;; TODO This is awful (and should probably live somewhere else!)
-(defun easi--completing-read-multiple-searchables (searchables)
-  "Read multiple SEARCHABLES from `easi-searchables'."
+(defun easi--completing-read-multiple-searchables (searchable)
+  "Read multiple SEARCHABLE from `easi-searchables'."
   (cl-labels ((get-name (searchable)
 		;; TODO Surely there is a more elegant way to do this!! (generics?)
 		(pcase (type-of searchable)
@@ -673,7 +673,7 @@ passing `easi-current-searchables' as argument."
 	      (name-prop (searchable)
 		(propertize (get-name searchable)
 			    'easi-searchable searchable)))
-    (let* ((s-list (flatten-list searchables))
+    (let* ((s-list (flatten-list searchable))
 	   (name-s-alist (mapcar #'name-prop s-list))
 	   (minibuffer-allow-text-properties t)
 	   (selected
@@ -684,7 +684,7 @@ passing `easi-current-searchables' as argument."
        (lambda (str)
 	 (seq-find
 	  (lambda (searchable) (string= str (get-name searchable)))
-	  searchables))
+	  searchable))
        selected))))
 
 (provide 'easi)
