@@ -623,8 +623,6 @@ controlled by `easi-default-non-queryable-skip'."
   (interactive (let* ((searchable (easi--prompt-for-searchable))
 		      (query (easi--prompt-for-query searchable)))
 		 `(,searchable ,query)))
-  ;; TODO Is there a place to get limiting `number' arguments for
-  ;; these functions?
   (let* ((session (easi--get-create-current-session))
 	 (raw-results (easi-searchable-results
 		       searchable
