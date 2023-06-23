@@ -246,6 +246,7 @@ If SESSION is not specified, default to current session."
 (defvar-keymap easi-base-map
   ;; TODO Do I want different commands for changing just
   ;; query/engines?
+  "N" #'easi-get-next-page
   "r" #'easi-rerun-with-new-query
   "R" #'easi-rerun-with-new-engines
   "s" #'easi-search
