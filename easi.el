@@ -1,9 +1,12 @@
-;;; Easi.el --- the Emacs Advanced Searching Interface  -*- lexical-binding: t; -*-
+;;; easi.el --- The Emacs Advanced Searching Interface  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2022  Hugo Heagren
 
 ;; Author: Hugo Heagren <hugo@heagren.com>
 ;; Keywords:hypermedia, matching
+;; Version: 0.1.0
+;; URL: https://github.com/Hugo-Heagren/easi
+;; Package-Requires: ((emacs "27.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

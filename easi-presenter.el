@@ -35,7 +35,10 @@ These are assumed to be compatible with every searchable on the
 machine. Presenters which are only compatible with some engines
 should be set in the \"results-presenters\" slot of those
 engines."
-  :group 'easi)
+  :group 'easi
+  :type '(repeat (choice symbol
+			 (restricted-sexp
+			  :match-alternatives easi-presenter-p))))
 
 (defcustom easi-default-result-presenters nil
   "List of result presenters which are always available.
@@ -43,7 +46,11 @@ engines."
 These are assumed to be compatible with every searchable on the
 machine. Presenters which are only compatible with some engines
 should be set in the \"result-presenters\" slot of those
-engines.")
+engines."
+  :group 'easi
+  :type '(repeat (choice symbol
+			 (restricted-sexp
+			  :match-alternatives easi-presenter-p))))
 
 ;;;; Presenter type
 
