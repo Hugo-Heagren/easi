@@ -276,7 +276,7 @@ If SESSION is not specified, default to current session."
   :parent easi-base-map
   "w" #'easi-view-result)
 
-(defun easi-kill-buffer-manage-sessions ()
+(defun easi--kill-buffer-manage-sessions ()
   "For use in `kill-buffer-hook'.
 
 Get the current buffer, and remove it from all lists in the
@@ -310,7 +310,7 @@ to ensure consistency of various features between different
 results presenters, like rerunning queries and switching between
 different presenters."
   :interactive nil
-  (add-hook 'kill-buffer-hook 'easi-kill-buffer-manage-sessions nil 'local))
+  (add-hook 'kill-buffer-hook 'easi--kill-buffer-manage-sessions nil 'local))
 
 (cl-defun easi--print (session &key (printable (easi-session-state-results session))
 			       (slots '(before printer after hook)))
@@ -378,7 +378,7 @@ to ensure consistency of various features between different
 result presenters, like rerunning queries and switching between
 different presenters."
   :interactive nil
-  (add-hook 'kill-buffer-hook 'easi-kill-buffer-manage-sessions nil 'local))
+  (add-hook 'kill-buffer-hook 'easi--kill-buffer-manage-sessions nil 'local))
 
 (defun easi--present-result (session slots)
   "(maybe) Display current result in a buffer in appropriate way.
