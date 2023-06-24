@@ -525,7 +525,7 @@ handle. It is sorted using the result of
 SESSION). The results are then printed using an appropriate
 presenter.
 
-Use `easi-get-results-presenters' to get a list of result
+Use `easi--get-results-presenters' to get a list of result
 presenters compatible with RESULTS, and treat the first one as
 default.
 
@@ -575,7 +575,7 @@ differently)."
 	   ;; there are a different number of results)
 	   (easi--buffer-from-default
 	    easi-results-default-buffer-name session)))
-	 (results-presenter (car (easi-get-results-presenters
+	 (results-presenter (car (easi--get-results-presenters
 				  (easi-session-state-searchables session)))))
     ;; TODO Should I save windows earlier, at the initial session definition?
     (setf (easi-session-state-window-config session)
