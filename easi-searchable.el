@@ -52,7 +52,7 @@
    nil
    :documentation
    "Way of getting a list of suggestions. Must be a of a type for
-which `easi-get-suggestions' has a method.")
+which `easi--get-suggestions' has a method.")
   (suggestion-post-processor
    nil
    :documentation
@@ -120,7 +120,7 @@ makes more sense."))
 
 (defvar easi-default-max-suggestions)
 
-(cl-defgeneric easi-get-suggestions (query suggestions-getter &optional number)
+(cl-defgeneric easi--get-suggestions (query suggestions-getter &optional number)
   "Get a list of by querying SUGGESTIONS-GETTER with QUERY.
 
 QUERY is always string. If NUMBER is non-nil, no more than NUMBER
@@ -130,14 +130,14 @@ suggestions should be returned."
   )
 
 ;; Simplest case
-(cl-defmethod easi-get-suggestions (query (suggestions-getter symbol) &optional number)
+(cl-defmethod easi--get-suggestions (query (suggestions-getter symbol) &optional number)
   "SUGGESTIONS-GETTER is a function.
 
 Call SUGGESTIONS-GETTER with args QUERY NUMBER (even if NUMBER is
 not specified, then passed as nil)."
   (funcall suggestions-getter query number))
 
-(cl-defmethod easi-get-suggestions (query (suggestions-getter string) &optional number)
+(cl-defmethod easi--get-suggestions (query (suggestions-getter string) &optional number)
   "SUGGESTIONS-GETTER is a string.
 
 Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
@@ -169,18 +169,18 @@ the slot's value is PROC, and the unprocessed results are RAW,
 then the call is (easi-structured-object-get-field PROC RAW).")
 
 (cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine) &optional number)
-  "Get suggestions with `easi-get-suggestions' and maybe post-process.
+  "Get suggestions with `easi--get-suggestions' and maybe post-process.
 
 Get value of `suggestions-getter', then pass QUERY, the getter,
 and NUMBER (or `easi-default-max-suggestions' when NUMBER is nil)
-to `easi-get-suggestions'.
+to `easi--get-suggestions'.
 
 If SEARCHABLE has a non-nil \"suggestion-post-processor\" slot,
 pass the results through that too."
   (when-let (((not (string-empty-p query)))
 	     (getter (easi-search-engine-suggestions-getter searchable))
 	     (raw-results
-	      (easi-get-suggestions query getter
+	      (easi--get-suggestions query getter
 				    (or number
 					(easi-search-engine-max-results searchable)
 					easi-default-max-suggestions))))
