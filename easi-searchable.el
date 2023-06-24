@@ -30,7 +30,7 @@
 ;; - (and nothing else is a searchable)
 ;;
 ;; The API for searchables currently includes:
-;; `easi-searchable-suggestions' and `easi-searchable-results'.
+;; `easi--searchable-suggestions' and `easi-searchable-results'.
 
 ;;; Code:
 
@@ -156,7 +156,7 @@ intended to be post-processed)."
 
 ;; TODO Some more interesting implementations of this ^
 
-(cl-defgeneric easi-searchable-suggestions (query searchable &optional number)
+(cl-defgeneric easi--searchable-suggestions (query searchable &optional number)
   "Get a list of suggestions from querying SEARCHABLE with QUERY.
 
 If NUMBER is non-nil, limit the number of suggestions from each
@@ -168,7 +168,7 @@ will be applied to the suggestions before they are returned. If
 the slot's value is PROC, and the unprocessed results are RAW,
 then the call is (easi-structured-object-get-field PROC RAW).")
 
-(cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine) &optional number)
+(cl-defmethod easi--searchable-suggestions (query (searchable easi-search-engine) &optional number)
   "Get suggestions with `easi--get-suggestions' and maybe post-process.
 
 Get value of `suggestions-getter', then pass QUERY, the getter,
@@ -187,26 +187,26 @@ pass the results through that too."
     (if-let (post-proc (easi-search-engine-suggestion-post-processor searchable))
 	(easi-structured-object-get-field post-proc raw-results)
       raw-results)))
-(cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine-group) &optional number)
-  "Map `easi-searchable-suggestions' over searchables.
+(cl-defmethod easi--searchable-suggestions (query (searchable easi-search-engine-group) &optional number)
+  "Map `easi--searchable-suggestions' over searchables.
 
 Get \"searchables\" slot in SEARCHABLE, and map
-`easi-searchable-suggestions' over each one, passing QUERY, the
+`easi--searchable-suggestions' over each one, passing QUERY, the
 searchable and NUMBER in each case."
-  (mapcar (lambda (sch) (easi-searchable-suggestions query sch number))
+  (mapcar (lambda (sch) (easi--searchable-suggestions query sch number))
 	  (easi-search-engine-group-searchables searchable)))
-(cl-defmethod easi-searchable-suggestions (query (searchable cons) &optional number)
-  "Map `easi-searchable-suggestions' over SEARCHABLE.
+(cl-defmethod easi--searchable-suggestions (query (searchable cons) &optional number)
+  "Map `easi--searchable-suggestions' over SEARCHABLE.
 
-Flatten the list, and `mapcar' `easi-searchable-suggestions' over
+Flatten the list, and `mapcar' `easi--searchable-suggestions' over
 the result, passing QUERY, the searchable, and NUMBER each time."
   (flatten-list
-   (mapcar (lambda (sch) (easi-searchable-suggestions query sch number)) searchable)))
-(cl-defmethod easi-searchable-suggestions (query (searchable symbol) &optional number)
-  "Call `easi-searchable-suggestions' with value of SEARCHABLE.
+   (mapcar (lambda (sch) (easi--searchable-suggestions query sch number)) searchable)))
+(cl-defmethod easi--searchable-suggestions (query (searchable symbol) &optional number)
+  "Call `easi--searchable-suggestions' with value of SEARCHABLE.
 
 Pass QUERY, the value of SEARCHABLE, and NUMBER."
-  (easi-searchable-suggestions query (symbol-value searchable) number))
+  (easi--searchable-suggestions query (symbol-value searchable) number))
 
 ;;;; Getting results
 

@@ -155,7 +155,7 @@ Used as a default NUMBER argument in functions such as
   "Default maximum number of suggestions to get.
 
 Used as a default NUMBER argument in functions such as
-`easi-searchable-suggestions'."
+`easi--searchable-suggestions'."
   :group 'easi
   :type 'integer)
 
@@ -512,7 +512,7 @@ with `completing-read'."
     (completing-read
      "Search: "
      (completion-table-dynamic
-      (lambda (str) (easi-searchable-suggestions str searchable))))))
+      (lambda (str) (easi--searchable-suggestions str searchable))))))
 
 (defun easi--present-results (session raw-results)
   "Present RAW-RESULTS from SEARCHABLE.
