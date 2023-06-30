@@ -60,7 +60,7 @@ list of lists of results."
 
 ;;;; Driver Functions
 
-(defun easi-sort-results (sorter results query)
+(defun easi--sort-results (sorter results query)
   "Call SORTER on RESULTS and QUERY.
 
 RESULTS is a list of results. QUERY is the string used to get the

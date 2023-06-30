@@ -480,7 +480,7 @@ NUM defaults to 1."
 	     (_ (unless new-raw-results
 		  (error "No next page of results")))
 	     (new-results
-	      (easi-sort-results
+	      (easi--sort-results
 	       (easi--sort-get-searchable-sorter searchable)
 	       new-raw-results query))
 	     (old-results (easi-session-state-results session)))
@@ -545,7 +545,7 @@ N.B. This function should only be run for its side-effects -- do
 not rely on its return value (this is because what it returns may
 change during development, and subsequent versions behave
 differently)."
-  (let* ((results (easi-sort-results
+  (let* ((results (easi--sort-results
 		   (easi--sort-get-searchable-sorter
 		    (easi-session-state-searchables session))
 		   raw-results
