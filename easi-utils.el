@@ -20,7 +20,7 @@
 ;;; Commentary:
 
 ;; Utilities used throughout the rest of EASI and functions which are
-;; often useful when building EASI searhchables.
+;; often useful when building EASI searchables.
 
 ;;; Code:
 
