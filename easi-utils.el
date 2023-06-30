@@ -45,7 +45,7 @@ cons) or a plist (`plistp')."
     (setf (plist-get result "easi-search-engine") engine)))
   result)
 
-(defun easi-utils-resolve-symbol (symbol)
+(defun easi--utils-resolve-symbol (symbol)
   "Iteratively get value of SYMBOL until it is not a symbol."
   (cl-loop
    while (and symbol (symbolp symbol))
