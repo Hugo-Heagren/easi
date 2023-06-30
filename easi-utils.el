@@ -34,6 +34,10 @@ implementation for every type of result.
 Must return RESULT with ENGINE attached.")
 
 (cl-defmethod easi-utils-result-attach-search-engine (engine (result cons))
+  "`setf' the key \"easi-search-engine\" of RESULT to ENGINE.
+
+RESULT is assumed to be either an alist (if every element is a
+cons) or a plist (`plistp')."
   (cond
    ((cl-every #'consp result)
     (setf (alist-get "easi-search-engine" result) engine))
