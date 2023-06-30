@@ -385,7 +385,7 @@ different presenters."
 
 SESSION is the current Easi session state object.
 
-Use `easi-get-result-presenters' to get a list of result
+Use `easi--get-result-presenters' to get a list of result
 presenters compatible with RESULT, and treat the first one as
 default.
 
@@ -404,7 +404,7 @@ If that is nil, then bury any current result buffer with
   (let* ((result (easi--get-current-result session))
 	 (presenter
 	  (easi-utils-resolve-symbol
-	   (car (easi-get-result-presenters
+	   (car (easi--get-result-presenters
 		 (easi-result-retrieve-search-engine result)))))
 	 (result-buffer
 	  ;; Reuse existing buffer if it exists
