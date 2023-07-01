@@ -159,6 +159,24 @@ Used as a default NUMBER argument in functions such as
   :group 'easi
   :type 'integer)
 
+(defcustom easi-next-page-sorting-strategy 'merge
+  "How to handle new results in `easi-get-next-page'.
+
+`easi-get-next-page' gets a new set of results and combines them
+with the preexisting results. If this variable is set to
+`append', then each new set of results is first sorted, then
+appended to the preexisting results. If set to `merge', then the
+new results are first appended, and then the new full list of
+results is sorted.
+
+Behaviour is undefined for other values.
+
+The default value of `merge' is probably better most of the time,
+though `append' probably takes less computing power."
+  :group 'easi
+  :type '(choice (const append)
+		 (const merge)))
+
 ;;;; Session management
 
 (cl-defstruct (easi-session-state
