@@ -29,12 +29,12 @@
 
 (require 'easi-searchable)
 
-(cl-defgeneric easi-result-list-fields (result)
+(cl-defgeneric easi--result-list-fields (result)
   "Return a list of fields in RESULT.
 
 Each field returned must be a string.")
 
-(cl-defmethod easi-result-list-fields ((result list))
+(cl-defmethod easi--result-list-fields ((result list))
   "RESULT is a list.
 
 If every element of RESULT is a cons, `mapcar' `car' over RESULT.

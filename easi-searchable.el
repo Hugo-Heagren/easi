@@ -79,7 +79,7 @@ FIELD in `easi-result-get-field'.")
    nil
    :documentation
    "Alist of field aliases.
-See `easi-result-list-fields' and `easi-result-get-field'.")
+See `easi--result-list-fields' and `easi-result-get-field'.")
   (results-presenters
    nil
    :documentation
