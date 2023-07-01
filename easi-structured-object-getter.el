@@ -147,6 +147,8 @@ If OBJECT fails `plistp', assume it is an alist, and call
 ;; TODO Write a few other obvious methods for different types of
 ;; object (alist, plist, cl-struct, hash-table, maybe json)
 
+;; HACK I realise that this is named wrong, (should be easi--...) but
+;; that name is taken above.
 (defun easi-structured-object-get-field (field object)
   "Get FIELD or its alias in OBJECT.
 
