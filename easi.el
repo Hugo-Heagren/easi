@@ -485,12 +485,16 @@ If that is nil, then bury any current result buffer with
 (cl-defun easi-get-next-page (&optional (num 1))
   "Print NUM next pages of results from session's searchables.
 
-NUM defaults to 1."
+NUM defaults to 1.
+
+How new results are added depends on the value of
+`easi-next-page-sorting-strategy', which see."
   (interactive "p" easi-results-mode)
   (when-let* ((session (easi--get-current-session))
 	      (searchable (easi-session-state-searchables session))
 	      (query (easi-session-state-query session))
-	      (page (easi-session-state-page session)))
+	      (page (easi-session-state-page session))
+	      (strategy easi-next-page-sorting-strategy))
     (dotimes (_ num)
       (let* ((new-raw-results
 	      (easi--searchable-results
@@ -498,12 +502,18 @@ NUM defaults to 1."
 	     (_ (unless new-raw-results
 		  (error "No next page of results")))
 	     (new-results
-	      (easi--sort-results
-	       (easi--sort-get-searchable-sorter searchable)
-	       new-raw-results query))
+	      (if (eql strategy 'append)
+		  (easi--sort-results
+		   (easi--sort-get-searchable-sorter searchable)
+		   new-raw-results query)
+		new-raw-results))
 	     (old-results (easi-session-state-results session)))
 	(setf (easi-session-state-results session)
-	      `(,@old-results ,@new-results))
+	      (if (eql strategy 'merge)
+		  (easi--sort-results
+		   (easi--sort-get-searchable-sorter searchable)
+		   `(,@old-results ,@new-results) query)
+		`(,@old-results ,@new-results)))
 	(easi--print session :slots '(printer))
 	(cl-incf (easi-session-state-page session))))))
 
