@@ -70,7 +70,7 @@ the plist key \"easi-search-engine\". Otherwise return nil."
    ((plistp result)
     (plist-get result "easi-search-engine"))))
 
-(defun easi-result-aliases (result)
+(defun easi--result-aliases (result)
   "Return list of field alias for RESULT."
   (let ((searchable (easi--result-retrieve-search-engine result)))
     (easi-search-engine-field-aliases searchable)))
