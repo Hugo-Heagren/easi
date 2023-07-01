@@ -67,7 +67,7 @@ value of that field as DESC2."
 	   collect
 	   `(,field
 	     [,field
-	      (,(let ((val (easi-result-get-field field result)))
+	      (,(let ((val (easi--result-get-field field result)))
 		  (cond
 		   ((stringp val) val)
 		   ((prin1-to-string val))

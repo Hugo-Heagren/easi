@@ -58,7 +58,7 @@ which `easi--get-suggestions' has a method.")
    :documentation
    "Processing to be done to the suggestions, after retrieval but
 before they are used by anything else in EASI. Takes the same
-form as FIELD in `easi-result-get-field'.")
+form as FIELD in `easi--result-get-field'.")
   (queryable-results-getter
    nil
    :documentation
@@ -74,12 +74,12 @@ form as FIELD in `easi-result-get-field'.")
    :documentation
    "Processing to be done to the results, after retrieval but before
 they are used by anything else in EASI. Takes the same form as
-FIELD in `easi-result-get-field'.")
+FIELD in `easi--result-get-field'.")
   (field-aliases
    nil
    :documentation
    "Alist of field aliases.
-See `easi--result-list-fields' and `easi-result-get-field'.")
+See `easi--result-list-fields' and `easi--result-get-field'.")
   (results-presenters
    nil
    :documentation

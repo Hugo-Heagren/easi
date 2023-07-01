@@ -47,7 +47,7 @@ element of RESUlT, beginning with the first."
     (cl-loop for x in result by 'cddr
 	     collect x))))
 
-(defalias 'easi-result-get-field
+(defalias 'easi--result-get-field
   'easi-structured-object-get-field)
 
 (cl-defgeneric easi-result-retrieve-search-engine (result)
