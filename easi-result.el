@@ -50,14 +50,14 @@ element of RESUlT, beginning with the first."
 (defalias 'easi--result-get-field
   'easi-structured-object-get-field)
 
-(cl-defgeneric easi-result-retrieve-search-engine (result)
+(cl-defgeneric easi--result-retrieve-search-engine (result)
   "Return the engine attached to RESULT.
 
 For certain features (such as field aliasing) to work, this
 function (and `easi--utils-result-attach-search-engine') must have an
 implementation for every type of result.")
 
-(cl-defmethod easi-result-retrieve-search-engine ((result cons))
+(cl-defmethod easi--result-retrieve-search-engine ((result cons))
   "Heuristically get search engine from a list RESULT.
 
 If RESULT passes `(cl-every #'consp result)', then get key
@@ -72,7 +72,7 @@ the plist key \"easi-search-engine\". Otherwise return nil."
 
 (defun easi-result-aliases (result)
   "Return list of field alias for RESULT."
-  (let ((searchable (easi-result-retrieve-search-engine result)))
+  (let ((searchable (easi--result-retrieve-search-engine result)))
     (easi-search-engine-field-aliases searchable)))
 
 

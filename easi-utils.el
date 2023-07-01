@@ -28,7 +28,7 @@
   "Attach ENGINE to RESULT.
 
 For certain features (such as field aliasing) to work, this
-function (and `easi-result-retrieve-search-engine') must have an
+function (and `easi--result-retrieve-search-engine') must have an
 implementation for every type of result.
 
 Must return RESULT with ENGINE attached.")
