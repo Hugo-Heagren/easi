@@ -63,7 +63,7 @@ form as FIELD in `easi--result-get-field'.")
    nil
    :documentation
    "Way of getting a list of results. Must be a of a type for which
-`easi--query-results' has a method.")
+`easi-searchable--query-results' has a method.")
   (all-results-getter
    nil
    :documentation
@@ -223,21 +223,21 @@ Pass QUERY, the value of SEARCHABLE, and NUMBER."
 
 (defvar easi-default-max-results)
 
-(cl-defgeneric easi--query-results (query queryable-results-getter &key number page)
+(cl-defgeneric easi-searchable--query-results (query queryable-results-getter &key number page)
   "Get a list of by querying QUERYABLE-RESULTS-GETTER with QUERY.
 
 QUERY is always string. If NUMBER is non-nil, no more than NUMBER
 results should be returned.")
 
 ;; Simplest case
-(cl-defmethod easi--query-results (query (queryable-results-getter symbol) &key number page)
+(cl-defmethod easi-searchable--query-results (query (queryable-results-getter symbol) &key number page)
   "QUERYABLE-RESULTS-GETTER is a function.
 
 Pass QUERY, NUMBER and PAGE to QUERYABLE-RESULTS-GETTER, in that
 order."
   (funcall queryable-results-getter query number page))
 
-(cl-defmethod easi--query-results (query (queryable-results-getter string) &key number page)
+(cl-defmethod easi-searchable--query-results (query (queryable-results-getter string) &key number page)
   "QUERYABLE-RESULTS-GETTER is a string.
 
 Make the following replacements in QUERYABLE-RESULTS-GETTER, and
@@ -298,7 +298,7 @@ If QUERY is non-nil, get the \"queryable-results-getter\",
 otherwise get \"all-results-getter\".
 
 If QUERY is non-nil, then pass QUERY, the getter, a number
-argument, and PAGE to `easi--query-results'. The number argument
+argument, and PAGE to `easi-searchable--query-results'. The number argument
 is NUMBER (if non-nil), or the result of
 `easi-search-engine-max-results' for SEARCHABLE (if non-nil) or
 `easi-default-max-results'. If QUERY is nil, call
@@ -318,7 +318,7 @@ is NUMBER (if non-nil), or the result of
 			 (easi-search-engine-queryable-results-getter searchable)))))
 	     (raw-results
 	      (if query
-		  (easi--query-results query getter
+		  (easi-searchable--query-results query getter
 				      :number
 				      (or number
 					  (easi-search-engine-max-results searchable)
