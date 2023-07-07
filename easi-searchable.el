@@ -395,30 +395,30 @@ Delete duplicates before returning."
     `(,@(easi-searchable--results-presenters searchable)
       ,@easi-default-results-presenters))))
 
-(cl-defgeneric easi--searchable-result-presenters (searchable)
+(cl-defgeneric easi-searchable--result-presenters (searchable)
   "Return a list of result presenters supported by SEARCHABLE.")
 
-(cl-defmethod easi--searchable-result-presenters ((searchable cons))
-  "Map `easi--searchable-result-presenters' over SEARCHABLE.
+(cl-defmethod easi-searchable--result-presenters ((searchable cons))
+  "Map `easi-searchable--result-presenters' over SEARCHABLE.
 
 Delete duplicates before returning."
   (delete-dups
-   (mapcan #'easi--searchable-result-presenters searchable)))
+   (mapcan #'easi-searchable--result-presenters searchable)))
 
-(cl-defmethod easi--searchable-result-presenters ((searchable symbol))
+(cl-defmethod easi-searchable--result-presenters ((searchable symbol))
   "Call recursively on `symbol-value' of SEARCHABLE."
-  (easi--searchable-result-presenters (symbol-value searchable)))
+  (easi-searchable--result-presenters (symbol-value searchable)))
 
-(cl-defmethod easi--searchable-result-presenters ((searchable easi-search-engine))
+(cl-defmethod easi-searchable--result-presenters ((searchable easi-search-engine))
   "Call `easi-search-engine-results-presenters' on SEARCHABLE."
   (easi-search-engine-result-presenters searchable))
 
-(cl-defmethod easi--searchable-result-presenters ((searchable easi-search-engine-group))
+(cl-defmethod easi-searchable--result-presenters ((searchable easi-search-engine-group))
   "Get searchables from group SEARCHABLE, and call on that list."
   ;; This works because a list of searchables is a searchables, so
   ;; there is a method for lists, and the value of the :searchables
   ;; slot is always a list.
-  (easi--searchable-result-presenters
+  (easi-searchable--result-presenters
    (easi-search-engine-group-searchables searchable)))
 
 (defun easi--get-result-presenters (searchable)
@@ -426,7 +426,7 @@ Delete duplicates before returning."
    ;; TODO Do I want to use `cl-delete-duplicates' and test for cases
    ;; of an object and a symbol pointing at the object?
    (delete-dups
-    `(,@(easi--searchable-result-presenters searchable)
+    `(,@(easi-searchable--result-presenters searchable)
       ,@easi-default-result-presenters)))
 
 ;;;; Getting sorter list
