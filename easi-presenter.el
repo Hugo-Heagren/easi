@@ -54,6 +54,7 @@ engines."
 
 ;;;; Presenter type
 
+;;;###autoload
 (defclass easi-presenter ()
   ((name :initarg :name :initform nil)
    (key :initarg :key :initform nil)
