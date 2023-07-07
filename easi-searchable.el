@@ -68,7 +68,7 @@ form as FIELD in `easi--result-get-field'.")
    nil
    :documentation
    "Way of getting a list of results. Must be of a type for which
-`easi--all-results' has a method.")
+`easi-searchable--all-results' has a method.")
   (results-post-processor
    nil
    :documentation
@@ -261,14 +261,14 @@ the response text (this is intended to be post-processed):
 
 ;; TODO Some more interesting implementations of this ^
 
-(cl-defgeneric easi--all-results (all-results-getter)
+(cl-defgeneric easi-searchable--all-results (all-results-getter)
   "Get a list of all results from ALL-RESULTS-GETTER.
 
 Used for searchables which can return \"everything\" in some
 meaningful sense (i.e. all the notes in my collection, not just
 the ones which match a query).")
 
-(cl-defmethod easi--all-results ((all-results-getter symbol))
+(cl-defmethod easi-searchable--all-results ((all-results-getter symbol))
   "ALL-RESULTS-GETTER is a symbol.
 
 If ALL-RESULTS-GETTER is a function (i.e. passes `functionp')
@@ -302,7 +302,7 @@ argument, and PAGE to `easi-searchable--query-results'. The number argument
 is NUMBER (if non-nil), or the result of
 `easi-search-engine-max-results' for SEARCHABLE (if non-nil) or
 `easi-default-max-results'. If QUERY is nil, call
-`easi--all-results' with the getter."
+`easi-searchable--all-results' with the getter."
   (when-let ((getter
 	      ;; Whether query is non-nil is an indication of whether
 	      ;; a query was originally passed by the user. If so, we
@@ -324,7 +324,7 @@ is NUMBER (if non-nil), or the result of
 					  (easi-search-engine-max-results searchable)
 					  easi-default-max-results)
 				      :page page)
-		(easi--all-results getter))))
+		(easi-searchable--all-results getter))))
     (mapcar
      (apply-partially #'easi--utils-result-attach-search-engine searchable)
      (if-let (post-proc (easi-search-engine-results-post-processor searchable))
