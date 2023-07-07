@@ -94,7 +94,18 @@ See `easi--result-list-fields' and `easi--result-get-field'.")
   (max-results
    nil
    :documentation
-   "Maximum number of results to retrieve at once.")
+   "Maximum number of results to retrieve at once.
+
+Acceptable values:
+- nil (default): use `easi-default-max-results' as the max number
+- a number: the maximum number to return
+- t: no max number, return all results
+
+This slot only applies to `easi-search'. `easi-all' always
+returns all results. Value of nil means no max, get all matching
+results (for searchables which interact with services like
+web-based search engines, this is generally a bad idea, so this
+slot defaults to `easi-default-max-results'.)")
   (max-suggestions
    nil
    :documentation
