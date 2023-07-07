@@ -240,19 +240,23 @@ order."
 (cl-defmethod easi--query-results (query (queryable-results-getter string) &key number page)
   "QUERYABLE-RESULTS-GETTER is a string.
 
-Replace %s with QUERY, and %n with NUMBER in
-QUERYABLE-RESULTS-GETTER, then make an https request on the
-result. Return a buffer holding the response text (this is
-intended to be post-processed)."
+Make the following replacements in QUERYABLE-RESULTS-GETTER, and
+then make an https request on the result. Return a buffer holding
+the response text (this is intended to be post-processed):
+- %s: QUERY
+- %n: NUMBER if that is a number, or the empty string otherwise.
+- %p: PAGE"
   (let* ((request-string
 	  (url-encode-url
 	   (format-spec queryable-results-getter
 			`((?s . ,query)
-		          (?n . ,number)
+		          (?n . ,(if (numberp number)
+				     number
+				   ""))
 			  (?p . ,page)))))
 	 (request-url (url-generic-parse-url request-string))
 	 (response-buffer (url-retrieve-synchronously
-		    request-url 'silent 'inhibit-cookies)))
+			   request-url 'silent 'inhibit-cookies)))
     response-buffer))
 
 ;; TODO Some more interesting implementations of this ^
