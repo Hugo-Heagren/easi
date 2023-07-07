@@ -41,14 +41,14 @@ query (a string) which was used to get those results. The
 function must return a flat list of results, in the desired
 order. This could, but need not, be based on the query.
 
-The function `easi--group-results-by-engine' may be helpful for
+The function `easi-sort--group-results-by-engine' may be helpful for
 writing sorters."
   :group 'easi
   :type '(repeat function))
 
 ;;;; Utility functions
 
-(defun easi--group-results-by-engine (results)
+(defun easi-sort--group-results-by-engine (results)
   "Group RESULTS into lists by search engine.
 
 Retrieve search engine from each member of RESULTS, then group
@@ -94,7 +94,7 @@ RESULTS."
    (cl-loop for i from 0
 	    with newelts = nil with output = nil
 	    do (setq newelts (mapcar (apply-partially #'nth i)
-				     (easi--group-results-by-engine results)))
+				     (easi-sort--group-results-by-engine results)))
 	    until (cl-every #'null newelts)
 	    do (setq output (append output newelts))
 	    finally return output))
