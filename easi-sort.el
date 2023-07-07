@@ -41,14 +41,14 @@ query (a string) which was used to get those results. The
 function must return a flat list of results, in the desired
 order. This could, but need not, be based on the query.
 
-The function `easi--group-results-by-engine' may be helpful for
+The function `easi-sort--group-results-by-engine' may be helpful for
 writing sorters."
   :group 'easi
   :type '(repeat function))
 
 ;;;; Utility functions
 
-(defun easi--group-results-by-engine (results)
+(defun easi-sort--group-results-by-engine (results)
   "Group RESULTS into lists by search engine.
 
 Retrieve search engine from each member of RESULTS, then group
@@ -56,11 +56,11 @@ all results with the same search-engine into a list. Return a
 list of lists of results."
   (mapcar #'cdr
 	  (seq-group-by
-	   #'easi--result-retrieve-search-engine results)))
+	   #'easi-result--retrieve-search-engine results)))
 
 ;;;; Driver Functions
 
-(defun easi--sort-results (sorter results query)
+(defun easi-sort--results (sorter results query)
   "Call SORTER on RESULTS and QUERY.
 
 RESULTS is a list of results. QUERY is the string used to get the
@@ -69,13 +69,13 @@ must return a flat list of results, in the desired order. This
 could, but need not, be based on the query."
   (funcall sorter results query))
 
-(defun easi--sort-get-searchable-sorter (searchable)
+(defun easi-sort--get-searchable-sorter (searchable)
   "Get sorter to use for SEARCHABLE.
 
-If calling `easi--searchable-sorters' returns no-nil, return first
+If calling `easi-searchable--sorters' returns no-nil, return first
 element of that. If not, return first element of
 `easi-default-sort-functions'."
-  (car `(,@(easi--searchable-sorters searchable)
+  (car `(,@(easi-searchable--sorters searchable)
 	 ,@easi-default-sort-functions)))
 
 ;;;; Sorters
@@ -94,7 +94,7 @@ RESULTS."
    (cl-loop for i from 0
 	    with newelts = nil with output = nil
 	    do (setq newelts (mapcar (apply-partially #'nth i)
-				     (easi--group-results-by-engine results)))
+				     (easi-sort--group-results-by-engine results)))
 	    until (cl-every #'null newelts)
 	    do (setq output (append output newelts))
 	    finally return output))

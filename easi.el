@@ -147,7 +147,7 @@ which need to specify certain behaviour."
   "Default maximum number of results to get.
 
 Used as a default NUMBER argument in functions such as
-`easi--searchable-results'."
+`easi-searchable--results'."
   :group 'easi
   :type 'integer)
 
@@ -155,7 +155,7 @@ Used as a default NUMBER argument in functions such as
   "Default maximum number of suggestions to get.
 
 Used as a default NUMBER argument in functions such as
-`easi--searchable-suggestions'."
+`easi-searchable--suggestions'."
   :group 'easi
   :type 'integer)
 
@@ -343,7 +343,7 @@ Get presenter for current buffer with
 functions in each of SLOTS passing PRINTABLE and the current
 buffer to each. As a special case, no args are passed to the
 functions in the \"hook\" slot."
-  (let ((presenter (easi--utils-resolve-symbol
+  (let ((presenter (easi-utils--resolve-symbol
 		    (easi--session-state-buffer-presenter session)))
 	(buffer (current-buffer)))
     (dolist (slot slots)
@@ -357,11 +357,11 @@ functions in the \"hook\" slot."
   "Return the result at point in SESSION."
   (let ((buf-list (easi-session-state-results-buffers session)))
     (if (memq (current-buffer) buf-list)
-	(funcall (slot-value (easi--utils-resolve-symbol
+	(funcall (slot-value (easi-utils--resolve-symbol
 			(easi--session-state-buffer-presenter session))
 		       'current-getter))
       (with-current-buffer (car buf-list)
-	(funcall (slot-value (easi--utils-resolve-symbol
+	(funcall (slot-value (easi-utils--resolve-symbol
 			(easi--session-state-buffer-presenter session))
 		       'current-getter))))))
 
@@ -403,7 +403,7 @@ different presenters."
 
 SESSION is the current Easi session state object.
 
-Use `easi--get-result-presenters' to get a list of result
+Use `easi-searchable--get-result-presenters' to get a list of result
 presenters compatible with RESULT, and treat the first one as
 default.
 
@@ -421,9 +421,9 @@ If that is nil, then bury any current result buffer with
 - return the result buffer or nil if nothing was presented."
   (let* ((result (easi--get-current-result session))
 	 (presenter
-	  (easi--utils-resolve-symbol
-	   (car (easi--get-result-presenters
-		 (easi--result-retrieve-search-engine result)))))
+	  (easi-utils--resolve-symbol
+	   (car (easi-searchable--get-result-presenters
+		 (easi-result--retrieve-search-engine result)))))
 	 (result-buffer
 	  ;; Reuse existing buffer if it exists
 	  (or
@@ -497,21 +497,21 @@ How new results are added depends on the value of
 	      (strategy easi-next-page-sorting-strategy))
     (dotimes (_ num)
       (let* ((new-raw-results
-	      (easi--searchable-results
+	      (easi-searchable--results
 	       searchable :query query :page (1+ page)))
 	     (_ (unless new-raw-results
 		  (error "No next page of results")))
 	     (new-results
 	      (if (eql strategy 'append)
-		  (easi--sort-results
-		   (easi--sort-get-searchable-sorter searchable)
+		  (easi-sort--results
+		   (easi-sort--get-searchable-sorter searchable)
 		   new-raw-results query)
 		new-raw-results))
 	     (old-results (easi-session-state-results session)))
 	(setf (easi-session-state-results session)
 	      (if (eql strategy 'merge)
-		  (easi--sort-results
-		   (easi--sort-get-searchable-sorter searchable)
+		  (easi-sort--results
+		   (easi-sort--get-searchable-sorter searchable)
 		   `(,@old-results ,@new-results) query)
 		`(,@old-results ,@new-results)))
 	(easi--print session :slots '(printer))
@@ -540,7 +540,7 @@ with `completing-read'."
     (completing-read
      "Search: "
      (completion-table-dynamic
-      (lambda (str) (easi--searchable-suggestions str searchable))))))
+      (lambda (str) (easi-searchable--suggestions str searchable))))))
 
 (defun easi--present-results (session raw-results)
   "Present RAW-RESULTS from SEARCHABLE.
@@ -549,11 +549,11 @@ Main user-interface driver function for Easi.
 
 RAW-RESULTS is an unsorted list of result objects which Easi can
 handle. It is sorted using the result of
-`easi--sort-get-searchable-sorter' (called on the searchables in
+`easi-sort--get-searchable-sorter' (called on the searchables in
 SESSION). The results are then printed using an appropriate
 presenter.
 
-Use `easi--get-results-presenters' to get a list of result
+Use `easi-searchable--get-results-presenters' to get a list of result
 presenters compatible with RESULTS, and treat the first one as
 default.
 
@@ -573,8 +573,8 @@ N.B. This function should only be run for its side-effects -- do
 not rely on its return value (this is because what it returns may
 change during development, and subsequent versions behave
 differently)."
-  (let* ((results (easi--sort-results
-		   (easi--sort-get-searchable-sorter
+  (let* ((results (easi-sort--results
+		   (easi-sort--get-searchable-sorter
 		    (easi-session-state-searchables session))
 		   raw-results
 		   (easi-session-state-query session)))
@@ -603,7 +603,7 @@ differently)."
 	   ;; there are a different number of results)
 	   (easi--buffer-from-default
 	    easi-results-default-buffer-name session)))
-	 (results-presenter (car (easi--get-results-presenters
+	 (results-presenter (car (easi-searchable--get-results-presenters
 				  (easi-session-state-searchables session)))))
     ;; TODO Should I save windows earlier, at the initial session definition?
     (setf (easi-session-state-window-config session)
@@ -638,7 +638,7 @@ SEARCHABLE. If this slot is nil, behaviour is controlled by
 `easi-default-non-all-results-skip'."
   (interactive `(,(easi--prompt-for-searchable)))
   (let* ((session (easi--get-create-current-session))
-	 (raw-results (easi--searchable-results
+	 (raw-results (easi-searchable--results
 		       searchable :page (easi-session-state-page session))))
     (setf (easi-session-state-searchables session) searchable)
     (easi--present-results session raw-results)))
@@ -656,7 +656,7 @@ controlled by `easi-default-non-queryable-skip'."
 		      (query (easi--prompt-for-query searchable)))
 		 `(,searchable ,query)))
   (let* ((session (easi--get-create-current-session))
-	 (raw-results (easi--searchable-results
+	 (raw-results (easi-searchable--results
 		       searchable
 		       :query query
 		       :page (easi-session-state-page session))))

@@ -161,9 +161,9 @@ Only strings are supported as aliases, so that other selectors
 always behave in predictable ways."
   (easi--structured-object-get-field
    (if-let (((stringp field))
-	    ;; TODO does `easi--result-aliases' need renaming? It
+	    ;; TODO does `easi-result--aliases' need renaming? It
 	    ;; doesn't necessarily /only/ operate on results
-	    (alias-list (easi--result-aliases object))
+	    (alias-list (easi-result--aliases object))
 	    (alias (alist-get field alias-list nil nil #'string=)))
        alias field)
    object))

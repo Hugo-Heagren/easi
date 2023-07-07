@@ -44,7 +44,7 @@ represents a column and is a plist with the following keys:
   `tabulated-list-format'.
 - `:getter' the value of this key is used to get the value to display
   in the column for each result. The value of `:getter' is passed as
-  FIELD, and the result as OBJECT to `easi--result-get-field'.
+  FIELD, and the result as OBJECT to `easi-result--get-field'.
 - `:width' maximum width to print. Used as WIDTH in
   `tabulated-list-format'.
 - `:sort' if non-nil, this field can be sorted. It is either t
@@ -117,7 +117,7 @@ able to print."
 	   ;; `tabulated-list-get-id' to get the current result
 	   `(,res
 	     ,(vconcat
-	       (mapcar (lambda (field) (or (easi--result-get-field (plist-get field :getter) res)
+	       (mapcar (lambda (field) (or (easi-result--get-field (plist-get field :getter) res)
 				      ;; Use an empty string, for
 				      ;; cases without a field value
 				      ""))
