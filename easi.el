@@ -672,9 +672,10 @@ Interactively, prompt for SEARCHABLE with
 `easi--prompt-for-searchable'."
   (interactive `(,(easi--prompt-for-searchable))
 	       easi-results-mode easi-result-mode)
-  (easi-search searchable
-	       (easi-session-state-query
-		(easi--get-current-session))))
+  (if-let ((query (easi-session-state-query
+		   (easi--get-current-session))))
+      (easi-search searchable query))
+  (easi-all searchable))
 
 ;;;###autoload
 (defun easi-rerun-with-new-query (query)
