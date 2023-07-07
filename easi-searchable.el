@@ -41,6 +41,9 @@
 
 ;;;; Basic types
 
+;; Defined in `easi.el' -- defvar here to avoid errors
+(defvar easi-default-max-results)
+
 (cl-defstruct (easi-search-engine
 	       (:constructor easi-search-engine-create))
   "A single atomic search engine."
@@ -92,9 +95,12 @@ See `easi--result-list-fields' and `easi--result-get-field'.")
 `easi-default-result-presenters'.)")
   (sorters nil :documentation "List of compatible results sorters.")
   (max-results
-   nil
+   easi-default-max-results
    :documentation
-   "Maximum number of results to retrieve at once.")
+   "Maximum number of results to retrieve at once.
+
+This slot only applies to `easi-search'. `easi-all' always
+returns all results.")
   (max-suggestions
    nil
    :documentation
