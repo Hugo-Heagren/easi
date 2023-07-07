@@ -423,7 +423,7 @@ If that is nil, then bury any current result buffer with
 	 (presenter
 	  (easi-utils--resolve-symbol
 	   (car (easi-searchable--get-result-presenters
-		 (easi--result-retrieve-search-engine result)))))
+		 (easi-result--retrieve-search-engine result)))))
 	 (result-buffer
 	  ;; Reuse existing buffer if it exists
 	  (or

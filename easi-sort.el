@@ -56,7 +56,7 @@ all results with the same search-engine into a list. Return a
 list of lists of results."
   (mapcar #'cdr
 	  (seq-group-by
-	   #'easi--result-retrieve-search-engine results)))
+	   #'easi-result--retrieve-search-engine results)))
 
 ;;;; Driver Functions
 

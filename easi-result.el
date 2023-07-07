@@ -29,12 +29,12 @@
 
 (require 'easi-searchable)
 
-(cl-defgeneric easi--result-list-fields (result)
+(cl-defgeneric easi-result--list-fields (result)
   "Return a list of fields in RESULT.
 
 Each field returned must be a string.")
 
-(cl-defmethod easi--result-list-fields ((result list))
+(cl-defmethod easi-result--list-fields ((result list))
   "RESULT is a list.
 
 If every element of RESULT is a cons, `mapcar' `car' over RESULT.
@@ -47,17 +47,17 @@ element of RESUlT, beginning with the first."
     (cl-loop for x in result by 'cddr
 	     collect x))))
 
-(defalias 'easi--result-get-field
+(defalias 'easi-result--get-field
   'easi-structured-object-get-field)
 
-(cl-defgeneric easi--result-retrieve-search-engine (result)
+(cl-defgeneric easi-result--retrieve-search-engine (result)
   "Return the engine attached to RESULT.
 
 For certain features (such as field aliasing) to work, this
 function (and `easi-utils--result-attach-search-engine') must have an
 implementation for every type of result.")
 
-(cl-defmethod easi--result-retrieve-search-engine ((result cons))
+(cl-defmethod easi-result--retrieve-search-engine ((result cons))
   "Heuristically get search engine from a list RESULT.
 
 If RESULT passes `(cl-every #'consp result)', then get key
@@ -70,9 +70,9 @@ the plist key \"easi-search-engine\". Otherwise return nil."
    ((plistp result)
     (plist-get result "easi-search-engine"))))
 
-(defun easi--result-aliases (result)
+(defun easi-result--aliases (result)
   "Return list of field alias for RESULT."
-  (let ((searchable (easi--result-retrieve-search-engine result)))
+  (let ((searchable (easi-result--retrieve-search-engine result)))
     (easi-search-engine-field-aliases searchable)))
 
 

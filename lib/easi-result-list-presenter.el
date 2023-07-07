@@ -57,17 +57,17 @@ presenting columns of field names and values. Derived from
 (defun easi-result-list--result-to-tabulated-list (result)
   "Convert an EASI result for `tabulated-list-mode'.
 
-Uses `easi--result-list-fields' to get a list of fields. Return a
+Uses `easi-result--list-fields' to get a list of fields. Return a
 list, suitable as a value for `tabulated-list-entries', with each
 element having the field string as it's ID and DESC1, and the
 value of that field as DESC2."
-  (cl-loop for field in (easi--result-list-fields result)
+  (cl-loop for field in (easi-result--list-fields result)
 	   unless (cl-member
 		   field easi-result-list-exlude-fields :test #'string=)
 	   collect
 	   `(,field
 	     [,field
-	      (,(let ((val (easi--result-get-field field result)))
+	      (,(let ((val (easi-result--get-field field result)))
 		  (cond
 		   ((stringp val) val)
 		   ((prin1-to-string val))
