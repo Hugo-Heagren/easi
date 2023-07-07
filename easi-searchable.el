@@ -30,7 +30,7 @@
 ;; - (and nothing else is a searchable)
 ;;
 ;; The API for searchables currently includes:
-;; `easi-searchable--suggestions' and `easi--searchable-results'.
+;; `easi-searchable--suggestions' and `easi-searchable--results'.
 
 ;;; Code:
 
@@ -281,7 +281,7 @@ list of objects, where no function exists to return them all)."
 
 ;; TODO Some more interesting implementations of this ^
 
-(cl-defgeneric easi--searchable-results (searchable &key query number page)
+(cl-defgeneric easi-searchable--results (searchable &key query number page)
   "Get a list of results from querying SEARCHABLE with QUERY.
 
 If NUMBER is non-nil, limit the number of results from each
@@ -291,7 +291,7 @@ get, if results are paginated (1-indexed).")
 (defvar easi-default-non-all-results-skip)
 (defvar easi-default-non-queryable-skip)
 
-(cl-defmethod easi--searchable-results ((searchable easi-search-engine) &key query number page)
+(cl-defmethod easi-searchable--results ((searchable easi-search-engine) &key query number page)
   "Get appropriate getter from SEARCHABLE, and pass QUERY, NUMBER and PAGE.
 
 If QUERY is non-nil, get the \"queryable-results-getter\",
@@ -330,30 +330,30 @@ is NUMBER (if non-nil), or the result of
      (if-let (post-proc (easi-search-engine-results-post-processor searchable))
 	 (easi-structured-object-get-field post-proc raw-results)
        raw-results))))
-(cl-defmethod easi--searchable-results ((searchable easi-search-engine-group) &key query number page)
-  "`mapcar' `easi--searchable-results' over searchables in SEARCHABLE.
+(cl-defmethod easi-searchable--results ((searchable easi-search-engine-group) &key query number page)
+  "`mapcar' `easi-searchable--results' over searchables in SEARCHABLE.
 
 Get the \"searchables\" slot from SEARCHABLE, and map
-`easi--searchable-results' over these, passing QUERY, NUMBER and
+`easi-searchable--results' over these, passing QUERY, NUMBER and
 PAGE directly."
   (mapcar (lambda (searchable)
-	    (easi--searchable-results
+	    (easi-searchable--results
 	     searchable :query query :number number :page page))
 	  (easi-search-engine-group-searchables searchable)))
-(cl-defmethod easi--searchable-results ((searchable cons) &key query number page)
-  "Mapcar `easi--searchable-results' over SEARCHABLE, `append' result.
+(cl-defmethod easi-searchable--results ((searchable cons) &key query number page)
+  "Mapcar `easi-searchable--results' over SEARCHABLE, `append' result.
 
-Pass QUERY, NUMBER and PAGE `easi--searchable-results'."
+Pass QUERY, NUMBER and PAGE `easi-searchable--results'."
   (apply 'append
 	 (mapcar (lambda (searchable)
-		   (easi--searchable-results
+		   (easi-searchable--results
 		    searchable :query query :number number :page page))
 		 searchable)))
-(cl-defmethod easi--searchable-results ((searchable symbol) &key query number page)
-  "Call `easi--searchable-results' with value of SEARCHABLE.
+(cl-defmethod easi-searchable--results ((searchable symbol) &key query number page)
+  "Call `easi-searchable--results' with value of SEARCHABLE.
 
 Pass the value of SEARCHABLE, QUERY, NUMBER and PAGE."
-  (easi--searchable-results
+  (easi-searchable--results
    (symbol-value searchable)
    :query query :number number :page page))
 

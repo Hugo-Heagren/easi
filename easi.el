@@ -147,7 +147,7 @@ which need to specify certain behaviour."
   "Default maximum number of results to get.
 
 Used as a default NUMBER argument in functions such as
-`easi--searchable-results'."
+`easi-searchable--results'."
   :group 'easi
   :type 'integer)
 
@@ -497,7 +497,7 @@ How new results are added depends on the value of
 	      (strategy easi-next-page-sorting-strategy))
     (dotimes (_ num)
       (let* ((new-raw-results
-	      (easi--searchable-results
+	      (easi-searchable--results
 	       searchable :query query :page (1+ page)))
 	     (_ (unless new-raw-results
 		  (error "No next page of results")))
@@ -638,7 +638,7 @@ SEARCHABLE. If this slot is nil, behaviour is controlled by
 `easi-default-non-all-results-skip'."
   (interactive `(,(easi--prompt-for-searchable)))
   (let* ((session (easi--get-create-current-session))
-	 (raw-results (easi--searchable-results
+	 (raw-results (easi-searchable--results
 		       searchable :page (easi-session-state-page session))))
     (setf (easi-session-state-searchables session) searchable)
     (easi--present-results session raw-results)))
@@ -656,7 +656,7 @@ controlled by `easi-default-non-queryable-skip'."
 		      (query (easi--prompt-for-query searchable)))
 		 `(,searchable ,query)))
   (let* ((session (easi--get-create-current-session))
-	 (raw-results (easi--searchable-results
+	 (raw-results (easi-searchable--results
 		       searchable
 		       :query query
 		       :page (easi-session-state-page session))))
