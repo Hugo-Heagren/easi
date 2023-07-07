@@ -326,7 +326,7 @@ is NUMBER (if non-nil), or the result of
 				      :page page)
 		(easi-searchable--all-results getter))))
     (mapcar
-     (apply-partially #'easi--utils-result-attach-search-engine searchable)
+     (apply-partially #'easi-utils--result-attach-search-engine searchable)
      (if-let (post-proc (easi-search-engine-results-post-processor searchable))
 	 (easi-structured-object-get-field post-proc raw-results)
        raw-results))))

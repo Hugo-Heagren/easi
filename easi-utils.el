@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(cl-defgeneric easi--utils-result-attach-search-engine (engine result)
+(cl-defgeneric easi-utils--result-attach-search-engine (engine result)
   "Attach ENGINE to RESULT.
 
 For certain features (such as field aliasing) to work, this
@@ -33,7 +33,7 @@ implementation for every type of result.
 
 Must return RESULT with ENGINE attached.")
 
-(cl-defmethod easi--utils-result-attach-search-engine (engine (result cons))
+(cl-defmethod easi-utils--result-attach-search-engine (engine (result cons))
   "`setf' the key \"easi-search-engine\" of RESULT to ENGINE.
 
 RESULT is assumed to be either an alist (if every element is a
