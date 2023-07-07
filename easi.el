@@ -343,7 +343,7 @@ Get presenter for current buffer with
 functions in each of SLOTS passing PRINTABLE and the current
 buffer to each. As a special case, no args are passed to the
 functions in the \"hook\" slot."
-  (let ((presenter (easi--utils-resolve-symbol
+  (let ((presenter (easi-utils--resolve-symbol
 		    (easi--session-state-buffer-presenter session)))
 	(buffer (current-buffer)))
     (dolist (slot slots)
@@ -357,11 +357,11 @@ functions in the \"hook\" slot."
   "Return the result at point in SESSION."
   (let ((buf-list (easi-session-state-results-buffers session)))
     (if (memq (current-buffer) buf-list)
-	(funcall (slot-value (easi--utils-resolve-symbol
+	(funcall (slot-value (easi-utils--resolve-symbol
 			(easi--session-state-buffer-presenter session))
 		       'current-getter))
       (with-current-buffer (car buf-list)
-	(funcall (slot-value (easi--utils-resolve-symbol
+	(funcall (slot-value (easi-utils--resolve-symbol
 			(easi--session-state-buffer-presenter session))
 		       'current-getter))))))
 
@@ -421,7 +421,7 @@ If that is nil, then bury any current result buffer with
 - return the result buffer or nil if nothing was presented."
   (let* ((result (easi--get-current-result session))
 	 (presenter
-	  (easi--utils-resolve-symbol
+	  (easi-utils--resolve-symbol
 	   (car (easi-searchable--get-result-presenters
 		 (easi--result-retrieve-search-engine result)))))
 	 (result-buffer
