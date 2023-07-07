@@ -431,27 +431,27 @@ Delete duplicates before returning."
 
 ;;;; Getting sorter list
 
-(cl-defgeneric easi--searchable-sorters (searchable)
+(cl-defgeneric easi-searchable--sorters (searchable)
   "Return a list of sorting functions compatible with SEARCHABLE.")
 
-(cl-defmethod easi--searchable-sorters ((searchable cons))
+(cl-defmethod easi-searchable--sorters ((searchable cons))
   "Get a list of sorters compatible with all members of SEARCHABLE."
   (seq-reduce
    #'seq-intersection
-   (mapcar #'easi--searchable-sorters (cdr searchable))
-   (easi--searchable-sorters (car searchable))))
+   (mapcar #'easi-searchable--sorters (cdr searchable))
+   (easi-searchable--sorters (car searchable))))
 
-(cl-defmethod easi--searchable-sorters ((searchable symbol))
-  "Call `easi--searchable-sorters' on value of SEARCHABLE."
-  (easi--searchable-sorters (symbol-value searchable)))
+(cl-defmethod easi-searchable--sorters ((searchable symbol))
+  "Call `easi-searchable--sorters' on value of SEARCHABLE."
+  (easi-searchable--sorters (symbol-value searchable)))
 
-(cl-defmethod easi--searchable-sorters ((searchable easi-search-engine))
+(cl-defmethod easi-searchable--sorters ((searchable easi-search-engine))
   "Call `easi-search-engine-sorters' on SEARCHABLE."
   (easi-search-engine-sorters searchable))
 
-(cl-defmethod easi--searchable-sorters ((searchable easi-search-engine-group))
-  "Get SEARCHABLE's searchables, pass to `easi--searchable-sorters'."
-  (easi--searchable-sorters (easi-search-engine-group-searchables searchable)))
+(cl-defmethod easi-searchable--sorters ((searchable easi-search-engine-group))
+  "Get SEARCHABLE's searchables, pass to `easi-searchable--sorters'."
+  (easi-searchable--sorters (easi-search-engine-group-searchables searchable)))
 
 (provide 'easi-searchable)
 ;;; easi-searchable.el ends here

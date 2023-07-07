@@ -72,10 +72,10 @@ could, but need not, be based on the query."
 (defun easi--sort-get-searchable-sorter (searchable)
   "Get sorter to use for SEARCHABLE.
 
-If calling `easi--searchable-sorters' returns no-nil, return first
+If calling `easi-searchable--sorters' returns no-nil, return first
 element of that. If not, return first element of
 `easi-default-sort-functions'."
-  (car `(,@(easi--searchable-sorters searchable)
+  (car `(,@(easi-searchable--sorters searchable)
 	 ,@easi-default-sort-functions)))
 
 ;;;; Sorters
