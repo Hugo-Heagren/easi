@@ -421,7 +421,7 @@ Delete duplicates before returning."
   (easi-searchable--result-presenters
    (easi-search-engine-group-searchables searchable)))
 
-(defun easi--get-result-presenters (searchable)
+(defun easi-searchable--get-result-presenters (searchable)
   "List all result presenters compatible with SEARCHABLE."
    ;; TODO Do I want to use `cl-delete-duplicates' and test for cases
    ;; of an object and a symbol pointing at the object?
