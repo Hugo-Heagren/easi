@@ -504,14 +504,14 @@ How new results are added depends on the value of
 	     (new-results
 	      (if (eql strategy 'append)
 		  (easi-sort--results
-		   (easi--sort-get-searchable-sorter searchable)
+		   (easi-sort--get-searchable-sorter searchable)
 		   new-raw-results query)
 		new-raw-results))
 	     (old-results (easi-session-state-results session)))
 	(setf (easi-session-state-results session)
 	      (if (eql strategy 'merge)
 		  (easi-sort--results
-		   (easi--sort-get-searchable-sorter searchable)
+		   (easi-sort--get-searchable-sorter searchable)
 		   `(,@old-results ,@new-results) query)
 		`(,@old-results ,@new-results)))
 	(easi--print session :slots '(printer))
@@ -549,7 +549,7 @@ Main user-interface driver function for Easi.
 
 RAW-RESULTS is an unsorted list of result objects which Easi can
 handle. It is sorted using the result of
-`easi--sort-get-searchable-sorter' (called on the searchables in
+`easi-sort--get-searchable-sorter' (called on the searchables in
 SESSION). The results are then printed using an appropriate
 presenter.
 
@@ -574,7 +574,7 @@ not rely on its return value (this is because what it returns may
 change during development, and subsequent versions behave
 differently)."
   (let* ((results (easi-sort--results
-		   (easi--sort-get-searchable-sorter
+		   (easi-sort--get-searchable-sorter
 		    (easi-session-state-searchables session))
 		   raw-results
 		   (easi-session-state-query session)))
