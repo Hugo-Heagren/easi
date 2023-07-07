@@ -385,7 +385,7 @@ Delete duplicates before returning."
   (easi-searchable--results-presenters
    (easi-search-engine-group-searchables searchable)))
 
-(defun easi--get-results-presenters (searchable)
+(defun easi-searchable--get-results-presenters (searchable)
   "List all results presenters compatible with SEARCHABLE."
   (cl-delete-if
    #'null
