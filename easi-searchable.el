@@ -367,7 +367,7 @@ Pass the value of SEARCHABLE, QUERY, NUMBER and PAGE."
 
 Delete duplicates before returning."
   (delete-dups
-   (mapcar #'easi-searchable--results-presenters searchable)))
+   (mapcan #'easi-searchable--results-presenters searchable)))
 
 (cl-defmethod easi-searchable--results-presenters ((searchable symbol))
   "Call recursively on `symbol-value' of SEARCHABLE."
