@@ -603,8 +603,10 @@ differently)."
 	   ;; there are a different number of results)
 	   (easi--buffer-from-default
 	    easi-results-default-buffer-name session)))
-	 (results-presenter (car (easi-searchable--get-results-presenters
-				  (easi-session-state-searchables session)))))
+	 (results-presenter
+	  (easi-utils--resolve-symbol
+	   (car (easi-searchable--get-results-presenters
+		 (easi-session-state-searchables session))))))
     ;; TODO Should I save windows earlier, at the initial session definition?
     (setf (easi-session-state-window-config session)
 	  (current-window-configuration))
