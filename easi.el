@@ -443,8 +443,7 @@ If that is nil, then bury any current result buffer with
 	 (result-presenter
 	  (easi-utils--resolve-symbol
 	   (car (easi-searchable--get-result-presenters
-		 (easi-result--retrieve-search-engine result)))))
-)
+		 (easi-result--retrieve-search-engine result))))))
     (cl-pushnew result-buffer
 		(easi-session-state-result-buffers session))
     (setf (alist-get result-buffer
@@ -573,40 +572,40 @@ N.B. This function should only be run for its side-effects -- do
 not rely on its return value (this is because what it returns may
 change during development, and subsequent versions behave
 differently)."
-  (let* ((results (easi-sort--results
-		   (easi-sort--get-searchable-sorter
-		    (easi-session-state-searchables session))
-		   raw-results
-		   (easi-session-state-query session)))
-	 ;; Reuse current buffer, if it exists
-	 ;; TODO This assumes there is only one results buffer. In
-	 ;; future, there may be more. Rewrite this to use ALL results
-	 ;; buffers, in a list, and update them all.
-	 ;; NOTE This ensures that the session is linked to buffer we
-	 ;; are printing into.
-	 (results-buffer
-	  (or
-	   ;; Use current buffer if in session' list
-	   (and (memq (current-buffer)
-		      (easi-session-state-results-buffers session))
-		(current-buffer))
-	   ;; Otherwise use the first buffer in that list
-	   (car (easi-session-state-results-buffers session))
-	   ;; No buffer exists already,so create one.
-	   ;; TODO this logic can all be wrapped up in one function,
-	   ;; which just takes a session and a buffer.
-	   ;; MAYBE Users might want to set the results-buffer name
-	   ;; depending on the results (e.g. on how many there
-	   ;; are). Do we want to update the results-buffer name on
-	   ;; this basis even we reuse the results-buffer (e.g. if they
-	   ;; rerun, reusing the results-buffer, with a new query and
-	   ;; there are a different number of results)
-	   (easi--buffer-from-default
-	    easi-results-default-buffer-name session)))
-	 (results-presenter
-	  (easi-utils--resolve-symbol
-	   (car (easi-searchable--get-results-presenters
-		 (easi-session-state-searchables session))))))
+  (let ((results (easi-sort--results
+		  (easi-sort--get-searchable-sorter
+		   (easi-session-state-searchables session))
+		  raw-results
+		  (easi-session-state-query session)))
+	;; Reuse current buffer, if it exists
+	;; TODO This assumes there is only one results buffer. In
+	;; future, there may be more. Rewrite this to use ALL results
+	;; buffers, in a list, and update them all.
+	;; NOTE This ensures that the session is linked to buffer we
+	;; are printing into.
+	(results-buffer
+	 (or
+	  ;; Use current buffer if in session' list
+	  (and (memq (current-buffer)
+		     (easi-session-state-results-buffers session))
+	       (current-buffer))
+	  ;; Otherwise use the first buffer in that list
+	  (car (easi-session-state-results-buffers session))
+	  ;; No buffer exists already,so create one.
+	  ;; TODO this logic can all be wrapped up in one function,
+	  ;; which just takes a session and a buffer.
+	  ;; MAYBE Users might want to set the results-buffer name
+	  ;; depending on the results (e.g. on how many there
+	  ;; are). Do we want to update the results-buffer name on
+	  ;; this basis even we reuse the results-buffer (e.g. if they
+	  ;; rerun, reusing the results-buffer, with a new query and
+	  ;; there are a different number of results)
+	  (easi--buffer-from-default
+	   easi-results-default-buffer-name session)))
+	(results-presenter
+	 (easi-utils--resolve-symbol
+	  (car (easi-searchable--get-results-presenters
+		(easi-session-state-searchables session))))))
     ;; TODO Should I save windows earlier, at the initial session definition?
     (setf (easi-session-state-window-config session)
 	  (current-window-configuration))
