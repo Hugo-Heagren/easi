@@ -419,10 +419,6 @@ If that is nil, then bury any current result buffer with
 - turn on `easi-result-mode' in the result buffer.
 - return the result buffer or nil if nothing was presented."
   (let* ((result (easi--get-current-result session))
-	 (presenter
-	  (easi-utils--resolve-symbol
-	   (car (easi-searchable--get-result-presenters
-		 (easi-result--retrieve-search-engine result)))))
 	 (result-buffer
 	  ;; Reuse existing buffer if it exists
 	  (or
@@ -443,21 +439,26 @@ If that is nil, then bury any current result buffer with
 	   ;; rerun, reusing the results-buffer, with a new query and
 	   ;; there are a different number of results)
 	   (easi--buffer-from-default
-	    easi-result-default-buffer-name session))))
+	    easi-result-default-buffer-name session)))
+	 (result-presenter
+	  (easi-utils--resolve-symbol
+	   (car (easi-searchable--get-result-presenters
+		 (easi-result--retrieve-search-engine result)))))
+)
     (cl-pushnew result-buffer
 		(easi-session-state-result-buffers session))
     (setf (alist-get result-buffer
 		     (easi-session-state-buffer-presenters
 		      session))
-	  presenter)
-    (if presenter
+	  result-presenter)
+    (if result-presenter
 	;; Non-nil presenter -- present result accordingly
 	(with-current-buffer result-buffer
 	  (easi--print session :printable result :slots slots)
 	  (easi-result-mode)
 	  ;; In `with-current-buffer' to stay inside first `if' arg
 	  (display-buffer result-buffer
-			  (or (slot-value presenter 'display-action)
+			  (or (slot-value result-presenter 'display-action)
 			      easi-result-default-display-action))
 	  result-buffer)
       ;; nil presenter -- don't present result, but do hide any
