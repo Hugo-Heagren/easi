@@ -340,17 +340,16 @@ this. It defaults to the list of result in SESSION.
 
 Get presenter for current buffer with
 `easi--session-state-buffer-presenter'. Then call each of the
-functions in each of SLOTS passing PRINTABLE and the current
-buffer to each. As a special case, no args are passed to the
-functions in the \"hook\" slot."
+functions in each of SLOTS passing PRINTABLE and SESSION to each.
+As a special case, no args are passed to the functions in the
+\"hook\" slot."
   (let ((presenter (easi-utils--resolve-symbol
-		    (easi--session-state-buffer-presenter session)))
-	(buffer (current-buffer)))
+		    (easi--session-state-buffer-presenter session))))
     (dolist (slot slots)
       (if (eq slot 'hook)
 	  (mapc #'funcall (slot-value presenter 'hook))
 	(mapc
-	 (lambda (fun) (funcall fun printable buffer))
+	 (lambda (fun) (funcall fun printable session))
 	 (slot-value presenter slot))))))
 
 (defun easi--get-current-result (session)

@@ -75,7 +75,7 @@ value of that field as DESC2."
 	   ;; End unless
 	   end))
 
-(defun easi-result-list--mode-setup (result _buffer)
+(defun easi-result-list--mode-setup (result _session)
   "Initialisation function for `easi-result-list-mode'.
 
 - run `easi-result-list-mode'
@@ -83,7 +83,7 @@ value of that field as DESC2."
   (easi-result-list-mode)
   (tabulated-list-init-header))
 
-(defun easi-result-list--print (result _buffer)
+(defun easi-result-list--print (result _session)
   "Set entries and print.
 
 Set `tabulated-list-entries' on the basis of RESULT, then call
