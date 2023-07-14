@@ -55,7 +55,7 @@ engines."
 (defcustom easi-default-presenter-grouper nil
   "Default method for displaying a group of presenters.")
 
-;;;; Presenter type
+;;;; Basic types
 
 ;;;###autoload
 (defclass easi-presenter ()
@@ -69,5 +69,14 @@ engines."
    (hook :initarg :hook :initform nil))
   "Base class for Easi presenters.")
 
-(provide 'easi-presenter)
-;;; easi-presenter.el ends here
+;;;###autoload
+(defclass easi-presentable-group nil
+  ((name :initarg :name :initform nil)
+   (key :initarg :key :initform nil)
+   (displayer :initarg :display-action :initform nil)
+   (documentation :initarg :documentation :initform "")
+   (presentables :initarg :presentables :initform nil))
+  "A group of presentables.")
+
+(provide 'easi-presentable)
+;;; easi-presentable.el ends here
