@@ -26,7 +26,7 @@
 
 (require 'tabulated-list)
 (require 'cl-lib)
-(require 'easi-presenter)
+(require 'easi-presentable)
 
 (defgroup easi-result-list nil
   "Group for EASI result presenter based on `tabulated-list-mode'."

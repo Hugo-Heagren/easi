@@ -32,7 +32,7 @@
 (require 'easi-searchable)
 (require 'easi-structured-object-getter)
 (require 'easi-result)
-(require 'easi-presenter)
+(require 'easi-presentable)
 (require 'easi-sort)
 (require 'easi-utils)
 

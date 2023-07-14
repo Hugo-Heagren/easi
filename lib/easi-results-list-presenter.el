@@ -27,7 +27,7 @@
 (require 'cl-lib)
 (require 'tabulated-list)
 (require 'easi)
-(require 'easi-presenter)
+(require 'easi-presentable)
 (require 'easi-result)
 
 (defgroup easi-results-list nil

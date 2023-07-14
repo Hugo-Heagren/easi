@@ -36,7 +36,7 @@
 
 (require 'cl-lib)
 (require 'easi-structured-object-getter)
-(require 'easi-presenter)
+(require 'easi-presentable)
 (require 'easi-utils)
 
 ;;;; Basic types
