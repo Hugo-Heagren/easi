@@ -1,4 +1,4 @@
-;;; easi-presenter.el --- Present (collections of) results to user  -*- lexical-binding: t; -*-
+;;; easi-presentable.el --- Present (collections of) results to user  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2023  Hugo Heagren
 
