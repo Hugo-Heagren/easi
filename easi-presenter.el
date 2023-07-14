@@ -52,6 +52,9 @@ engines."
 			 (restricted-sexp
 			  :match-alternatives easi-presenter-p))))
 
+(defcustom easi-default-presenter-grouper nil
+  "Default method for displaying a group of presenters.")
+
 ;;;; Presenter type
 
 ;;;###autoload
