@@ -267,7 +267,7 @@ results. The relevant presenter should be prepared to handle
 this. It defaults to the list of result in SESSION.
 
 Get presenter for current buffer with
-`easi--session-state-buffer-presenter'. Then call each of the
+`easi-session--current-buffer-presenter'. Then call each of the
 functions in each of SLOTS passing PRINTABLE and SESSION to each.
 As a special case, no args are passed to the functions in the
 \"hook\" slot."
@@ -284,12 +284,11 @@ As a special case, no args are passed to the functions in the
   "Return the result at point in SESSION."
   (let ((buf-list (easi-session-state-results-buffers session)))
     (if (memq (current-buffer) buf-list)
-	(funcall (slot-value (easi-utils--resolve-symbol
-			(easi--session-state-buffer-presenter session))
+	(funcall (slot-value (easi-session--current-buffer-presenter session)
 		       'current-getter))
       (with-current-buffer (car buf-list)
 	(funcall (slot-value (easi-utils--resolve-symbol
-			(easi--session-state-buffer-presenter session))
+			(easi-session--current-buffer-presenter session))
 		       'current-getter))))))
 
 ;;;;; (Current) Result

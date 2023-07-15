@@ -37,7 +37,7 @@
   (page 1))
 
 ;; TODO this should probably be a method
-(defun easi--session-state-buffer-presenter (session)
+(defun easi-session--current-buffer-presenter (session)
   "Get results presenter for current buffer in SESSION."
   (alist-get (current-buffer)
 	     (easi-session-state-buffer-presenters session)))
