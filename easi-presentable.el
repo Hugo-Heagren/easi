@@ -25,6 +25,8 @@
 ;;; Code:
 
 (require 'eieio)
+(require 'easi-utils)
+(require 'easi-session)
 
 ;;;; Customizables
 
@@ -94,6 +96,79 @@ called with the current result as its sole argument."
    (documentation :initarg :documentation :initform "")
    (presentables :initarg :presentables :initform nil))
   "A group of presentables.")
+
+;;;; Setting up buffers
+
+(cl-defgeneric easi-presentable--set-buffers (presentable session result-or-results)
+  "Ensure that SESSION has buffers setup for PRESENTABLE.
+
+Mutably modifies SESSION's state. For each presenter in
+PRESENTABLE, ensure that SESSION has a buffer, and that the
+association between buffer and presenter is registered.
+
+RESULT-OR-RESULTS should be either of the symbols `result' or
+`results', to indicate the type of thing being printed.
+
+Do not rely on this function's return value.")
+
+(cl-defmethod easi-presentable--set-buffers ((presentable symbol) session result-or-results)
+  "Call `easi-presentable--set-buffers' on value of PRESENTABLE.
+
+Pass SESSION and RESULT-OR-RESULTS on unchanged."
+  (easi-presentable--set-buffers
+   (symbol-value presentable) session result-or-results))
+
+(cl-defmethod easi-presentable--set-buffers ((presentable cons) session result-or-results)
+  "Map `easi-presentable--set-buffers' over PRESENTABLE.
+
+Pass SESSION and RESULT-OR-RESULTS on unchanged. Mapping is done
+with `mapc'."
+  (mapc
+   (lambda (pres)
+     (easi-presentable--set-buffers pres session result-or-results))
+   presentable))
+
+(cl-defmethod easi-presentable--set-buffers ((presentable easi-presentable-group) session result-or-results)
+  "Call `easi-presentable--set-buffers' on value of slot \"presentables\".
+
+Get presentables from PRESENTABLE's slots \"presentables\", and
+call `easi-presentable--set-buffers' on this value.
+
+Pass SESSION and RESULT-OR-RESULTS on unchanged."
+  (easi-presentable--set-buffers
+   (slot-value presentable 'presentables) session result-or-results)
+  ;; TODO run here the group display function
+  )
+
+(cl-defmethod easi-presentable--set-buffers ((presentable easi-presenter) session result-or-results)
+  "Create and set a buffer for PRESENTABLE, unless there is one already.
+
+If PRESENTABLE is already associated (in SESSION) with a buffer,
+do nothing. Otherwise, get a new buffer with
+`easi-utils--buffer-from-default', and set the relevant state in
+the session.
+
+RESULT-OR-RESULTS should be either of the symbols `result' or
+`results', to indicate the type of thing being printed."
+  ;; If the presenter already has a buffer in the list.
+  ;; (`easi--kill-buffer-manage-sessions' ensures that killed buffers
+  ;; are removed from this list, so anything strange happens, we can
+  ;; assume that the buffer is live.) This ensures that no presenter
+  ;; is used more than once.
+  (unless (rassoc presentable (easi-session-state-buffer-presenters session))
+    (let* ((default (cl-case result-or-results
+		      (result easi-result-default-buffer-name)
+		      (results easi-results-default-buffer-name)))
+	   (buffer (easi-utils--buffer-from-default default session)))
+      ;; If necessary, push the buffer into the result/results buffer
+      ;; list
+      (cl-pushnew buffer
+		  (cl-case result-or-results
+		    (result (easi-session-state-result-buffers session))
+		    (results (easi-session-state-results-buffers session))))
+      (setf (alist-get
+	     buffer (easi-session-state-buffer-presenters session))
+	    presentable))))
 
 (provide 'easi-presentable)
 ;;; easi-presentable.el ends here
