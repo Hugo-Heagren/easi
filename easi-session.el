@@ -45,7 +45,7 @@
   (alist-get (current-buffer)
 	     (easi-session-state-buffer-presenters session)))
 
-(defun easi--get-current-session ()
+(defun easi-session--get-current ()
   "Return first session with current buffer.
 
 Search the \"result-buffers\" and \"results-buffers\" slots of
@@ -62,7 +62,7 @@ buffer appears."
   "Get current session, creating one if necessary.
 
 If a session is created, it is added to `easi-session-list'."
-  (or (easi--get-current-session)
+  (or (easi-session--get-current)
       (let* ((session (easi-session-state-create)))
 	 (push session easi-session-list)
 	 session)))

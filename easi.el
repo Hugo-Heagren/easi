@@ -167,7 +167,7 @@ though `append' probably takes less computing power."
 (defun easi-quit ()
   "Quit current Easi buffer."
   (interactive nil easi-results-mode easi-result-mode)
-  (when (easi--get-current-session)
+  (when (easi-session--get-current)
     (kill-buffer (current-buffer))))
 
 (defun easi-quit-session (&optional session)
@@ -177,7 +177,7 @@ Delete all buffers in the session, restore any saved window
 config, and remove the session from `easi-session-list'.
 
 If SESSION is not specified, default to current session."
-  (interactive `(,(easi--get-current-session))
+  (interactive `(,(easi-session--get-current))
    easi-results-mode easi-result-mode)
   (let* ((window-config (easi-session-state-window-config session)))
     (dolist (buf `(,@(easi-session-state-results-buffers session)
@@ -204,7 +204,7 @@ If SESSION is not specified, default to current session."
 (defun easi-view-result ()
   "Select window of current result."
   (interactive)
-  (let* ((session (easi--get-current-session))
+  (let* ((session (easi-session--get-current))
 	 (buf-ls (easi-session-state-result-buffers session))
 	 (buf1 (car buf-ls))
 	 (buf (cond
@@ -228,7 +228,7 @@ If SESSION is not specified, default to current session."
 Get the current buffer, and remove it from all lists in the
 current session. If it was the last buffer in that session, then
 call `easi-quit-session', passing the session."
-  (let* ((session (easi--get-current-session))
+  (let* ((session (easi-session--get-current))
 	 (buffer (current-buffer))
 	 (new-results-buffers (delq buffer (easi-session-state-results-buffers session)))
 	 (new-result-buffers (delq buffer (easi-session-state-result-buffers session))))
@@ -296,7 +296,7 @@ As a special case, no args are passed to the functions in the
 (defun easi-view-results ()
   "Select window of current results."
   (interactive)
-  (let* ((session (easi--get-current-session))
+  (let* ((session (easi-session--get-current))
 	 (buf-ls (easi-session-state-results-buffers session))
 	 (buf1 (car buf-ls))
 	 (buf (cond
@@ -403,7 +403,7 @@ If that is nil, then bury any current result buffer with
 
 (defun easi--update-result ()
   "Update Easi's result buffer to display the current result."
-  (let* ((session (easi--get-current-session)))
+  (let* ((session (easi-session--get-current)))
     (easi--present-result session '(printer))))
 
 ;;;;; Pagination
@@ -416,7 +416,7 @@ NUM defaults to 1.
 How new results are added depends on the value of
 `easi-next-page-sorting-strategy', which see."
   (interactive "p" easi-results-mode)
-  (when-let* ((session (easi--get-current-session))
+  (when-let* ((session (easi-session--get-current))
 	      (searchable (easi-session-state-searchables session))
 	      (query (easi-session-state-query session))
 	      (page (easi-session-state-page session))
@@ -601,7 +601,7 @@ Interactively, prompt for SEARCHABLE with
   (interactive `(,(easi--prompt-for-searchable))
 	       easi-results-mode easi-result-mode)
   (if-let ((query (easi-session-state-query
-		   (easi--get-current-session))))
+		   (easi-session--get-current))))
       (easi-search searchable query))
   (easi-all searchable))
 
@@ -613,10 +613,10 @@ Interactively, prompt for QUERY with `easi--prompt-for-query',
 passing `easi-current-searchables' as argument."
   (interactive `(,(easi--prompt-for-query
 		   (easi-session-state-searchables
-		    (easi--get-current-session))))
+		    (easi-session--get-current))))
 	       easi-results-mode easi-result-mode)
   (easi-search
-   (easi-session-state-searchables (easi--get-current-session))
+   (easi-session-state-searchables (easi-session--get-current))
    query))
 
 ;;; Examples (not part of infrastructure) (to be eventually removed)
