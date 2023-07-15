@@ -259,26 +259,37 @@ different presenters."
   (add-hook 'kill-buffer-hook 'easi--kill-buffer-manage-sessions nil 'local))
 
 (cl-defun easi--print (session &key (printable (easi-session-state-results session))
-			       (slots '(before printer after hook)))
-  "Print PRINTABLE in current buffer.
+			       (slots '(before printer after hook))
+			       result-or-results)
+  "Print a results or list of results in all relevant buffers.
 
-PRINTABLE is expected to be either a single result or a list of
-results. The relevant presenter should be prepared to handle
-this. It defaults to the list of result in SESSION.
+PRINTABLE is either a single result or a list of results. The
+relevant presenter should be prepared to handle this. PRINTABLE
+defaults to the list of result in SESSION.
 
-Get presenter for current buffer with
-`easi-session--current-buffer-presenter'. Then call each of the
-functions in each of SLOTS passing PRINTABLE and SESSION to each.
-As a special case, no args are passed to the functions in the
-\"hook\" slot."
-  (let ((presenter (easi-utils--resolve-symbol
-		    (easi--session-state-buffer-presenter session))))
-    (dolist (slot slots)
-      (if (eq slot 'hook)
-	  (mapc #'funcall (slot-value presenter 'hook))
-	(mapc
-	 (lambda (fun) (funcall fun printable session))
-	 (slot-value presenter slot))))))
+Loop over the buffer/presenter pairs in SESSSION's list, and for
+each relevant one (i.e. all the results or result presenters,
+depending on RESULT-OR-RESULTS), call `easi-presentable--print',
+passing SLOTS and the buffer."
+  ;; Loop over all the presentables in all the buffers, and
+  (let ((list (cl-case result-or-results
+		(result (easi-session-state-result-buffers session))
+		(results (easi-session-state-results-buffers session)))))
+    ;; Because there is a 1-1 correspondence between buffers and
+    ;; presenters, and each buffer is unique, looping over this list
+    ;; ensures that we only print for each buffer once, even if some
+    ;; presenters are specified more than once (e.g. in multiple
+    ;; groups).
+    (cl-loop for (buf . pres)
+	     in (easi-session-state-buffer-presenters session)
+	     when (memql buf list)
+	     do
+	     (easi-presentable--print
+	      pres session
+	      :printable printable
+	      :slots slots
+	      :buffer buf)
+	     end)))
 
 (defun easi--get-current-result (session)
   "Return the result at point in SESSION."
