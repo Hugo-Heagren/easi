@@ -27,6 +27,9 @@
 
 (require 'cl-lib)
 
+(defvar easi-session-list nil
+  "List of easi sessions. Each is an `easi-session-state'.")
+
 (cl-defstruct (easi-session-state
 	       (:constructor easi-session-state-create))
   "Holds current easi search and presentation state."
@@ -41,9 +44,6 @@
   "Get results presenter for current buffer in SESSION."
   (alist-get (current-buffer)
 	     (easi-session-state-buffer-presenters session)))
-
-(defvar easi-session-list nil
-  "List of easi sessions. Each is an `easi-session-state'.")
 
 (defun easi--get-current-session ()
   "Return first session with current buffer.
