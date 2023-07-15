@@ -35,6 +35,7 @@
 (require 'easi-presentable)
 (require 'easi-sort)
 (require 'easi-utils)
+(require 'easi-session)
 
 ;;;; Customizables
 
@@ -160,47 +161,6 @@ though `append' probably takes less computing power."
   :type '(choice (const append)
 		 (const merge)))
 
-;;;; Session management
-
-(cl-defstruct (easi-session-state
-	       (:constructor easi-session-state-create))
-  "Holds current easi search and presentation state."
-  window-config
-  query searchables results
-  results-buffers result-buffers
-  buffer-presenters
-  (page 1))
-
-;; TODO this should probably be a method, and be elsewhere?
-(defun easi--session-state-buffer-presenter (session)
-  "Get results presenter for current buffer in SESSION."
-  (alist-get (current-buffer)
-	     (easi-session-state-buffer-presenters session)))
-
-(defvar easi-session-list nil
-  "List of easi sessions. Each is an `easi-session-state'.")
-
-(defun easi--get-current-session ()
-  "Return first session with current buffer.
-
-Search the \"result-buffers\" and \"results-buffers\" slots of
-each item in `easi-session-list' and return first where current
-buffer appears."
-  (let ((buf (current-buffer)))
-    (cl-find-if
-     (lambda (session)
-       (or (memq buf (easi-session-state-result-buffers session))
-	   (memq buf (easi-session-state-results-buffers session))))
-     easi-session-list)))
-
-(defun easi--get-create-current-session ()
-  "Get current session, creating one if necessary.
-
-If a session is created, it is added to `easi-session-list'."
-  (or (easi--get-current-session)
-      (let* ((session (easi-session-state-create)))
-	 (push session easi-session-list)
-	 session)))
 
 ;;;; Results user interface
 
