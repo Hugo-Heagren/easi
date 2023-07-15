@@ -88,23 +88,6 @@ experience)."
   :group 'easi
   :type 'easi-searchable)
 
-(defcustom easi-results-default-buffer-name "EASI Results"
-  "Default name for EASI buffer displaying collected results.
-
-A string will be used as the buffer name. A function will be
-called with three arguments: current searchable, the current
-query, and the list of results. It should return a string."
-  :group 'easi
-  :type '(choice string function))
-
-(defcustom easi-result-default-buffer-name "EASI Current Result"
-  "Default name for EASI buffer displaying the current result.
-
-A string will be used as the buffer name. A function will be
-called with the current result as its sole argument."
-  :group 'easi
-  :type '(choice string function))
-
 (defcustom easi-result-default-display-action nil
   "ACTION arg for `display-buffer' when displaying a result buffer."
   :type display-buffer--action-custom-type)
