@@ -58,7 +58,7 @@ buffer appears."
 	   (memq buf (easi-session-state-results-buffers session))))
      easi-session-list)))
 
-(defun easi--get-create-current-session ()
+(defun easi-session--get-create-current ()
   "Get current session, creating one if necessary.
 
 If a session is created, it is added to `easi-session-list'."
