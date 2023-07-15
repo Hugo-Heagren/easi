@@ -221,21 +221,6 @@ If a session is created, it is added to `easi-session-list'."
 
 ;;;; Results user interface
 
-(defun easi--buffer-from-default (default session)
-  "Get an appropriate buffer given DEFAULT.
-
-SESSION If DEFAULT is a string, pass it to `generate-new-buffer'.
-If DEFAULT is a function, call it passing SESSION as the sole
-argument.
-
-Return the result of whatever is done. If DEFAULT is neither a
-string nor a function, return nil."
-  (cond
-   ((stringp default)
-    (generate-new-buffer default))
-   ((functionp default)
-    (funcall default session))))
-
 (defun easi-quit ()
   "Quit current Easi buffer."
   (interactive nil easi-results-mode easi-result-mode)
@@ -411,7 +396,7 @@ If that is nil, then bury any current result buffer with
 - get a result buffer (reuse the current buffer if it's in
   SESSION's \"result-buffers\" slot, otherwise use the first
   buffer in that list, otherwise create a new buffer with
-  `easi--buffer-from-default').
+  `easi-utils--buffer-from-default').
 - set new state in SESSION (e.g. new result buffer).
 - switch to result buffer where necessary.
 - call `easi--print', passing SESSION, RESULT and SLOTS. This actually
@@ -560,7 +545,7 @@ Then:
 - get a results buffer (reuse the current buffer if it's in
   SESSION's \"results-buffers\" slot, otherwise use the first
   buffer in that list, otherwise create a new buffer with
-  `easi--buffer-from-default').
+  `easi-utils--buffer-from-default').
 - set new state in SESSION (e.g. new results buffer).
 - switch to results buffer where necessary.
 - call `easi--print', passing SESSION. This actually prints the

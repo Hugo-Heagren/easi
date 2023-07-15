@@ -53,6 +53,21 @@ cons) or a plist (`plistp')."
    and
    finally return symbol))
 
+(defun easi-utils--buffer-from-default (default session)
+  "Get an appropriate buffer given DEFAULT.
+
+SESSION If DEFAULT is a string, pass it to `generate-new-buffer'.
+If DEFAULT is a function, call it passing SESSION as the sole
+argument.
+
+Return the result of whatever is done. If DEFAULT is neither a
+string nor a function, return nil."
+  (cond
+   ((stringp default)
+    (generate-new-buffer default))
+   ((functionp default)
+    (funcall default session))))
+
 ;;; Utils for writing search engines
 
 (defun easi-utils-get-http-body (buffer)
