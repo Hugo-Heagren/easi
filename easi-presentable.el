@@ -78,6 +78,11 @@ called with the current result as its sole argument."
   :type display-buffer--action-custom-type
   :group 'easi)
 
+(defcustom easi-result-default-display-action nil
+  "ACTION arg for `display-buffer' when displaying a result buffer."
+  :type display-buffer--action-custom-type
+  :group 'easi)
+
 
 ;;;; Basic types
 

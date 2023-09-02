@@ -89,10 +89,6 @@ experience)."
   :group 'easi
   :type 'easi-searchable)
 
-(defcustom easi-result-default-display-action nil
-  "ACTION arg for `display-buffer' when displaying a result buffer."
-  :type display-buffer--action-custom-type)
-
 (defcustom easi-default-non-queryable-skip nil
   "How query functions should handle non-queryable searchables.
 
