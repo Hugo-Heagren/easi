@@ -359,5 +359,18 @@ Call `display-buffer', passing either:
 	 (result easi-result-default-display-action)
 	 (results easi-results-default-display-action)))))
 
+;;;; Hiding
+
+(defun easi-presentable-hide-buffer (buffer presenter)
+  "Hide BUFFER according to PRESENTER.
+
+Pass BUFFER to either:
+- the value of slot `hide-function' in PRESENTER, if non-nil
+- `easi-default-result-hide-function' otherwise."
+  (let ((hide-function
+	 (or (slot-value presenter 'hide-function)
+	     easi-default-result-hide-function)))
+    (funcall hide-function buffer)))
+
 (provide 'easi-presentable)
 ;;; easi-presentable.el ends here
