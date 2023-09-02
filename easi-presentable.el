@@ -281,5 +281,40 @@ are passed to the functions in the \"hook\" slot."
 	(easi-results-mode)
       (easi-result-mode))))
 
+;;;; Compatibility
+
+(cl-defgeneric easi-presentable-presenter-compat-p (presentable presenter)
+  "Return non-nil if PRESENTER is compatible with PRESENTABLE.")
+
+(cl-defmethod easi-presentable-presenter-compat-p ((presentable symbol) presenter)
+  "Call `easi-presentable-presenter-compat-p' on value of PRESENTABLE.
+
+Pass PRESENTER on."
+  (easi-presentable-presenter-compat-p (symbol-value presentable) presenter))
+
+(cl-defmethod easi-presentable-presenter-compat-p ((presentable cons) presenter)
+  "Return t if PRESENTER is compatible with any member of PRESENTABLE."
+  (when (memq t
+	      (mapcar
+	       (lambda (pres) (easi-presentable-presenter-compat-p pres presenter))
+	       presentable))
+    t))
+
+(cl-defmethod easi-presentable-presenter-compat-p ((presentable easi-presentable-group) presenter)
+  "Non-nil if PRESENTER is compatible with any presentable in PRESENTABLE."
+  (easi-presentable-presenter-compat-p
+   (slot-value presentable 'presentables)
+   presenter))
+
+(cl-defmethod easi-presentable-presenter-compat-p ((presentable easi-presenter) presenter)
+  "Non-nil if PRESENTABLE and PRESENTER are `eql'."
+  (eql presentable presenter))
+
+(cl-defmethod easi-presentable-presenter-compat-p ((presentable (eql nil)) presenter)
+  "Return nil.
+
+PRESENTABLE and PRESENTER are otherwise ignored."
+  (ignore presentable presenter))
+
 (provide 'easi-presentable)
 ;;; easi-presentable.el ends here
