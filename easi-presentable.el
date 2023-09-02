@@ -94,6 +94,11 @@ called with the current result as its sole argument."
   (when-let ((window (get-buffer-window buffer)))
     (quit-restore-window window)))
 
+(defcustom easi-default-result-hide-function
+  #'easi-quit-restore-hide
+  "Default hide-action for a result buffer."
+  :group 'easi
+  :type 'function)
 
 ;;;; Basic types
 
