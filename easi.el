@@ -256,7 +256,7 @@ different presenters."
 
 (cl-defun easi--print (session &key (printable (easi-session-state-results session))
 			       (slots '(before printer after hook))
-			       result-or-results)
+			       result-or-results presenter)
   "Print a results or list of results in all relevant buffers.
 
 PRINTABLE is either a single result or a list of results. The
@@ -266,8 +266,8 @@ defaults to the list of result in SESSION.
 Loop over the buffer/presenter pairs in SESSSION's list, and for
 each relevant one (i.e. all the results or result presenters,
 depending on RESULT-OR-RESULTS), call `easi-presentable--print',
-passing SLOTS and the buffer."
-  ;; Loop over all the presentables in all the buffers, and
+passing SLOTS and the buffer, then display it with
+`easi-presentable--display-buffer'."
   (let ((list (cl-case result-or-results
 		(result (easi-session-state-result-buffers session))
 		(results (easi-session-state-results-buffers session)))))
@@ -279,13 +279,13 @@ passing SLOTS and the buffer."
     (cl-loop for (buf . pres)
 	     in (easi-session-state-buffer-presenters session)
 	     when (memql buf list)
-	     do
-	     (easi-presentable--print
-	      pres session
-	      :printable printable
-	      :slots slots
-	      :buffer buf)
-	     end)))
+ 	     if (easi-presentable-presenter-compat-p presenter pres)
+  	     do (easi-presentable--print
+		 pres session :printable printable :slots slots :buffer buf)
+	     and do (easi-presentable--display-buffer
+		     buf pres result-or-results)
+	     else do (easi-presentable-hide-buffer buf pres)
+	     end end)))
 
 (defun easi--get-current-result (session)
   "Return the result at point in SESSION."
