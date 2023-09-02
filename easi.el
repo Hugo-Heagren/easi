@@ -336,77 +336,22 @@ different presenters."
 
 SESSION is the current Easi session state object.
 
-Use `easi-searchable--get-result-presenters' to get a list of result
-presenters compatible with RESULT, and treat the first one as
-default.
-
-If that is nil, then bury any current result buffer with
-`quit-restore-window' and return nil. If non-nil, then:
-- get a result buffer (reuse the current buffer if it's in
-  SESSION's \"result-buffers\" slot, otherwise use the first
-  buffer in that list, otherwise create a new buffer with
-  `easi-utils--buffer-from-default').
-- set new state in SESSION (e.g. new result buffer).
-- switch to result buffer where necessary.
-- call `easi--print', passing SESSION, RESULT and SLOTS. This actually
-  prints the result.
-- turn on `easi-result-mode' in the result buffer.
-- return the result buffer or nil if nothing was presented."
+Use `easi-searchable--get-result-presenters' to get a list of
+result presenters compatible with RESULT, and treat the first one
+as default. Ensure buffers are setup correctly SESSION with
+`easi-presentable--set-buffers'. Finally call `easi--print',
+passing SESSION, SLOTS, the symbol `result', and the presenter."
   (let* ((result (easi--get-current-result session))
-	 (result-buffer
-	  ;; Reuse existing buffer if it exists
-	  (or
-	   ;; Is the current results buffer in the session's list? (if
-	   ;; so, use it)
-	   (and (memq (current-buffer)
-		      (easi-session-state-result-buffers session))
-		(current-buffer))
-	   ;; Otherwise use the first buffer in that list
-	   (car (easi-session-state-result-buffers session))
-	   ;; No buffer exists already,so create one.
-	   ;; TODO this logic can all be wrapped up in one function,
-	   ;; which just takes a session and a buffer.
-	   ;; MAYBE Users might want to set the results-buffer name
-	   ;; depending on the results (e.g. on how many there
-	   ;; are). Do we want to update the results-buffer name on
-	   ;; this basis even we reuse the results-buffer (e.g. if they
-	   ;; rerun, reusing the results-buffer, with a new query and
-	   ;; there are a different number of results)
-	   (easi--buffer-from-default
-	    easi-result-default-buffer-name session)))
 	 (result-presenter
-	  (easi-utils--resolve-symbol
-	   (car (easi-searchable--get-result-presenters
-		 (easi-result--retrieve-search-engine result))))))
-    (cl-pushnew result-buffer
-		(easi-session-state-result-buffers session))
-    (setf (alist-get result-buffer
-		     (easi-session-state-buffer-presenters
-		      session))
-	  result-presenter)
-    (if result-presenter
-	;; Non-nil presenter -- present result accordingly
-	(with-current-buffer result-buffer
-	  (easi--print session :printable result :slots slots)
-	  (easi-result-mode)
-	  ;; In `with-current-buffer' to stay inside first `if' arg
-	  (display-buffer result-buffer
-			  (or (slot-value result-presenter 'display-action)
-			      easi-result-default-display-action))
-	  result-buffer)
-      ;; nil presenter -- don't present result, but do hide any
-      ;; previously-presented results
-      ;; TODO Should this behaviour be controlled with a user variable?
-      ;; NOTE We have to get and check the window separately like
-      ;; this, because if there is no result buffer window, then
-      ;; `window' will be nil, and passing nil to
-      ;; `quit-restore-window' just quits the current window---so the
-      ;; results buffer would often be buried.
-      (when-let ((result-buffer)
-		 (window (get-buffer-window result-buffer)))
-	(quit-restore-window window)
-	;; Return nil -- no (active/useful) result buffer
-	nil))))
+	  (car (easi-searchable--get-result-presenters
+		(easi-result--retrieve-search-engine result)))))
+    (easi-presentable--set-buffers result-presenter session 'result)
+    (easi--print
+     session
+     :printable result
+     :slots slots
+     :result-or-results 'result
+     :presenter result-presenter)))
 
 (defun easi--update-result ()
   "Update Easi's result buffer to display the current result."
