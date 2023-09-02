@@ -316,5 +316,48 @@ Pass PRESENTER on."
 PRESENTABLE and PRESENTER are otherwise ignored."
   (ignore presentable presenter))
 
+;;;; Displaying
+
+(cl-defgeneric easi-presentable--display-buffer (buffer presentable result-or-results)
+  "Display BUFFER with PRESENTABLE.
+
+RESULT-OR-RESULTS indicates what type of thing is being
+displayed in BUFFER.")
+
+(cl-defmethod easi-presentable--display-buffer (buffer (presentable symbol) result-or-results)
+  "Call `easi-presentable--display-buffer' on value of PRESENTABLE.
+
+Pass BUFFER and RESULT-OR-RESULTS unaltered."
+  (easi-presentable--display-buffer buffer (symbol-value presentable)) result-or-results)
+
+(cl-defmethod easi-presentable--display-buffer (buffer (presentable cons) result-or-results)
+  "Map `easi-presentable--display-buffer' over PRESENTABLE with `mapc'.
+
+Pass BUFFER and RESULT-OR-RESULTS unaltered."
+  (mapc (lambda (pres) (easi-presentable--display-buffer buffer pres result-or-results))
+	presentable))
+
+(cl-defmethod easi-presentable--display-buffer (buffer (presentable easi-presentable-group) result-or-results)
+  "Call `easi-presentable--display-buffer' on all presentables in PRESENTABLE.
+
+Pass BUFFER and RESULT-OR-RESULTS unaltered."
+  (easi-presentable--display-buffer
+   buffer (slot-value presentable 'presentables) result-or-results))
+
+(cl-defmethod easi-presentable--display-buffer (buffer (presentable easi-presenter) result-or-results)
+  "Display BUFFER.
+
+Call `display-buffer', passing either:
+- the value of slot `display-action' in PRESENTABLE, if non-nil
+- `easi-result-default-display-action' or
+  `easi-results-default-display-action' according to
+  RESULT-OR-RESULTS otherwise."
+(display-buffer
+   buffer
+   (or (slot-value presentable 'display-action)
+       (cl-case result-or-results
+	 (result easi-result-default-display-action)
+	 (results easi-results-default-display-action)))))
+
 (provide 'easi-presentable)
 ;;; easi-presentable.el ends here
