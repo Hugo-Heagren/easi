@@ -421,7 +421,7 @@ with `completing-read'."
       (lambda (str) (easi-searchable--suggestions str searchable))))))
 
 (defun easi--present-results (session raw-results)
-  "Present RAW-RESULTS from SEARCHABLE.
+  "Present RAW-RESULTS in SESSION.
 
 Main user-interface driver function for Easi.
 
@@ -435,73 +435,33 @@ Use `easi-searchable--get-results-presenters' to get a list of result
 presenters compatible with RESULTS, and treat the first one as
 default.
 
-Then:
-- get a results buffer (reuse the current buffer if it's in
-  SESSION's \"results-buffers\" slot, otherwise use the first
-  buffer in that list, otherwise create a new buffer with
-  `easi-utils--buffer-from-default').
-- set new state in SESSION (e.g. new results buffer).
-- switch to results buffer where necessary.
-- call `easi--print', passing SESSION. This actually prints the
-  results.
-- turn on `easi-results-mode' in the results buffer.
-- (maybe) present current result `easi--present-result'.
+Then save state to SESSION (the sorted results, and the previous
+window state) and ensure SESSION's buffers are setup correctly
+with `easi-presentable--set-buffers'.
 
-N.B. This function should only be run for its side-effects -- do
-not rely on its return value (this is because what it returns may
-change during development, and subsequent versions behave
-differently)."
+Finally call `easi--print' to present the results (passing
+SESSION, the results list as \"printable\", the symbol `result',
+and the results presenter) then `easi--present-result' to present
+the current result as appropriate."
   (let ((results (easi-sort--results
 		  (easi-sort--get-searchable-sorter
 		   (easi-session-state-searchables session))
 		  raw-results
 		  (easi-session-state-query session)))
-	;; Reuse current buffer, if it exists
-	;; TODO This assumes there is only one results buffer. In
-	;; future, there may be more. Rewrite this to use ALL results
-	;; buffers, in a list, and update them all.
 	;; NOTE This ensures that the session is linked to buffer we
 	;; are printing into.
-	(results-buffer
-	 (or
-	  ;; Use current buffer if in session' list
-	  (and (memq (current-buffer)
-		     (easi-session-state-results-buffers session))
-	       (current-buffer))
-	  ;; Otherwise use the first buffer in that list
-	  (car (easi-session-state-results-buffers session))
-	  ;; No buffer exists already,so create one.
-	  ;; TODO this logic can all be wrapped up in one function,
-	  ;; which just takes a session and a buffer.
-	  ;; MAYBE Users might want to set the results-buffer name
-	  ;; depending on the results (e.g. on how many there
-	  ;; are). Do we want to update the results-buffer name on
-	  ;; this basis even we reuse the results-buffer (e.g. if they
-	  ;; rerun, reusing the results-buffer, with a new query and
-	  ;; there are a different number of results)
-	  (easi--buffer-from-default
-	   easi-results-default-buffer-name session)))
 	(results-presenter
-	 (easi-utils--resolve-symbol
-	  (car (easi-searchable--get-results-presenters
-		(easi-session-state-searchables session))))))
+	 (car (easi-searchable--get-results-presenters
+	       (easi-session-state-searchables session)))))
     ;; TODO Should I save windows earlier, at the initial session definition?
     (setf (easi-session-state-window-config session)
 	  (current-window-configuration))
     (setf (easi-session-state-results session) results)
-    (setf (easi-session-state-query session) (easi-session-state-query session))
-    (cl-pushnew results-buffer (easi-session-state-results-buffers session))
-    (setf (alist-get results-buffer
-		     (easi-session-state-buffer-presenters
-		      session))
-	  results-presenter)
-    ;; TODO This might have to move, so that I can run easi-search
-    ;; from inside the result buffer...
-    ;; TODO Hard coding this is going to make it difficult to do
-    ;; different types of rerunning...
-    (switch-to-buffer results-buffer)
-    (easi--print session)
-    (easi-results-mode)
+    (easi-presentable--set-buffers results-presenter session 'results)
+    (easi--print session
+		 :printable results
+		 :result-or-results 'results
+		 :presenter results-presenter)
     (easi--present-result
      session
      '(before printer after hook))))
