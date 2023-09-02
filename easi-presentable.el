@@ -24,6 +24,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'eieio)
 (require 'easi-utils)
 (require 'easi-session)
@@ -137,6 +138,18 @@ RESULT-OR-RESULTS should be either of the symbols `result' or
 `results', to indicate the type of thing being printed.
 
 Do not rely on this function's return value.")
+
+(cl-defmethod easi-presentable--set-buffers ((presentable (eql nil)) session result-or-results)
+  "Ignore.
+
+Because there is no presentable, no buffer needs to be assigned,
+but there does need to be a meaningful method for this case,
+otherwise the default implementation throws an error.
+
+Ignores PRESENTABLE, SESSION and RESULT-OR-RESULTS.
+
+Return nil."
+  (ignore presentable session result-or-results))
 
 (cl-defmethod easi-presentable--set-buffers ((presentable symbol) session result-or-results)
   "Call `easi-presentable--set-buffers' on value of PRESENTABLE.
