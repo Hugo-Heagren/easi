@@ -107,6 +107,7 @@ called with the current result as its sole argument."
   ((name :initarg :name :initform nil)
    (key :initarg :key :initform nil)
    (display-action :initarg :display-action :initform nil)
+   (hide-function :initarg :hide-function :initform nil)
    (before :initarg :before :initform nil)
    (printer :initarg :printer :initform nil)
    (after :initarg :after :initform nil)
