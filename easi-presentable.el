@@ -73,6 +73,11 @@ called with the current result as its sole argument."
 
 (defcustom easi-default-presenter-grouper nil
   "Default method for displaying a group of presenters.")
+(defcustom easi-results-default-display-action nil
+  "ACTION arg for `display-buffer' when displaying a results buffer."
+  :type display-buffer--action-custom-type
+  :group 'easi)
+
 
 ;;;; Basic types
 
