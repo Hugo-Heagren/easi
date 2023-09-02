@@ -83,6 +83,17 @@ called with the current result as its sole argument."
   :type display-buffer--action-custom-type
   :group 'easi)
 
+;; It offends my sense of tidiness, but there isn't anywhere else
+;; obvious to put this and it had to go somewhere.
+(defun easi-quit-restore-hide (buffer)
+  "If BUFFER is displayed, call `quit-restore-window' on its window."
+  ;; NOTE We HAVE to use `when-let' here, otherwise whenever we pass a
+  ;; buffer which is not displayed anywhere, no window is returned,
+  ;; and `quit-restore-window' interprets the nil arg as quitting the
+  ;; current window!
+  (when-let ((window (get-buffer-window buffer)))
+    (quit-restore-window window)))
+
 
 ;;;; Basic types
 
