@@ -24,6 +24,7 @@
 
 ;;; Code:
 
+(require 'easi-presenter)
 (require 'cl-lib)
 (require 'eieio)
 (require 'easi-utils)
@@ -84,37 +85,7 @@ called with the current result as its sole argument."
   :type display-buffer--action-custom-type
   :group 'easi)
 
-;; It offends my sense of tidiness, but there isn't anywhere else
-;; obvious to put this and it had to go somewhere.
-(defun easi-quit-restore-hide (buffer)
-  "If BUFFER is displayed, call `quit-restore-window' on its window."
-  ;; NOTE We HAVE to use `when-let' here, otherwise whenever we pass a
-  ;; buffer which is not displayed anywhere, no window is returned,
-  ;; and `quit-restore-window' interprets the nil arg as quitting the
-  ;; current window!
-  (when-let ((window (get-buffer-window buffer)))
-    (quit-restore-window window)))
-
-(defcustom easi-default-result-hide-function
-  #'easi-quit-restore-hide
-  "Default hide-action for a result buffer."
-  :group 'easi
-  :type 'function)
-
-;;;; Basic types
-
-;;;###autoload
-(defclass easi-presenter ()
-  ((name :initarg :name :initform nil)
-   (key :initarg :key :initform nil)
-   (display-action :initarg :display-action :initform nil)
-   (hide-function :initarg :hide-function :initform nil)
-   (before :initarg :before :initform nil)
-   (printer :initarg :printer :initform nil)
-   (after :initarg :after :initform nil)
-   (current-getter :initarg :current-getter :initform nil)
-   (hook :initarg :hook :initform nil))
-  "Base class for Easi presenters.")
+;;;; Group type
 
 ;;;###autoload
 (defclass easi-presentable-group nil
@@ -359,18 +330,6 @@ Call `display-buffer', passing either:
 	 (result easi-result-default-display-action)
 	 (results easi-results-default-display-action)))))
 
-;;;; Hiding
-
-(defun easi-presentable-hide-buffer (buffer presenter)
-  "Hide BUFFER according to PRESENTER.
-
-Pass BUFFER to either:
-- the value of slot `hide-function' in PRESENTER, if non-nil
-- `easi-default-result-hide-function' otherwise."
-  (let ((hide-function
-	 (or (slot-value presenter 'hide-function)
-	     easi-default-result-hide-function)))
-    (funcall hide-function buffer)))
 
 (provide 'easi-presentable)
 ;;; easi-presentable.el ends here

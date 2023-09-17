@@ -33,6 +33,7 @@
 (require 'easi-structured-object-getter)
 (require 'easi-result)
 (require 'easi-presentable)
+(require 'easi-presenter)
 (require 'easi-sort)
 (require 'easi-utils)
 (require 'easi-session)
@@ -284,7 +285,7 @@ passing SLOTS and the buffer, then display it with
 		 pres session :printable printable :slots slots :buffer buf)
 	     and do (easi-presentable--display-buffer
 		     buf pres result-or-results)
-	     else do (easi-presentable-hide-buffer buf pres)
+	     else do (easi-presenter-hide-buffer buf pres)
 	     end end)))
 
 (defun easi--get-current-result (session)
