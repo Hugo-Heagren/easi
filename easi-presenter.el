@@ -30,14 +30,14 @@
 ;;;; Customizables
 
 (defcustom easi-default-result-hide-function
-  #'easi-quit-restore-hide
+  #'easi-presenter-quit-restore-hide
   "Default hide-action for a result buffer."
   :group 'easi
   :type 'function)
 
 ;; It offends my sense of tidiness, but there isn't anywhere else
 ;; obvious to put this and it had to go somewhere.
-(defun easi-quit-restore-hide (buffer)
+(defun easi-presenter-quit-restore-hide (buffer)
   "If BUFFER is displayed, call `quit-restore-window' on its window."
   ;; NOTE We HAVE to use `when-let' here, otherwise whenever we pass a
   ;; buffer which is not displayed anywhere, no window is returned,
