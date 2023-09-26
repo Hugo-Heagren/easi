@@ -260,6 +260,22 @@ go to next result."
 	;; to set it manually. Hfmsk.
 	(set-window-point (get-buffer-window buf) (point))))))
 
+(defun easi-presenter-last-result ()
+  "Go to last result."
+  (interactive)
+    (let* ((session (easi-session--get-current))
+	 (list (easi-session-state-results-buffers session))
+	 (pres-alist (easi-session-state-buffer-presenters
+		      session)))
+    (dolist (buf list)
+      (with-current-buffer buf
+	(easi-presenter--last-result
+	 (alist-get buf pres-alist #'equal))
+	;; For some reason, the `window-point' in the other buffers is
+	;; not kept properly in sync with the buffer point, so we have
+	;; to set it manually. Hfmsk.
+	(set-window-point (get-buffer-window buf) (point))))))
+
 (defvar-keymap easi-results-mode-map
   :parent easi-base-map
   "w" #'easi-view-result
