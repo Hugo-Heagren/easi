@@ -26,6 +26,7 @@
 ;;; Code:
 
 (require 'eieio)
+(require 'cl-lib)
 
 ;;;; Customizables
 
@@ -75,6 +76,17 @@ Pass BUFFER to either:
 	     easi-default-result-hide-function)))
     (funcall hide-function buffer)))
 
+;;;; Movement
+
+(cl-defgeneric easi-presenter--next-result (presenter &optional n)
+  "Generic function for going to next result in PRESENTER buffers.
+
+With optional arg N, go to Nth next result. If N is negative, go
+to previous.
+
+The default implementation just passes N to `forward-line'."
+  (ignore presenter)
+  (forward-line n))
 
 (provide 'easi-presenter)
 ;;; easi-presenter.el ends here
