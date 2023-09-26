@@ -280,7 +280,9 @@ go to next result."
   :parent easi-base-map
   "w" #'easi-view-result
   "n" #'easi-results-next
-  "p" #'easi-results-previous)
+  "p" #'easi-results-previous
+  "M-<" #'easi-presenter-first-result
+  "M->" #'easi-presenter-last-result)
 
 (defun easi--kill-buffer-manage-sessions ()
   "For use in `kill-buffer-hook'.
