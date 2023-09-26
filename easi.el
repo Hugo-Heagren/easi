@@ -351,7 +351,9 @@ passing SLOTS and the buffer, then display it with
 
 (defvar-keymap easi-result-mode-map
   :parent easi-base-map
-  "w" #'easi-view-results)
+  "w" #'easi-view-results
+  "M-N" #'easi-results-next
+  "M-P" #'easi-results-previous)
 
 (define-minor-mode easi-result-mode
   "Minor mode for viewing a single EASI result.
