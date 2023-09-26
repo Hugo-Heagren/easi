@@ -88,5 +88,19 @@ The default implementation just passes N to `forward-line'."
   (ignore presenter)
   (forward-line n))
 
+(cl-defgeneric easi-presenter--first-result (presenter)
+  "Generic function for going to first result in PRESENTER buffers.
+
+The default implementation just goes to the minimum point."
+  (ignore presenter)
+  (goto-char (point-min)))
+
+(cl-defgeneric easi-presenter--last-result (presenter)
+  "Generic function for going to last result in PRESENTER buffers.
+
+The default implementation just passes N to maximum point."
+  (ignore presenter)
+  (goto-char (point-max)))
+
 (provide 'easi-presenter)
 ;;; easi-presenter.el ends here
