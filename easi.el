@@ -246,7 +246,9 @@ go to next result."
 
 (defvar-keymap easi-results-mode-map
   :parent easi-base-map
-  "w" #'easi-view-result)
+  "w" #'easi-view-result
+  "n" #'easi-results-next
+  "p" #'easi-results-previous)
 
 (defun easi--kill-buffer-manage-sessions ()
   "For use in `kill-buffer-hook'.
