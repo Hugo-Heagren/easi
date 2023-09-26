@@ -90,26 +90,6 @@ Derived from `tabulated-list-mode'."
     (setq tabulated-list-format format)
     (tabulated-list-init-header)))
 
-(defun easi-results-list-mode-next (&optional arg)
-  "Move to next entry in results list.
-
-If prefix ARG is specified, move ARG entries forward."
-  (interactive "P")
-  (forward-line arg)
-  (easi--update-result))
-
-(defun easi-results-list-mode-previous (&optional arg)
-  "Move to previous entry in results list.
-
-If prefix ARG is specified, move ARG entries backward."
-  (interactive "P")
-  (forward-line (- (or arg 1)))
-  (easi--update-result))
-
-(let ((map easi-results-list-mode-map))
-  (keymap-set map "n" #'easi-results-list-mode-next)
-  (keymap-set map "p" #'easi-results-list-mode-previous))
-
 (defun easi-results-list--results-to-tabulated-list (results session)
   "Convert a list of EASI results for `tabulated-list-mode'.
 
