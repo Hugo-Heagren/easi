@@ -236,6 +236,14 @@ to previous result."
 	(set-window-point (get-buffer-window buf) (point)))))
   (easi--update-result))
 
+(defun easi-results-previous (&optional n)
+  "Go to previous result in all results buffers in EASI session.
+
+With optional prefix arg N, go to Nth previous. If N is negative,
+go to next result."
+  (interactive "p")
+  (easi-results-next (- (or n 1))))
+
 (defvar-keymap easi-results-mode-map
   :parent easi-base-map
   "w" #'easi-view-result)
