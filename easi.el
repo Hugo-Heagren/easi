@@ -215,6 +215,27 @@ If SESSION is not specified, default to current session."
 	(select-window window)
       (error "Result buffer not displayed in a window"))))
 
+(defun easi-results-next (&optional n)
+  "Go to next result in all results buffers in EASI session.
+
+With optional prefix arg N, go to Nth next. If N is negative, go
+to previous result."
+  (interactive "p")
+  (let* ((session (easi-session--get-current))
+	 (list (easi-session-state-results-buffers session))
+	 (pres-alist (easi-session-state-buffer-presenters
+		      session)))
+    (dolist (buf list)
+      (with-current-buffer buf
+	(easi-presenter--next-result
+	 (alist-get buf pres-alist #'equal)
+	 n)
+	;; For some reason, the `window-point' in the other buffers is
+	;; not kept properly in sync with the buffer point, so we have
+	;; to set it manually. Hfmsk.
+	(set-window-point (get-buffer-window buf) (point)))))
+  (easi--update-result))
+
 (defvar-keymap easi-results-mode-map
   :parent easi-base-map
   "w" #'easi-view-result)
