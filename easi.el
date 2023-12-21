@@ -612,13 +612,17 @@ controlled by `easi-default-non-queryable-skip'."
 		      (query (easi--prompt-for-query searchable)))
 		 `(,searchable ,query)))
   (let* ((session (easi-session--get-create-current))
-	 (raw-results (easi-searchable--results
-		       searchable
-		       :query query
-		       :page (easi-session-state-page session))))
-    (setf (easi-session-state-query session) query)
-    (setf (easi-session-state-searchables session) searchable)
-    (easi--present-results session raw-results)))
+	 ;; We need to set these before getting results
+	 (_ (setf (easi-session-state-query session) query))
+	 (_ (setf (easi-session-state-searchables session) searchable))
+	 (results-thread
+	  (make-thread
+	   (lambda () (easi--get-results session searchable))
+	   "Easi results")))
+    (setf (easi-session-state-results-thread session) results-thread)
+    (make-thread
+     (lambda () (easi--present-results session))
+     "Easi presentation")))
  
 ;;;###autoload
 (defun easi-rerun-with-new-engines (searchable)
