@@ -567,10 +567,18 @@ SEARCHABLE. If this slot is nil, behaviour is controlled by
 `easi-default-non-all-results-skip'."
   (interactive `(,(easi--prompt-for-searchable)))
   (let* ((session (easi-session--get-create-current))
-	 (raw-results (easi-searchable--results
-		       searchable :page (easi-session-state-page session))))
+	 (results-thread
+	  (make-thread
+	   ;; TODO Name thread in accordance with sessions?
+	   (lambda () (easi--get-results session searchable))
+	   "Easi results")))
+    (setf (easi-session-state-results-thread session) results-thread)
     (setf (easi-session-state-searchables session) searchable)
-    (easi--present-results session raw-results)))
+    (make-thread
+     (lambda ()
+       (easi--present-results session))
+     "Easi presentation")))
+
 
 ;;;###autoload
 (defun easi-search (searchable query)
