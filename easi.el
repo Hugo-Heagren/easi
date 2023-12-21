@@ -480,31 +480,15 @@ How new results are added depends on the value of
 `easi-next-page-sorting-strategy', which see."
   (interactive "p" easi-results-mode)
   (when-let* ((session (easi-session--get-current))
-	      (searchable (easi-session-state-searchables session))
-	      (query (easi-session-state-query session))
-	      (page (easi-session-state-page session))
-	      (strategy easi-next-page-sorting-strategy))
-    (dotimes (_ num)
-      (let* ((new-raw-results
-	      (easi-searchable--results
-	       searchable :query query :page (1+ page)))
-	     (_ (unless new-raw-results
-		  (error "No next page of results")))
-	     (new-results
-	      (if (eql strategy 'append)
-		  (easi-sort--results
-		   (easi-sort--get-searchable-sorter searchable)
-		   new-raw-results query)
-		new-raw-results))
-	     (old-results (easi-session-state-results session)))
-	(setf (easi-session-state-results session)
-	      (if (eql strategy 'merge)
-		  (easi-sort--results
-		   (easi-sort--get-searchable-sorter searchable)
-		   `(,@old-results ,@new-results) query)
-		`(,@old-results ,@new-results)))
-	(easi--print session :slots '(printer))
-	(cl-incf (easi-session-state-page session))))))
+	      (results-thread
+	       (make-thread
+		(lambda () (easi--get-next-page session num))
+		"Easi next page results thread")))
+    (setf (easi-session-state-results-thread session) results-thread)
+    (easi--print session
+		 :printable results-thread
+		 :slots '(printer)
+		 :result-or-results 'results)))
 
 ;;;; Search functions and entry points
 
