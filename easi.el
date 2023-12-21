@@ -419,8 +419,7 @@ passing SESSION, SLOTS, the symbol `result', and the presenter."
      session
      :printable result
      :slots slots
-     :result-or-results 'result
-     :presenter result-presenter)))
+     :result-or-results 'result)))
 
 (defun easi--update-result ()
   "Update Easi's result buffer to display the current result."
