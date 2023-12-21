@@ -37,6 +37,7 @@
 (require 'easi-sort)
 (require 'easi-utils)
 (require 'easi-session)
+(require 'thread)
 
 ;;;; Customizables
 
