@@ -428,6 +428,49 @@ passing SESSION, SLOTS, the symbol `result', and the presenter."
 
 ;;;;; Pagination
 
+(defun easi--get-next-page (session num)
+  "Fetch NUM next pages of results SESSION's searchables.
+
+Used internally by `easi-get-next-page'. How new results are
+added depends on the value of `easi-next-page-sorting-strategy',
+which see."
+  (let ((searchable (easi-session-state-searchables session))
+	(query (easi-session-state-query session))
+	(page (easi-session-state-page session))
+	(strategy easi-next-page-sorting-strategy))
+    (cl-loop with i = 0
+	     until (eq i num)
+	     with new-raw-results and new-results
+	     do (setq new-raw-results (easi-searchable--results
+				       searchable :query query :page (1+ page)))
+	     if new-raw-results
+	       do (cl-incf (easi-session-state-page session))
+	       ;; I *think* this is the `correct' way of doing this,
+	       ;; but it isn't perfect. The main thread doesn't
+	       ;; propogate signals like all other threads would, so
+	       ;; you can't properly signal an error in the main
+	       ;; thread from another thread.
+	       else
+	       do (thread-signal main-thread 'error '("No next page of results"))
+	     end ;; end `if new-raw-results'
+	     do (setq new-results (if (eql strategy 'append)
+				      (easi-sort--results
+				       (easi-sort--get-searchable-sorter searchable)
+				       new-raw-results query)
+				    new-raw-results))
+	     append new-results into collected-results
+	     do (cl-incf i)
+	     ;; This works because `setf' returns the set value.
+	     finally return
+	     (setf (easi-session-state-results session)
+		   (if (eql strategy 'merge)
+		       (easi-sort--results
+			(easi-sort--get-searchable-sorter searchable)
+			`(,@(easi-session-state-results session)
+			  ,@collected-results)
+			query)
+		     `(,@(easi-session-state-results session) ,@collected-results))))))
+
 (cl-defun easi-get-next-page (&optional (num 1))
   "Print NUM next pages of results from session's searchables.
 
