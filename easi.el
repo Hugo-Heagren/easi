@@ -515,7 +515,7 @@ with `completing-read'."
      (completion-table-dynamic
       (lambda (str) (easi-searchable--suggestions str searchable))))))
 
-(defun easi--present-results (session raw-results)
+(defun easi--present-results (session)
   "Present RAW-RESULTS in SESSION.
 
 Main user-interface driver function for Easi.
@@ -538,25 +538,19 @@ Finally call `easi--print' to present the results (passing
 SESSION, the results list as \"printable\", the symbol `result',
 and the results presenter) then `easi--present-result' to present
 the current result as appropriate."
-  (let ((results (easi-sort--results
-		  (easi-sort--get-searchable-sorter
-		   (easi-session-state-searchables session))
-		  raw-results
-		  (easi-session-state-query session)))
-	;; NOTE This ensures that the session is linked to buffer we
-	;; are printing into.
-	(results-presenter
-	 (car (easi-searchable--get-results-presenters
-	       (easi-session-state-searchables session)))))
+  (let (;; NOTE This ensures that the session is linked to buffer we
+        ;; are printing into.
+        (results-presenter
+         (car (easi-searchable--get-results-presenters
+               (easi-session-state-searchables session)))))
     ;; TODO Should I save windows earlier, at the initial session definition?
     (setf (easi-session-state-window-config session)
-	  (current-window-configuration))
-    (setf (easi-session-state-results session) results)
+          (current-window-configuration))
     (easi-presentable--set-buffers results-presenter session 'results)
     (easi--print session
-		 :printable results
-		 :result-or-results 'results
-		 :presenter results-presenter)
+		 ;; Not strictly necessary, but good to be explicit.
+		 :printable (easi-session-state-results-thread session)
+                 :result-or-results 'results)
     (easi--present-result
      session
      '(before printer after hook))))
