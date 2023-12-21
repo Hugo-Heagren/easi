@@ -37,7 +37,8 @@
   query searchables results
   results-buffers result-buffers
   buffer-presenters
-  (page 1))
+  (page 1)
+  results-thread)
 
 ;; TODO this should probably be a method
 (defun easi-session--current-buffer-presenter (session)
