@@ -104,5 +104,16 @@ Uses `json-parse-string' with:
 		       :null-object nil
 		       :false-object nil)))
 
+(defun easi-utils-calculate-offset (number page &optional force-number)
+  "Calculate offset given a PAGE and NUMBER (per page).
+
+This is mostly useful for building queries which require an
+offset argument instead of a page.
+
+If NUMBER is nil then: if FORCE-NUMBER is non-nil return 0,
+otherwise return nil."
+  (if (numberp number) (* (- page 1) number)
+    (when force-number 0)))
+
 (provide 'easi-utils)
 ;;; easi-utils.el ends here
