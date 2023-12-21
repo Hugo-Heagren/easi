@@ -183,40 +183,40 @@ RESULT-OR-RESULTS should be either of the symbols `result' or
 
 ;;;; Printing
 
-(cl-defgeneric easi-presentable--print (presentable session &key printable slots buffer)
-  "Print PRINTABLE with PRESENTABLE in associated buffer.
+(cl-defgeneric easi-presentable--print (presentable session &key printable-or-thread slots buffer)
+  "Print PRINTABLE-OR-THREAD with PRESENTABLE in associated buffer.
 
 Get the buffer or buffers associated with PRESENTABLE in SESSION,
-and print PRINTABLE (a result or list of results) into it")
+and print PRINTABLE-OR-THREAD (a result or list of results) into it")
 
-(cl-defmethod easi-presentable--print ((presentable symbol) session &key printable slots buffer)
+(cl-defmethod easi-presentable--print ((presentable symbol) session &key printable-or-thread slots buffer)
   "Call `easi-presentable--print' on the value of PRESENTABLE.
 
-Pass SESSION, PRINTABLE, SLOTS and BUFFER unchanged."
+Pass SESSION, PRINTABLE-OR-THREAD, SLOTS and BUFFER unchanged."
   (easi-presentable--print
-   (symbol-value presentable) session :printable printable :slots slots :buffer buffer))
+   (symbol-value presentable) session :printable-or-thread printable-or-thread :slots slots :buffer buffer))
 
-(cl-defmethod easi-presentable--print ((presentable cons) session &key printable slots buffer)
+(cl-defmethod easi-presentable--print ((presentable cons) session &key printable-or-thread slots buffer)
   "Map `easi-presentable--print' over PRESENTABLE.
 
-Pass SESSION, PRINTABLE, SLOTS and BUFFER unchanged. Mapping is
+Pass SESSION, PRINTABLE-OR-THREAD, SLOTS and BUFFER unchanged. Mapping is
 done with `mapc'."
   (mapc
    (lambda (pres)
      (easi-presentable--print
-      pres session :printable printable :slots slots :buffer buffer))
+      pres session :printable-or-thread printable-or-thread :slots slots :buffer buffer))
    presentable))
 
-(cl-defmethod easi-presentable--print ((presentable easi-presentable-group) session &key printable slots buffer)
+(cl-defmethod easi-presentable--print ((presentable easi-presentable-group) session &key printable-or-thread slots buffer)
   "Call `easi-presentable--print' on value of slot \"presentables\".
 
 Get presentables from PRESENTABLE's slots \"presentables\", and
 call `easi-presentable--set-buffers' on this value.
 
-Pass SESSION, PRINTABLE, SLOTS and BUFFER unchanged."
+Pass SESSION, PRINTABLE-OR-THREAD, SLOTS and BUFFER unchanged."
     (mapc
    (lambda (pres) (easi-presentable--print
-	      pres session :printable printable :slots slots :buffer buffer))
+	      pres session :printable-or-thread printable-or-thread :slots slots :buffer buffer))
    (slot-value presentable 'presentables)
    ;; TODO Run here the presenter-group display function. This should
    ;; account for the fact that there is a 1-1 correspondence between
@@ -227,22 +227,28 @@ Pass SESSION, PRINTABLE, SLOTS and BUFFER unchanged."
 (declare-function easi-results-mode "easi")
 (declare-function easi-result-mode "easi")
 
-(cl-defmethod easi-presentable--print ((presentable easi-presenter) session &key printable slots buffer)
-  "Print PRINTABLE in BUFFER.
+(cl-defmethod easi-presentable--print ((presentable easi-presenter) session &key printable-or-thread slots buffer)
+  "Print PRINTABLE-OR-THREAD in BUFFER.
 
-PRINTABLE is expected to be either a single result or a list of
+PRINTABLE-OR-THREAD is expected to be either a single result or a list of
 results. The relevant presenter should be prepared to handle
 this. It defaults to the list of result in SESSION.
 
 Call each of the functions in each of SLOTS in PRESENTABLE
-passing PRINTABLE and SESSION to each. As a special case, no args
+passing PRINTABLE-OR-THREAD and SESSION to each. As a special case, no args
 are passed to the functions in the \"hook\" slot."
   (with-current-buffer buffer
     (dolist (slot slots)
       (if (eq slot 'hook)
 	  (mapc #'funcall (slot-value presentable 'hook))
 	(mapc
-	 (lambda (fun) (funcall fun printable session))
+	 (lambda (fun)
+	   (funcall
+	    fun
+	    (if (and (threadp printable-or-thread) (memq slot '(printer after)))
+		(thread-join printable-or-thread)
+	      printable-or-thread)
+	    session))
 	 (slot-value presentable slot))))
     ;; Turn on the relevant mode
     ;; (if the buffer is in both lists, being a results buffer
