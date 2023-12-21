@@ -579,6 +579,24 @@ SEARCHABLE. If this slot is nil, behaviour is controlled by
        (easi--present-results session))
      "Easi presentation")))
 
+(defun easi--get-results (session searchable)
+  "Get and store results for SEARCHABLE in SESSION.
+
+Get results from SESSION with SEARCHABLE, clean them with
+`easi-sort--results'. Finally, store the clean results in SESSION
+and return the clean results."
+  (let* ((query (easi-session-state-query session))
+	 (raw-results (easi-searchable--results
+		       searchable
+		       :page (easi-session-state-page session)
+		       :query query))
+	 (clean-results
+	  (easi-sort--results
+	   (easi-sort--get-searchable-sorter
+	    (easi-session-state-searchables session))
+	   raw-results query)))
+    ;; Store results in SESSION
+    (setf (easi-session-state-results session) clean-results)))
 
 ;;;###autoload
 (defun easi-search (searchable query)
