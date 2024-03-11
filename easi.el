@@ -322,7 +322,7 @@ different presenters."
   (add-hook 'kill-buffer-hook 'easi--kill-buffer-manage-sessions nil 'local))
 
 (cl-defun easi--print (session &key
-			       (printable
+			       (printable-or-thread
 				(easi-session-state-results-thread session))
                                (slots '(before printer after hook))
                                result-or-results)
@@ -350,7 +350,10 @@ passing PRINTABLE, SLOTS and the buffer, then display the buffer
              in (easi-session-state-buffer-presenters session)
              when (memql buf list)
              do (easi-presentable--print
-                 pres session :printable printable :slots slots :buffer buf)
+                 pres session
+		 :printable-or-thread printable-or-thread
+		 :slots slots
+		 :buffer buf)
              and do (easi-presentable--display-buffer
                      buf pres result-or-results)
 	     end)))
@@ -418,7 +421,7 @@ passing SESSION, SLOTS, the symbol `result', and the presenter."
     (easi-presentable--set-buffers result-presenter session 'result)
     (easi--print
      session
-     :printable result
+     :printable-or-thread result
      :slots slots
      :result-or-results 'result)))
 
@@ -487,7 +490,7 @@ How new results are added depends on the value of
 		"Easi next page results thread")))
     (setf (easi-session-state-results-thread session) results-thread)
     (easi--print session
-		 :printable results-thread
+		 :printable-or-thread results-thread
 		 :slots '(printer)
 		 :result-or-results 'results)))
 
@@ -548,10 +551,11 @@ the current result as appropriate."
     (setf (easi-session-state-window-config session)
           (current-window-configuration))
     (easi-presentable--set-buffers results-presenter session 'results)
-    (easi--print session
-		 ;; Not strictly necessary, but good to be explicit.
-		 :printable (easi-session-state-results-thread session)
-                 :result-or-results 'results)
+    (easi--print
+     session
+     ;; Not strictly necessary, but good to be explicit.
+     :printable-or-thread (easi-session-state-results-thread session)
+     :result-or-results 'results)
     (easi--present-result
      session
      '(before printer after hook))))
