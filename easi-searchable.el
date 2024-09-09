@@ -85,13 +85,13 @@ FIELD in `easi-result--get-field'.")
     "Alist of field aliases.
 See `easi-result--list-fields' and `easi-result--get-field'.")
    (results-presenters
-    :initform nil 
+    :initform nil
     :initarg :results-presenters
     :documentation
     "List of compatible results presenters (need not include those in
 `easi-default-results-presenters'.)")
    (result-presenters
-    :initform nil 
+    :initform nil
     :initarg :result-presenters
     :documentation
     "List of compatible result presenters (need not include those in
