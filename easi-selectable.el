@@ -24,6 +24,9 @@
 
 ;;;; easi-selectable
 
+;; TODO Should groups be a kind of selectable too? (with a
+;; group-selectable superclass above the various kinds of group)
+
 (defclass easi-selectable ()
   ((key :initarg :key
 	:type (satisfies key-valid-p)
