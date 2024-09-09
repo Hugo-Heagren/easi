@@ -198,13 +198,13 @@ to `easi-searchable--get-suggestions'.
 If SEARCHABLE has a non-nil \"suggestion-post-processor\" slot,
 pass the results through that too."
   (when-let (((not (string-empty-p query)))
-	     (getter (easi-search-engine-suggestions-getter searchable))
+	     (getter (slot-value searchable 'suggestions-getter))
 	     (raw-results
 	      (easi-searchable--get-suggestions query getter
 				    (or number
-					(easi-search-engine-max-results searchable)
+					(slot-value searchable 'max-results)
 					easi-default-max-suggestions))))
-    (if-let (post-proc (easi-search-engine-suggestion-post-processor searchable))
+    (if-let (post-proc (slot-value searchable 'suggestion-post-processor))
 	(easi-structured-object-get-field post-proc raw-results)
       raw-results)))
 (cl-defmethod easi-searchable--suggestions (query (searchable easi-search-engine-group) &optional number)
@@ -214,7 +214,7 @@ Get \"searchables\" slot in SEARCHABLE, and map
 `easi-searchable--suggestions' over each one, passing QUERY, the
 searchable and NUMBER in each case."
   (mapcar (lambda (sch) (easi-searchable--suggestions query sch number))
-	  (easi-search-engine-group-searchables searchable)))
+	  (slot-value searchable 'searchables)))
 (cl-defmethod easi-searchable--suggestions (query (searchable cons) &optional number)
   "Map `easi-searchable--suggestions' over SEARCHABLE.
 
@@ -318,25 +318,25 @@ is NUMBER (if non-nil), or the result of
 	      ;; are doing something like `easi-search'. If not,
 	      ;; something more like `easi-all'.
 	      (if query
-		  (or (easi-search-engine-queryable-results-getter searchable)
-		      (not easi-default-non-queryable-skip
-			   (easi-search-engine-all-results-getter searchable)))
-		(or (easi-search-engine-all-results-getter searchable)
-		    (and (stringp easi-default-non-all-results-skip)
-			 (setq query easi-default-non-all-results-skip)
-			 (easi-search-engine-queryable-results-getter searchable)))))
+		  (or (slot-value searchable 'queryable-results-getter)
+		      (unless easi-default-non-queryable-skip
+			(slot-value searchable 'all-results-getter)))
+		(or (slot-value searchable 'all-results-getter)
+		    (when (stringp easi-default-non-all-results-skip)
+		      (setq query easi-default-non-all-results-skip)
+		      (slot-value searchable 'queryable-results-getter)))))
 	     (raw-results
 	      (if query
-		  (easi-searchable--query-results query getter
-				      :number
-				      (or number
-					  (easi-search-engine-max-results searchable)
-					  easi-default-max-results)
-				      :page page)
+		  (easi-searchable--query-results
+		   query getter
+		   :number (or number
+			       (slot-value searchable 'max-results)
+			       easi-default-max-results)
+		   :page page)
 		(easi-searchable--all-results getter))))
     (mapcar
      (apply-partially #'easi-utils--result-attach-search-engine searchable)
-     (if-let (post-proc (easi-search-engine-results-post-processor searchable))
+     (if-let (post-proc (slot-value searchable 'results-post-processor))
 	 (easi-structured-object-get-field post-proc raw-results)
        raw-results))))
 (cl-defmethod easi-searchable--results ((searchable easi-search-engine-group) &key query number page)
@@ -348,7 +348,7 @@ PAGE directly."
   (mapcar (lambda (searchable)
 	    (easi-searchable--results
 	     searchable :query query :number number :page page))
-	  (easi-search-engine-group-searchables searchable)))
+	  (slot-value searchable 'searchables)))
 (cl-defmethod easi-searchable--results ((searchable cons) &key query number page)
   "Mapcar `easi-searchable--results' over SEARCHABLE, `append' result.
 
@@ -384,7 +384,7 @@ Delete duplicates before returning."
 
 (cl-defmethod easi-searchable--results-presenters ((searchable easi-search-engine))
   "Call `easi-search-engine-results-presenters' on SEARCHABLE."
-  (easi-search-engine-results-presenters searchable))
+  (slot-value searchable 'results-presenters))
 
 (cl-defmethod easi-searchable--results-presenters ((searchable easi-search-engine-group))
   "Get searchables from group SEARCHABLE, and call on that list."
@@ -392,7 +392,7 @@ Delete duplicates before returning."
   ;; there is a method for lists, and the value of the :searchables
   ;; slot is always a list.
   (easi-searchable--results-presenters
-   (easi-search-engine-group-searchables searchable)))
+   (slot-value searchable 'searchables)))
 
 (defun easi-searchable--get-results-presenters (searchable)
   "List all results presenters compatible with SEARCHABLE."
@@ -420,7 +420,7 @@ Delete duplicates before returning."
 
 (cl-defmethod easi-searchable--result-presenters ((searchable easi-search-engine))
   "Call `easi-search-engine-results-presenters' on SEARCHABLE."
-  (easi-search-engine-result-presenters searchable))
+  (slot-value searchable 'result-presenters))
 
 (cl-defmethod easi-searchable--result-presenters ((searchable easi-search-engine-group))
   "Get searchables from group SEARCHABLE, and call on that list."
@@ -428,7 +428,7 @@ Delete duplicates before returning."
   ;; there is a method for lists, and the value of the :searchables
   ;; slot is always a list.
   (easi-searchable--result-presenters
-   (easi-search-engine-group-searchables searchable)))
+   (slot-value searchable 'searchables)))
 
 (defun easi-searchable--get-result-presenters (searchable)
   "List all result presenters compatible with SEARCHABLE."
@@ -456,11 +456,11 @@ Delete duplicates before returning."
 
 (cl-defmethod easi-searchable--sorters ((searchable easi-search-engine))
   "Call `easi-search-engine-sorters' on SEARCHABLE."
-  (easi-search-engine-sorters searchable))
+  (slot-value searchable 'sorters))
 
 (cl-defmethod easi-searchable--sorters ((searchable easi-search-engine-group))
   "Get SEARCHABLE's searchables, pass to `easi-searchable--sorters'."
-  (easi-searchable--sorters (easi-search-engine-group-searchables searchable)))
+  (easi-searchable--sorters (slot-value searchable 'searchables)))
 
 (provide 'easi-searchable)
 ;;; easi-searchable.el ends here
