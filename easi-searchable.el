@@ -35,66 +35,77 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'eieio)
+(require 'easi-selectable)
 (require 'easi-structured-object-getter)
 (require 'easi-presentable)
 (require 'easi-utils)
 
 ;;;; Basic types
 
-(cl-defstruct (easi-search-engine
-	       (:constructor easi-search-engine-create))
-  "A single atomic search engine."
-  (key nil :type key :documentation "Key used for selection")
-  (name "" :type string)
-  documentation
-  ;; opensearch ?
-  (suggestions-getter
-   nil
-   :documentation
-   "Way of getting a list of suggestions. Must be a of a type for
+;; TODO Constructor? (or replace it?) (`easi-search-engine-create')
+;; TODO Check type validation for slots?
+(defclass easi-search-engine (easi-selectable)
+  ((suggestions-getter
+    :initarg :suggestions-getter
+    :initform nil
+    :documentation
+    "Way of getting a list of suggestions. Must be a of a type for
 which `easi-searchable--get-suggestions' has a method.")
-  (suggestion-post-processor
-   nil
-   :documentation
-   "Processing to be done to the suggestions, after retrieval but
+   (suggestion-post-processor
+    :initarg :suggestion-post-processor
+    :initform nil
+    :documentation
+    "Processing to be done to the suggestions, after retrieval but
 before they are used by anything else in EASI. Takes the same
 form as FIELD in `easi-result--get-field'.")
-  (queryable-results-getter
-   nil
-   :documentation
-   "Way of getting a list of results. Must be a of a type for which
+   (queryable-results-getter
+    :initarg :queryable-results-getter
+    :initform nil
+    :documentation
+    "Way of getting a list of results. Must be a of a type for which
 `easi-searchable--query-results' has a method.")
-  (all-results-getter
-   nil
-   :documentation
-   "Way of getting a list of results. Must be of a type for which
+   (all-results-getter
+    :initarg :all-results-getter
+    :initform nil
+    :documentation
+    "Way of getting a list of results. Must be of a type for which
 `easi-searchable--all-results' has a method.")
-  (results-post-processor
-   nil
-   :documentation
-   "Processing to be done to the results, after retrieval but before
+   (results-post-processor
+    :initarg :results-post-processor
+    :initform nil
+    :documentation
+    "Processing to be done to the results, after retrieval but before
 they are used by anything else in EASI. Takes the same form as
 FIELD in `easi-result--get-field'.")
-  (field-aliases
-   nil
-   :documentation
-   "Alist of field aliases.
+   (field-aliases
+    :initform nil
+    :initarg :field-aliases
+    :documentation
+    "Alist of field aliases.
 See `easi-result--list-fields' and `easi-result--get-field'.")
-  (results-presenters
-   nil
-   :documentation
-   "List of compatible results presenters (need not include those in
+   (results-presenters
+    :initform nil 
+    :initarg :results-presenters
+    :documentation
+    "List of compatible results presenters (need not include those in
 `easi-default-results-presenters'.)")
-  (result-presenters
-   nil
-   :documentation
-   "List of compatible result presenters (need not include those in
+   (result-presenters
+    :initform nil 
+    :initarg :result-presenters
+    :documentation
+    "List of compatible result presenters (need not include those in
 `easi-default-result-presenters'.)")
-  (sorters nil :documentation "List of compatible results sorters.")
-  (max-results
-   nil
-   :documentation
-   "Maximum number of results to retrieve at once.
+   (sorters
+    :initarg :sorters
+    :initform nil
+    :documentation
+    "List of compatible results sorters.")
+   (max-results
+    :initform nil
+    :initarg :max-results
+    :documentation
+    "Maximum number of results to retrieve at once.
 
 Acceptable values:
 - nil (default): use `easi-default-max-results' as the max number
@@ -106,24 +117,12 @@ returns all results. Value of nil means no max, get all matching
 results (for searchables which interact with services like
 web-based search engines, this is generally a bad idea, so this
 slot defaults to `easi-default-max-results'.)")
-  (max-suggestions
-   nil
-   :documentation
-   "Maximum number of suggestions to retrieve at once."))
-
-(cl-defstruct (easi-search-engine-group
-	       (:constructor easi-search-engine-group-create))
-  "A group of search-engines."
-  (key nil
-       :type key
-       :documentation "Key used for selection")
-  (name nil :type string)
-  documentation
-  (searchables
-   nil
-   :type list
-   :documentation
-   "List of searchables.
+   (max-suggestions
+    :initform nil
+    :initarg :max-suggestions
+    :documentation
+    "Maximum number of suggestions to retrieve at once."))
+  "A single atomic search engine.")
 Technically, this is itself a searchable, but naming it this way
 makes more sense."))
 
