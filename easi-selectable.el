@@ -72,6 +72,31 @@ Standard Emacs docstrings constructs are supported."))
 (cl-defmethod easi-selectable-documentation ((selectable symbol))
   (easi-selectable-documentation (symbol-value selectable)))
 
+;;; Completing-read-multiple selector
+
+;; TODO Account for groups?
+(defun easi-selectable--completing-read-multiple-selector (selectable-list prompt)
+  "Read multiple selectables from SELECTABLE-LIST.
+
+PROMPT is passed to `completing-read-multiple'."
+  (cl-labels ((name-prop (selectable)
+		(propertize (easi-selectable-name selectable)
+			    'easi-selectable selectable)))
+    ;; `flatten-list' accounts for lists of selectables themselves
+    ;; counting as selectables
+    (let* ((names-alist
+	    (mapcar #'name-prop (flatten-list selectable-list)))
+	   (minibuffer-allow-text-properties t)
+	   (selected
+	    (completing-read-multiple
+	     prompt names-alist nil t)))
+      ;; This is a HACK
+      (mapcar
+       (lambda (str)
+	 (seq-find
+	  (lambda (schbls) (string= str (easi-selectable-name schbls)))
+	  selectable-list))
+       selected))))
 
 (provide 'easi-selectable)
 ;;; easi-selectable.el ends here

@@ -655,35 +655,6 @@ passing `easi-current-searchables' as argument."
    (easi-session-state-searchables (easi-session--get-current))
    query))
 
-;;; Examples (not part of infrastructure) (to be eventually removed)
-
-;; TODO This is awful (and should probably live somewhere else!)
-(defun easi--completing-read-multiple-searchables (searchable)
-  "Read multiple SEARCHABLE from `easi-searchables'."
-  (cl-labels ((get-name (searchable)
-		;; TODO Surely there is a more elegant way to do this!! (generics?)
-		(pcase (type-of searchable)
-		  ('symbol (get-name (symbol-value searchable)))
-		  ('easi-search-engine (easi-search-engine-name searchable))
-		  ('easi-search-engine-group
-		   (easi-search-engine-group-name searchable))))
-	      (name-prop (searchable)
-		(propertize (get-name searchable)
-			    'easi-searchable searchable)))
-    (let* ((s-list (flatten-list searchable))
-	   (name-s-alist (mapcar #'name-prop s-list))
-	   (minibuffer-allow-text-properties t)
-	   (selected
-	    (completing-read-multiple
-	     "Searchables: " name-s-alist nil t)))
-      ;; This is a HACK
-      (mapcar
-       (lambda (str)
-	 (seq-find
-	  (lambda (searchable) (string= str (get-name searchable)))
-	  searchable))
-       selected))))
-
 (provide 'easi)
 
 ;;; easi.el ends here
