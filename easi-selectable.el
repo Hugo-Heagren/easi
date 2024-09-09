@@ -47,5 +47,17 @@ Standard Emacs docstrings constructs are supported."))
 (cl-defmethod easi-selectable-name ((selectable symbol))
   (easi-selectable-name (symbol-value selectable)))
 
+;;;;; Keys
+
+(cl-defgeneric easi-selectable-key (selectable)
+  "Get key of SELECTABLE.")
+
+(cl-defmethod easi-selectable-key ((selectable easi-selectable))
+  (slot-value selectable 'key))
+
+(cl-defmethod easi-selectable-key ((selectable symbol))
+  (easi-selectable-key (symbol-value selectable)))
+
+
 (provide 'easi-selectable)
 ;;; easi-selectable.el ends here
