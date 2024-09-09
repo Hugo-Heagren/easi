@@ -20,6 +20,7 @@
 ;;; Code:
 
 (require 'eieio)
+(require 'cl-lib)
 
 ;;;; easi-selectable
 
@@ -34,6 +35,17 @@
 Standard Emacs docstrings constructs are supported."))
   "Superclass for selecting things in EASI."
   :abstract t)
+
+;;;;; Names
+
+(cl-defgeneric easi-selectable-name (selectable)
+  "Get name of SELECTABLE.")
+
+(cl-defmethod easi-selectable-name ((selectable easi-selectable))
+  (slot-value selectable 'name))
+
+(cl-defmethod easi-selectable-name ((selectable symbol))
+  (easi-selectable-name (symbol-value selectable)))
 
 (provide 'easi-selectable)
 ;;; easi-selectable.el ends here
