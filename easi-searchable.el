@@ -309,9 +309,9 @@ is NUMBER (if non-nil), or the result of
 	      ;; are doing something like `easi-search'. If not,
 	      ;; something more like `easi-all'.
 	      (if query
-		  (or (easi-search-engine-queryable-results-getter searchable)
-		      (not easi-default-non-queryable-skip
-			   (easi-search-engine-all-results-getter searchable)))
+		  (or (slot-value searchable 'queryable-results-getter)
+		      (unless easi-default-non-queryable-skip
+			(slot-value searchable 'all-results-getter)))
 		(or (easi-search-engine-all-results-getter searchable)
 		    (and (stringp easi-default-non-all-results-skip)
 			 (setq query easi-default-non-all-results-skip)
