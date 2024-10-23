@@ -120,6 +120,27 @@ slot defaults to `easi-default-max-results'.)")
     :documentation
     "Maximum number of suggestions to retrieve at once."))
   "A single atomic search engine.")
+
+;; TODO Constructor? `easi-search-engine-group-create'
+(defclass easi-search-engine-group ()
+  ((name
+    :initarg :name
+    :initform nil
+    :documentation "Name of this search engine group.")
+   (documentation
+    :initarg :documentation
+    :initform nil
+    :documentation "Documentation string.")
+   (key
+    :initarg :key
+    :initform nil
+    :documentation "Key used for selection")
+   (searchables
+    :initarg :searchables
+    ;; TODO Could this be more specific?
+    :type list
+    :documentation
+    "List of searchables.
 Technically, this is itself a searchable, but naming it this way
 makes more sense."))
 
