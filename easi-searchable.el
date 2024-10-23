@@ -30,7 +30,7 @@
 ;; - (and nothing else is a searchable)
 ;;
 ;; The API for searchables currently includes:
-;; `easi-searchable--suggestions' and `easi-searchable--results'.
+;; `easi-searchable-suggestions' and `easi-searchable--results'.
 
 ;;; Code:
 
@@ -41,60 +41,68 @@
 
 ;;;; Basic types
 
-(cl-defstruct (easi-search-engine
-	       (:constructor easi-search-engine-create))
-  "A single atomic search engine."
-  (key nil :type key :documentation "Key used for selection")
-  (name "" :type string)
-  documentation
-  ;; opensearch ?
-  (suggestions-getter
-   nil
-   :documentation
-   "Way of getting a list of suggestions. Must be a of a type for
-which `easi-searchable--get-suggestions' has a method.")
-  (suggestion-post-processor
-   nil
-   :documentation
-   "Processing to be done to the suggestions, after retrieval but
+;; TODO would it be useful to have a more convenient constructor
+;; function? (you do this by writing a specific method for
+;; `make-instance')
+
+;;TODO Check type validation for slots? ()
+(defclass easi-search-engine ()
+  (;; TODO Eventually, `name', `key', etc. will be abstracted out into
+   ;; an `easi-selectable' class
+   (name
+    :initarg :name
+    :initform nil
+    :documentation "Name of this search engine.")
+   (documentation
+    :initarg :documentation
+    :initform nil
+    :documentation "Documentation string.")
+   (key
+    :initarg :key
+    :initform nil
+    :documentation "Key used for selection")
+   (suggestion-post-processor
+    :initarg :suggestion-post-processor
+    :initform nil
+    :documentation
+    "Processing to be done to the suggestions, after retrieval but
 before they are used by anything else in EASI. Takes the same
 form as FIELD in `easi-result--get-field'.")
-  (queryable-results-getter
-   nil
-   :documentation
-   "Way of getting a list of results. Must be a of a type for which
-`easi-searchable--query-results' has a method.")
-  (all-results-getter
-   nil
-   :documentation
-   "Way of getting a list of results. Must be of a type for which
-`easi-searchable--all-results' has a method.")
-  (results-post-processor
-   nil
-   :documentation
-   "Processing to be done to the results, after retrieval but before
+   (results-post-processor
+    :initarg :results-post-processor
+    :initform nil
+    :documentation
+    "Processing to be done to the results, after retrieval but before
 they are used by anything else in EASI. Takes the same form as
 FIELD in `easi-result--get-field'.")
-  (field-aliases
-   nil
-   :documentation
-   "Alist of field aliases.
+   (field-aliases
+    :initform nil
+    :initarg :field-aliases
+    :documentation
+    "Alist of field aliases.
 See `easi-result--list-fields' and `easi-result--get-field'.")
-  (results-presenters
-   nil
-   :documentation
-   "List of compatible results presenters (need not include those in
+   (results-presenters
+    :initform nil 
+    :initarg :results-presenters
+    :documentation
+    "List of compatible results presenters (need not include those in
 `easi-default-results-presenters'.)")
-  (result-presenters
-   nil
-   :documentation
-   "List of compatible result presenters (need not include those in
+   (result-presenters
+    :initform nil 
+    :initarg :result-presenters
+    :documentation
+    "List of compatible result presenters (need not include those in
 `easi-default-result-presenters'.)")
-  (sorters nil :documentation "List of compatible results sorters.")
-  (max-results
-   nil
-   :documentation
-   "Maximum number of results to retrieve at once.
+   (sorters
+    :initarg :sorters
+    :initform nil
+    :documentation
+    "List of compatible results sorters.")
+   (max-results
+    :initform nil
+    :initarg :max-results
+    :documentation
+    "Maximum number of results to retrieve at once.
 
 Acceptable values:
 - nil (default): use `easi-default-max-results' as the max number
@@ -106,24 +114,12 @@ returns all results. Value of nil means no max, get all matching
 results (for searchables which interact with services like
 web-based search engines, this is generally a bad idea, so this
 slot defaults to `easi-default-max-results'.)")
-  (max-suggestions
-   nil
-   :documentation
-   "Maximum number of suggestions to retrieve at once."))
-
-(cl-defstruct (easi-search-engine-group
-	       (:constructor easi-search-engine-group-create))
-  "A group of search-engines."
-  (key nil
-       :type key
-       :documentation "Key used for selection")
-  (name nil :type string)
-  documentation
-  (searchables
-   nil
-   :type list
-   :documentation
-   "List of searchables.
+   (max-suggestions
+    :initform nil
+    :initarg :max-suggestions
+    :documentation
+    "Maximum number of suggestions to retrieve at once."))
+  "A single atomic search engine.")
 Technically, this is itself a searchable, but naming it this way
 makes more sense."))
 
@@ -131,43 +127,23 @@ makes more sense."))
 
 (defvar easi-default-max-suggestions)
 
-(cl-defgeneric easi-searchable--get-suggestions (query suggestions-getter &optional number)
-  "Get a list of by querying SUGGESTIONS-GETTER with QUERY.
+(defun easi-searchable--suggestions (query searchable &optional number)
+  "TODO DOCS"
+  (when-let (((not (string-empty-p query)))
+	     (raw-results
+	      (easi-searchable-suggestions
+	       query searchable
+	       (or number
+		   (slot-value searchable 'max-results)
+		   easi-default-max-suggestions))))
+    (if-let (post-proc (slot-value searchable 'suggestion-post-processor))
+	(easi-structured-object-get-field post-proc raw-results)
+      raw-results)))
 
-QUERY is always string. If NUMBER is non-nil, no more than NUMBER
-suggestions should be returned."
-  ;; TODO Implement a default which just gets all of the results of
-  ;; QUERY and prints the title or other appropriate field in each one
-  )
-
-;; Simplest case
-(cl-defmethod easi-searchable--get-suggestions (query (suggestions-getter symbol) &optional number)
-  "SUGGESTIONS-GETTER is a function.
-
-Call SUGGESTIONS-GETTER with args QUERY NUMBER (even if NUMBER is
-not specified, then passed as nil)."
-  (funcall suggestions-getter query number))
-
-(cl-defmethod easi-searchable--get-suggestions (query (suggestions-getter string) &optional number)
-  "SUGGESTIONS-GETTER is a string.
-
-Replace %s with QUERY, and %n with NUMBER (or 10 if number is not
-specified) in SUGGESTIONS-GETTER, then make an https request on
-the result. Return a buffer holding the response text (this is
-intended to be post-processed)."
-  (let* ((request-string
-	  (url-encode-url
-	   (format-spec suggestions-getter
-			`((?s . ,query)
-		          (?n . ,number)))))
-	 (request-url (url-generic-parse-url request-string))
-	 (response-buffer (url-retrieve-synchronously
-			   request-url 'silent 'inhibit-cookies)))
-    response-buffer))
-
-;; TODO Some more interesting implementations of this ^
-
-(cl-defgeneric easi-searchable--suggestions (query searchable &optional number)
+;; This is a public-interface function, so should only have single
+;; dashes in it's name. TODO make the same true for the results
+;; functions!
+(cl-defgeneric easi-searchable-suggestions (query searchable &optional number)
   "Get a list of suggestions from querying SEARCHABLE with QUERY.
 
 If NUMBER is non-nil, limit the number of suggestions from each
@@ -177,159 +153,125 @@ If SEARCHABLE is an `easi-search-engine' with a defined
 \"suggestion-post-processor\" slot, then the value of that slot
 will be applied to the suggestions before they are returned. If
 the slot's value is PROC, and the unprocessed results are RAW,
-then the call is (easi-structured-object-get-field PROC RAW).")
+then the call is (easi-structured-object-get-field PROC RAW)."
+  ;; Default -- no suggestions (`ignore' is used to appease flymake)
+  (ignore query searchable number))
 
-(cl-defmethod easi-searchable--suggestions (query (searchable easi-search-engine) &optional number)
-  "Get suggestions with `easi-searchable--get-suggestions' and maybe post-process.
-
-Get value of `suggestions-getter', then pass QUERY, the getter,
-and NUMBER (or `easi-default-max-suggestions' when NUMBER is nil)
-to `easi-searchable--get-suggestions'.
-
-If SEARCHABLE has a non-nil \"suggestion-post-processor\" slot,
-pass the results through that too."
-  (when-let (((not (string-empty-p query)))
-	     (getter (easi-search-engine-suggestions-getter searchable))
-	     (raw-results
-	      (easi-searchable--get-suggestions query getter
-				    (or number
-					(easi-search-engine-max-results searchable)
-					easi-default-max-suggestions))))
-    (if-let (post-proc (easi-search-engine-suggestion-post-processor searchable))
-	(easi-structured-object-get-field post-proc raw-results)
-      raw-results)))
-(cl-defmethod easi-searchable--suggestions (query (searchable easi-search-engine-group) &optional number)
-  "Map `easi-searchable--suggestions' over searchables.
+(cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine-group) &optional number)
+  "Map `easi-searchable-suggestions' over searchables.
 
 Get \"searchables\" slot in SEARCHABLE, and map
-`easi-searchable--suggestions' over each one, passing QUERY, the
+`easi-searchable-suggestions' over each one, passing QUERY, the
 searchable and NUMBER in each case."
-  (mapcar (lambda (sch) (easi-searchable--suggestions query sch number))
-	  (easi-search-engine-group-searchables searchable)))
-(cl-defmethod easi-searchable--suggestions (query (searchable cons) &optional number)
-  "Map `easi-searchable--suggestions' over SEARCHABLE.
+  (mapcar (lambda (sch) (easi-searchable-suggestions query sch number))
+	  (slot-value searchable 'searchables)))
 
-Flatten the list, and `mapcar' `easi-searchable--suggestions' over
+(cl-defmethod easi-searchable-suggestions (query (searchable cons) &optional number)
+  "Map `easi-searchable-suggestions' over SEARCHABLE.
+
+Flatten the list, and `mapcar' `easi-searchable-suggestions' over
 the result, passing QUERY, the searchable, and NUMBER each time."
   (flatten-list
-   (mapcar (lambda (sch) (easi-searchable--suggestions query sch number)) searchable)))
-(cl-defmethod easi-searchable--suggestions (query (searchable symbol) &optional number)
-  "Call `easi-searchable--suggestions' with value of SEARCHABLE.
+   (mapcar (lambda (sch) (easi-searchable-suggestions query sch number)) searchable)))
+
+(cl-defmethod easi-searchable-suggestions (query (searchable symbol) &optional number)
+  "Call `easi-searchable-suggestions' with value of SEARCHABLE.
 
 Pass QUERY, the value of SEARCHABLE, and NUMBER."
-  (easi-searchable--suggestions query (symbol-value searchable) number))
+  (easi-searchable-suggestions query (symbol-value searchable) number))
 
 ;;;; Getting results
 
 (defvar easi-default-max-results)
+(defvar easi-default-non-queryable-skip)
 
-(cl-defgeneric easi-searchable--query-results (query queryable-results-getter &key number page)
-  "Get a list of by querying QUERYABLE-RESULTS-GETTER with QUERY.
+(cl-defgeneric easi-searchable-query-results (query searchable &key number page)
+  "Get a list of results by querying SEARCHABLE with QUERY.
 
 QUERY is always string. If NUMBER is non-nil, no more than NUMBER
-results should be returned.")
+results should be returned. PAGE is the page of results to be
+returned (1-indexed).
 
-;; Simplest case
-(cl-defmethod easi-searchable--query-results (query (queryable-results-getter symbol) &key number page)
-  "QUERYABLE-RESULTS-GETTER is a function.
+The default implementation acts as a fallback for searchables which do
+not implement this behaviour. It checks
+`easi-default-non-queryable-skip' and acts accordingly."
+  ;; Silence flymake
+  (ignore query number page)
+  (if easi-default-non-queryable-skip
+      nil
+    (easi-searchable-all-results searchable)))
 
-Pass QUERY, NUMBER and PAGE to QUERYABLE-RESULTS-GETTER, in that
-order."
-  (funcall queryable-results-getter query number page))
+(defvar easi-default-non-all-results-skip)
 
-(cl-defmethod easi-searchable--query-results (query (queryable-results-getter string) &key number page)
-  "QUERYABLE-RESULTS-GETTER is a string.
-
-Make the following replacements in QUERYABLE-RESULTS-GETTER, and
-then make an https request on the result. Return a buffer holding
-the response text (this is intended to be post-processed):
-- %s: QUERY
-- %n: NUMBER if that is a number, or the empty string otherwise.
-- %p: PAGE"
-  (let* ((request-string
-	  (url-encode-url
-	   (format-spec queryable-results-getter
-			`((?s . ,query)
-		          (?n . ,(if (numberp number)
-				     number
-				   ""))
-			  (?p . ,page)))))
-	 (request-url (url-generic-parse-url request-string))
-	 (response-buffer (url-retrieve-synchronously
-			   request-url 'silent 'inhibit-cookies)))
-    response-buffer))
-
-;; TODO Some more interesting implementations of this ^
-
-(cl-defgeneric easi-searchable--all-results (all-results-getter)
-  "Get a list of all results from ALL-RESULTS-GETTER.
+(cl-defgeneric easi-searchable-all-results (searchable)
+  "Get a list of all results from SEARCHABLE.
 
 Used for searchables which can return \"everything\" in some
 meaningful sense (i.e. all the notes in my collection, not just
-the ones which match a query).")
-
-(cl-defmethod easi-searchable--all-results ((all-results-getter symbol))
-  "ALL-RESULTS-GETTER is a symbol.
-
-If ALL-RESULTS-GETTER is a function (i.e. passes `functionp')
-then call it with `funcall'. If not a function, get its
-`symbol-value' (this allows using a variable which contains a
-list of objects, where no function exists to return them all)."
-  (if (functionp all-results-getter)
-      (funcall all-results-getter)
-    (symbol-value all-results-getter)))
-
-;; TODO Some more interesting implementations of this ^
+the ones which match a query)."
+  ;; The only reason this (default) implementation is called is if the
+  ;; SEARCHABLE can't handle getting all results, so this implements
+  ;; what to do in that case:
+  (pcase easi-default-non-all-results-skip
+    ((pred stringp)
+     (easi-searchable-query-results
+      ;; TODO Do we need :number and/or :page here?
+      easi-default-non-all-results-skip searchable))
+    ;; Skip and return nothing.
+    ('t nil)
+    ;; Not formally defined. Raise an error so that we can extend in
+    ;; the future if necessary.
+    (_ (error "Undefined value for `easi-default-non-all-results-skip'"))))
 
 (cl-defgeneric easi-searchable--results (searchable &key query number page)
-  "Get a list of results from querying SEARCHABLE with QUERY.
+  "Get and process results from SEARCHABLE.
+
+If QUERY is non-nil, pass it along to SEARCHABLE.
 
 If NUMBER is non-nil, limit the number of results from each
 engine in SEARCHABLE to NUMBER. PAGE is the page of results to
-get, if results are paginated (1-indexed).")
+get, if results are paginated (1-indexed).
 
-(defvar easi-default-non-all-results-skip)
-(defvar easi-default-non-queryable-skip)
+If SEARCHABLE has a non-nil \"results-post-processor\" slot, then pass
+the results through this before returning them.")
 
 (cl-defmethod easi-searchable--results ((searchable easi-search-engine) &key query number page)
-  "Get appropriate getter from SEARCHABLE, and pass QUERY, NUMBER and PAGE.
+  ;; TODO Document how this function differs from (e.g.
+  ;; `easi-searchable-query-results'): `easi-searchable--results' is
+  ;; a generic function with methods for different types of searchable
+  ;; (symbols, lists, etc.). `easi-searchable-query-results' and
+  ;; friends are generics from which different classes of searchable
+  ;; are supposed to derive their functionality.
+  "Get and process results from SEARCHABLE.
 
-If QUERY is non-nil, get the \"queryable-results-getter\",
-otherwise get \"all-results-getter\".
+If QUERY is non-nil, call `easi-searchable-query-results' with QUERY,
+NUMBER and PAGE. If QUERY is nil, call `easi-searchable-all-results'.
 
-If QUERY is non-nil, then pass QUERY, the getter, a number
-argument, and PAGE to `easi-searchable--query-results'. The number argument
-is NUMBER (if non-nil), or the result of
-`easi-search-engine-max-results' for SEARCHABLE (if non-nil) or
-`easi-default-max-results'. If QUERY is nil, call
-`easi-searchable--all-results' with the getter."
-  (when-let ((getter
+If NUMBER is non-nil, limit the number of results from each engine in
+SEARCHABLE to NUMBER. PAGE is the page of results to get, if results are
+paginated (1-indexed).
+
+If SEARCHABLE has a non-nil \"results-post-processor\" slot, then pass
+the results through this before returning them."
+  (when-let ((raw-results
 	      ;; Whether query is non-nil is an indication of whether
 	      ;; a query was originally passed by the user. If so, we
 	      ;; are doing something like `easi-search'. If not,
 	      ;; something more like `easi-all'.
 	      (if query
-		  (or (slot-value searchable 'queryable-results-getter)
-		      (unless easi-default-non-queryable-skip
-			(slot-value searchable 'all-results-getter)))
-		(or (easi-search-engine-all-results-getter searchable)
-		    (and (stringp easi-default-non-all-results-skip)
-			 (setq query easi-default-non-all-results-skip)
-			 (easi-search-engine-queryable-results-getter searchable)))))
-	     (raw-results
-	      (if query
-		  (easi-searchable--query-results query getter
-				      :number
-				      (or number
-					  (easi-search-engine-max-results searchable)
-					  easi-default-max-results)
-				      :page page)
-		(easi-searchable--all-results getter))))
+		  (easi-searchable-query-results
+		   query searchable
+		   :number (or number
+			       (slot-value searchable 'max-results)
+			       easi-default-max-results)
+		   :page page)
+		(easi-searchable-all-results searchable))))
     (mapcar
      (apply-partially #'easi-utils--result-attach-search-engine searchable)
-     (if-let (post-proc (easi-search-engine-results-post-processor searchable))
+     (if-let (post-proc (slot-value searchable 'results-post-processor))
 	 (easi-structured-object-get-field post-proc raw-results)
        raw-results))))
+
 (cl-defmethod easi-searchable--results ((searchable easi-search-engine-group) &key query number page)
   "`mapcar' `easi-searchable--results' over searchables in SEARCHABLE.
 
@@ -339,7 +281,8 @@ PAGE directly."
   (mapcar (lambda (searchable)
 	    (easi-searchable--results
 	     searchable :query query :number number :page page))
-	  (easi-search-engine-group-searchables searchable)))
+	  (slot-value searchable 'searchables)))
+
 (cl-defmethod easi-searchable--results ((searchable cons) &key query number page)
   "Mapcar `easi-searchable--results' over SEARCHABLE, `append' result.
 
@@ -349,6 +292,7 @@ Pass QUERY, NUMBER and PAGE `easi-searchable--results'."
 		   (easi-searchable--results
 		    searchable :query query :number number :page page))
 		 searchable)))
+
 (cl-defmethod easi-searchable--results ((searchable symbol) &key query number page)
   "Call `easi-searchable--results' with value of SEARCHABLE.
 
@@ -375,7 +319,7 @@ Delete duplicates before returning."
 
 (cl-defmethod easi-searchable--results-presenters ((searchable easi-search-engine))
   "Call `easi-search-engine-results-presenters' on SEARCHABLE."
-  (easi-search-engine-results-presenters searchable))
+  (slot-value searchable 'results-presenters))
 
 (cl-defmethod easi-searchable--results-presenters ((searchable easi-search-engine-group))
   "Get searchables from group SEARCHABLE, and call on that list."
@@ -383,7 +327,7 @@ Delete duplicates before returning."
   ;; there is a method for lists, and the value of the :searchables
   ;; slot is always a list.
   (easi-searchable--results-presenters
-   (easi-search-engine-group-searchables searchable)))
+   (slot-value searchable 'searchables)))
 
 (defun easi-searchable--get-results-presenters (searchable)
   "List all results presenters compatible with SEARCHABLE."
@@ -411,7 +355,7 @@ Delete duplicates before returning."
 
 (cl-defmethod easi-searchable--result-presenters ((searchable easi-search-engine))
   "Call `easi-search-engine-results-presenters' on SEARCHABLE."
-  (easi-search-engine-result-presenters searchable))
+  (slot-value searchable 'result-presenters))
 
 (cl-defmethod easi-searchable--result-presenters ((searchable easi-search-engine-group))
   "Get searchables from group SEARCHABLE, and call on that list."
@@ -419,7 +363,7 @@ Delete duplicates before returning."
   ;; there is a method for lists, and the value of the :searchables
   ;; slot is always a list.
   (easi-searchable--result-presenters
-   (easi-search-engine-group-searchables searchable)))
+   (slot-value searchable 'searchables)))
 
 (defun easi-searchable--get-result-presenters (searchable)
   "List all result presenters compatible with SEARCHABLE."
@@ -447,11 +391,11 @@ Delete duplicates before returning."
 
 (cl-defmethod easi-searchable--sorters ((searchable easi-search-engine))
   "Call `easi-search-engine-sorters' on SEARCHABLE."
-  (easi-search-engine-sorters searchable))
+  (slot-value searchable 'sorters))
 
 (cl-defmethod easi-searchable--sorters ((searchable easi-search-engine-group))
   "Get SEARCHABLE's searchables, pass to `easi-searchable--sorters'."
-  (easi-searchable--sorters (easi-search-engine-group-searchables searchable)))
+  (easi-searchable--sorters (slot-value searchable 'searchables)))
 
 (provide 'easi-searchable)
 ;;; easi-searchable.el ends here

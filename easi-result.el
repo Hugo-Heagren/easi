@@ -73,7 +73,7 @@ the plist key \"easi-search-engine\". Otherwise return nil."
 (defun easi-result--aliases (result)
   "Return list of field alias for RESULT."
   (let ((searchable (easi-result--retrieve-search-engine result)))
-    (easi-search-engine-field-aliases searchable)))
+    (slot-value searchable 'field-aliases)))
 
 
 (provide 'easi-result)

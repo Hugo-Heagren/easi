@@ -116,8 +116,7 @@ sense for the data being queried).
 
 If a string, use that as the query.
 
-Anything else is treated as equivalent to t, though this may
-change, so setting to t or a string is recommended.
+Anything else is an error.
 
 This is only a default. It can be overridden by some functions
 which need to specify certain behaviour."
