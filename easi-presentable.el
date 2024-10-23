@@ -166,7 +166,7 @@ RESULT-OR-RESULTS should be either of the symbols `result' or
   ;; are removed from this list, so anything strange happens, we can
   ;; assume that the buffer is live.) This ensures that no presenter
   ;; is used more than once.
-  (unless (rassoc presentable (easi-session-state-buffer-presenters session))
+  (unless (rassoc presentable (slot-value session 'buffer-presenters))
     (let* ((default (cl-case result-or-results
 		      (result easi-result-default-buffer-name)
 		      (results easi-results-default-buffer-name)))
@@ -175,10 +175,10 @@ RESULT-OR-RESULTS should be either of the symbols `result' or
       ;; list
       (cl-pushnew buffer
 		  (cl-case result-or-results
-		    (result (easi-session-state-result-buffers session))
-		    (results (easi-session-state-results-buffers session))))
+		    (result (slot-value session 'result-buffers))
+		    (results (slot-value session 'results-buffers))))
       (setf (alist-get
-	     buffer (easi-session-state-buffer-presenters session))
+	     buffer (slot-value session 'buffer-presenters))
 	    presentable))))
 
 ;;;; Printing
@@ -254,7 +254,7 @@ are passed to the functions in the \"hook\" slot."
     ;; (if the buffer is in both lists, being a results buffer
     ;; 'wins').
     ;; TODO In future, do I want to make a merged mode for such cases?
-    (if (memq buffer (easi-session-state-results-buffers session))
+    (if (memq buffer (slot-value session 'results-buffers))
 	(easi-results-mode)
       (easi-result-mode))))
 

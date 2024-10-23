@@ -176,9 +176,9 @@ config, and remove the session from `easi-session-list'.
 If SESSION is not specified, default to current session."
   (interactive `(,(easi-session--get-current))
    easi-results-mode easi-result-mode)
-  (let* ((window-config (easi-session-state-window-config session)))
-    (dolist (buf `(,@(easi-session-state-results-buffers session)
-		   ,@(easi-session-state-result-buffers session)))
+  (let* ((window-config (slot-value session 'window-config)))
+    (dolist (buf `(,@(slot-value session 'results-buffers)
+		   ,@(slot-value session 'result-buffers)))
       (when buf (kill-buffer buf)))
     (when window-config
       (set-window-configuration window-config))
@@ -202,7 +202,7 @@ If SESSION is not specified, default to current session."
   "Select window of current result."
   (interactive)
   (let* ((session (easi-session--get-current))
-	 (buf-ls (easi-session-state-result-buffers session))
+	 (buf-ls (slot-value session 'result-buffers))
 	 (buf1 (car buf-ls))
 	 (buf (cond
 	       ((null buf1) (error "No result buffer(s)"))
@@ -222,9 +222,8 @@ With optional prefix arg N, go to Nth next. If N is negative, go
 to previous result."
   (interactive "p")
   (let* ((session (easi-session--get-current))
-	 (list (easi-session-state-results-buffers session))
-	 (pres-alist (easi-session-state-buffer-presenters
-		      session)))
+	 (list (slot-value session 'results-buffers))
+	 (pres-alist (slot-value session 'buffer-presenters)))
     (dolist (buf list)
       (with-current-buffer buf
 	(easi-presenter--next-result
@@ -248,9 +247,8 @@ go to next result."
   "Go to first result."
   (interactive)
     (let* ((session (easi-session--get-current))
-	 (list (easi-session-state-results-buffers session))
-	 (pres-alist (easi-session-state-buffer-presenters
-		      session)))
+	 (list (slot-value session 'results-buffers))
+	 (pres-alist (slot-value session 'buffer-presenters)))
     (dolist (buf list)
       (with-current-buffer buf
 	(easi-presenter--first-result
@@ -264,9 +262,8 @@ go to next result."
   "Go to last result."
   (interactive)
     (let* ((session (easi-session--get-current))
-	 (list (easi-session-state-results-buffers session))
-	 (pres-alist (easi-session-state-buffer-presenters
-		      session)))
+	 (list (slot-value session 'results-buffers))
+	 (pres-alist (slot-value session 'buffer-presenters)))
     (dolist (buf list)
       (with-current-buffer buf
 	(easi-presenter--last-result
@@ -292,16 +289,16 @@ current session. If it was the last buffer in that session, then
 call `easi-quit-session', passing the session."
   (let* ((session (easi-session--get-current))
 	 (buffer (current-buffer))
-	 (new-results-buffers (delq buffer (easi-session-state-results-buffers session)))
-	 (new-result-buffers (delq buffer (easi-session-state-result-buffers session))))
+	 (new-results-buffers (delq buffer (slot-value session 'results-buffers)))
+	 (new-result-buffers (delq buffer (slot-value session 'result-buffers))))
     ;; remove buffer from session
-    (setf (easi-session-state-results-buffers session)
+    (setf (slot-value session 'results-buffers)
 	  new-results-buffers)
-    (setf (easi-session-state-result-buffers session)
+    (setf (slot-value session 'result-buffers)
 	  new-result-buffers)
     (setf (alist-get
 	   buffer
-	   (easi-session-state-buffer-presenters session)
+	   (slot-value session 'buffer-presenters)
 	   nil 'remove)
 	  nil)
     ;; If session now empty, delete it
@@ -322,7 +319,7 @@ different presenters."
 
 (cl-defun easi--print (session &key
 			       (printable-or-thread
-				(easi-session-state-results-thread session))
+				(slot-value session 'results-thread))
                                (slots '(before printer after hook))
                                result-or-results)
   "Print a results or list of results in all relevant buffers.
@@ -337,8 +334,8 @@ depending on RESULT-OR-RESULTS), call `easi-presentable--print',
 passing PRINTABLE, SLOTS and the buffer, then display the buffer
 `easi-presentable--display-buffer'."
   (let ((list (cl-case result-or-results
-                (result (easi-session-state-result-buffers session))
-                (results (easi-session-state-results-buffers session)))))
+                (result (slot-value session 'result-buffers))
+                (results (slot-value session 'results-buffers)))))
     ;; Because there is a 1-1 correspondence between buffers and
     ;; presenters, and each buffer is unique, looping over this list
     ;; ensures that we only print for each buffer once, even if some
@@ -346,7 +343,7 @@ passing PRINTABLE, SLOTS and the buffer, then display the buffer
     ;; groups).
     ;; TODO Separate thread for each buffer.
     (cl-loop for (buf . pres)
-             in (easi-session-state-buffer-presenters session)
+             in (slot-value session 'buffer-presenters)
              when (memql buf list)
              do (easi-presentable--print
                  pres session
@@ -359,7 +356,7 @@ passing PRINTABLE, SLOTS and the buffer, then display the buffer
 
 (defun easi--get-current-result (session)
   "Return the result at point in SESSION."
-  (let ((buf-list (easi-session-state-results-buffers session)))
+  (let ((buf-list (slot-value session 'results-buffers)))
     (if (memq (current-buffer) buf-list)
 	(funcall (slot-value (easi-session--current-buffer-presenter session)
 		       'current-getter))
@@ -374,7 +371,7 @@ passing PRINTABLE, SLOTS and the buffer, then display the buffer
   "Select window of current results."
   (interactive)
   (let* ((session (easi-session--get-current))
-	 (buf-ls (easi-session-state-results-buffers session))
+	 (buf-ls (slot-value session 'results-buffers))
 	 (buf1 (car buf-ls))
 	 (buf (cond
 	       ((null buf1) (error "No results buffer(s)"))
@@ -437,9 +434,9 @@ passing SESSION, SLOTS, the symbol `result', and the presenter."
 Used internally by `easi-get-next-page'. How new results are
 added depends on the value of `easi-next-page-sorting-strategy',
 which see."
-  (let ((searchable (easi-session-state-searchables session))
-	(query (easi-session-state-query session))
-	(page (easi-session-state-page session))
+  (let ((searchable (slot-value session 'searchables))
+	(query (slot-value session 'query))
+	(page (slot-value session 'page))
 	(strategy easi-next-page-sorting-strategy))
     (cl-loop with i = 0
 	     until (eq i num)
@@ -447,7 +444,7 @@ which see."
 	     do (setq new-raw-results (easi-searchable--results
 				       searchable :query query :page (1+ page)))
 	     if new-raw-results
-	       do (cl-incf (easi-session-state-page session))
+	       do (cl-incf (slot-value session 'page))
 	       ;; I *think* this is the `correct' way of doing this,
 	       ;; but it isn't perfect. The main thread doesn't
 	       ;; propogate signals like all other threads would, so
@@ -465,14 +462,14 @@ which see."
 	     do (cl-incf i)
 	     ;; This works because `setf' returns the set value.
 	     finally return
-	     (setf (easi-session-state-results session)
+	     (setf (slot-value session 'results)
 		   (if (eql strategy 'merge)
 		       (easi-sort--results
 			(easi-sort--get-searchable-sorter searchable)
-			`(,@(easi-session-state-results session)
+			`(,@(slot-value session 'results)
 			  ,@collected-results)
 			query)
-		     `(,@(easi-session-state-results session) ,@collected-results))))))
+		     `(,@(slot-value session 'results) ,@collected-results))))))
 
 (cl-defun easi-get-next-page (&optional (num 1))
   "Print NUM next pages of results from session's searchables.
@@ -487,7 +484,7 @@ How new results are added depends on the value of
 	       (make-thread
 		(lambda () (easi--get-next-page session num))
 		"Easi next page results thread")))
-    (setf (easi-session-state-results-thread session) results-thread)
+    (setf (slot-value session 'results-thread) results-thread)
     (easi--print session
 		 :printable-or-thread results-thread
 		 :slots '(printer)
@@ -545,15 +542,15 @@ the current result as appropriate."
         ;; are printing into.
         (results-presenter
          (car (easi-searchable--get-results-presenters
-               (easi-session-state-searchables session)))))
+               (slot-value session 'searchables)))))
     ;; TODO Should I save windows earlier, at the initial session definition?
-    (setf (easi-session-state-window-config session)
+    (setf (slot-value session 'window-config)
           (current-window-configuration))
     (easi-presentable--set-buffers results-presenter session 'results)
     (easi--print
      session
      ;; Not strictly necessary, but good to be explicit.
-     :printable-or-thread (easi-session-state-results-thread session)
+     :printable-or-thread (slot-value session 'results-thread)
      :result-or-results 'results)
     (easi--present-result
      session
@@ -576,8 +573,8 @@ SEARCHABLE. If this slot is nil, behaviour is controlled by
 	   ;; TODO Name thread in accordance with sessions?
 	   (lambda () (easi--get-results session searchable))
 	   "Easi results")))
-    (setf (easi-session-state-results-thread session) results-thread)
-    (setf (easi-session-state-searchables session) searchable)
+    (setf (slot-value session 'results-thread) results-thread)
+    (setf (slot-value session 'searchables) searchable)
     (make-thread
      (lambda ()
        (easi--present-results session))
@@ -589,18 +586,18 @@ SEARCHABLE. If this slot is nil, behaviour is controlled by
 Get results from SESSION with SEARCHABLE, clean them with
 `easi-sort--results'. Finally, store the clean results in SESSION
 and return the clean results."
-  (let* ((query (easi-session-state-query session))
+  (let* ((query (slot-value session 'query))
 	 (raw-results (easi-searchable--results
 		       searchable
-		       :page (easi-session-state-page session)
+		       :page (slot-value session 'page)
 		       :query query))
 	 (clean-results
 	  (easi-sort--results
 	   (easi-sort--get-searchable-sorter
-	    (easi-session-state-searchables session))
+	    (slot-value session 'searchables))
 	   raw-results query)))
     ;; Store results in SESSION
-    (setf (easi-session-state-results session) clean-results)))
+    (setf (slot-value session 'results) clean-results)))
 
 ;;;###autoload
 (defun easi-search (searchable query)
@@ -616,13 +613,13 @@ controlled by `easi-default-non-queryable-skip'."
 		 `(,searchable ,query)))
   (let* ((session (easi-session--get-create-current))
 	 ;; We need to set these before getting results
-	 (_ (setf (easi-session-state-query session) query))
-	 (_ (setf (easi-session-state-searchables session) searchable))
+	 (_ (setf (slot-value session 'query) query))
+	 (_ (setf (slot-value session 'searchables) searchable))
 	 (results-thread
 	  (make-thread
 	   (lambda () (easi--get-results session searchable))
 	   "Easi results")))
-    (setf (easi-session-state-results-thread session) results-thread)
+    (setf (slot-value session 'results-thread) results-thread)
     (make-thread
      (lambda () (easi--present-results session))
      "Easi presentation")))
@@ -635,8 +632,8 @@ Interactively, prompt for SEARCHABLE with
 `easi--prompt-for-searchable'."
   (interactive `(,(easi--prompt-for-searchable))
 	       easi-results-mode easi-result-mode)
-  (if-let ((query (easi-session-state-query
-		   (easi-session--get-current))))
+  (if-let ((query (slot-value (easi-session--get-current)
+		   'query)))
       (easi-search searchable query))
   (easi-all searchable))
 
@@ -647,11 +644,11 @@ Interactively, prompt for SEARCHABLE with
 Interactively, prompt for QUERY with `easi--prompt-for-query',
 passing `easi-current-searchables' as argument."
   (interactive `(,(easi--prompt-for-query
-		   (easi-session-state-searchables
-		    (easi-session--get-current))))
+		   (slot-value (easi-session--get-current)
+		    'searchables)))
 	       easi-results-mode easi-result-mode)
   (easi-search
-   (easi-session-state-searchables (easi-session--get-current))
+   (slot-value (easi-session--get-current) 'searchables)
    query))
 
 ;;; Examples (not part of infrastructure) (to be eventually removed)
@@ -663,9 +660,9 @@ passing `easi-current-searchables' as argument."
 		;; TODO Surely there is a more elegant way to do this!! (generics?)
 		(pcase (type-of searchable)
 		  ('symbol (get-name (symbol-value searchable)))
-		  ('easi-search-engine (easi-search-engine-name searchable))
+		  ('easi-search-engine (slot-value searchable 'name))
 		  ('easi-search-engine-group
-		   (easi-search-engine-group-name searchable))))
+		   (slot-value searchable 'group-name))))
 	      (name-prop (searchable)
 		(propertize (get-name searchable)
 			    'easi-searchable searchable)))

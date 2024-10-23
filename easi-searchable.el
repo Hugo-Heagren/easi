@@ -35,6 +35,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'eieio)
 (require 'easi-structured-object-getter)
 (require 'easi-presentable)
 (require 'easi-utils)
@@ -143,6 +144,7 @@ slot defaults to `easi-default-max-results'.)")
     "List of searchables.
 Technically, this is itself a searchable, but naming it this way
 makes more sense."))
+  "A group of search-engines.")
 
 ;;;; Getting suggestions
 

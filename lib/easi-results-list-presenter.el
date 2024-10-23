@@ -82,7 +82,7 @@ Derived from `tabulated-list-mode'."
 
 (defun easi-results-list--set-format (_results session)
   (let* ((presenter (alist-get (current-buffer)
-			       (easi-session-state-buffer-presenters session)))
+			       (slot-value session 'buffer-presenters)))
 	 (fields (slot-value presenter 'fields))
 	 (format (vconcat
 		  (mapcar #'easi-results-list--convert-field-list
@@ -97,7 +97,7 @@ RESULTS should be a list of results EASI will recognise. Return a
 list of entries which `tabulated-list-mode' will recognise and be
 able to print."
   (let* ((presenter (alist-get (current-buffer)
-			       (easi-session-state-buffer-presenters session)))
+			       (slot-value session 'buffer-presenters)))
 	 (fields (slot-value presenter 'fields)))
     (cl-loop for res in results
 	     when res

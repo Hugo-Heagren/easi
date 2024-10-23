@@ -25,26 +25,47 @@
 
 ;;; Code:
 
-(require 'cl-lib)
+
+(require 'eieio)
 
 (defvar easi-session-list nil
   "List of easi sessions. Each is an `easi-session-state'.")
 
-(cl-defstruct (easi-session-state
-	       (:constructor easi-session-state-create))
-  "Holds current easi search and presentation state."
-  window-config
-  query searchables results
-  results-buffers result-buffers
-  buffer-presenters
-  (page 1)
-  results-thread)
+(defclass easi-session-state ()
+  ((window-config
+    :initarg :window-config
+    :initform nil)
+   (query
+    :initarg :query
+    :initform nil)
+   (searchables
+    :initarg :searchables
+    :initform nil)
+   (results
+    :initarg :results
+    :initform nil)
+   (results-buffers
+    :initarg :results-buffers
+    :initform nil)
+   (result-buffers
+    :initarg :result-buffers
+    :initform nil)
+   (buffer-presenters
+    :initarg :buffer-presenters
+    :initform nil)
+   (page
+    :initarg :page
+    :initform 1)
+   (results-thread
+    :initarg :results-thread
+    :initform nil))
+  "Holds current easi search and presentation state.")
 
 ;; TODO this should probably be a method
 (defun easi-session--current-buffer-presenter (session)
   "Get results presenter for current buffer in SESSION."
   (alist-get (current-buffer)
-	     (easi-session-state-buffer-presenters session)))
+	     (slot-value session 'buffer-presenters)))
 
 (defun easi-session--get-current ()
   "Return first session with current buffer.
@@ -55,8 +76,8 @@ buffer appears."
   (let ((buf (current-buffer)))
     (cl-find-if
      (lambda (session)
-       (or (memq buf (easi-session-state-result-buffers session))
-	   (memq buf (easi-session-state-results-buffers session))))
+       (or (memq buf (slot-value session 'result-buffers))
+	   (memq buf (slot-value session 'results-buffers))))
      easi-session-list)))
 
 (defun easi-session--get-create-current ()
@@ -64,7 +85,7 @@ buffer appears."
 
 If a session is created, it is added to `easi-session-list'."
   (or (easi-session--get-current)
-      (let* ((session (easi-session-state-create)))
+      (let* ((session (make-instance 'easi-session-state)))
 	 (push session easi-session-list)
 	 session)))
 
