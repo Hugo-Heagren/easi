@@ -163,9 +163,6 @@ makes more sense."))
 	(easi-structured-object-get-field post-proc raw-results)
       raw-results)))
 
-;; This is a public-interface function, so should only have single
-;; dashes in it's name. TODO make the same true for the results
-;; functions!
 (cl-defgeneric easi-searchable-suggestions (query searchable &optional number)
   "Get a list of suggestions from querying SEARCHABLE with QUERY.
 
@@ -204,6 +201,13 @@ Pass QUERY, the value of SEARCHABLE, and NUMBER."
   (easi-searchable-suggestions query (symbol-value searchable) number))
 
 ;;;; Getting results
+;; NOTE For myself and others who get confused.
+;; `easi-searchable-query-results' and `easi-searchable-all-results'
+;; are public methods, in that different searchables are supposed to
+;; implement them. Each searchable type type must implement at least
+;; *one* of them, as appropriate. `easi-searchable--results' is an
+;; internal function (which searchables should generally *not*
+;; override) for collecting results together.
 
 (defvar easi-default-max-results)
 (defvar easi-default-non-queryable-skip)
