@@ -1,0 +1,574 @@
+*EASI: Emacs Advanced Search Interface*
+
++Metasearching+ Federated Search application.
+
+[[https://github.com/sidprobstein/swirl-search][prior art---SWIRL]]
+
+Principle is that you can define search engines very flexibly, then
+can:
+- select more than one to search with, and amalgamate the search
+  suggestions and results (possibly changing some options at
+  search-time about how the results are amalgamated/sorted?)
+- define groups of engines, which act just like standard engines
+- define a default (group of) search engines (and default
+  settings/options) and search with that
+
+I seem to remember some way of specifying an abbrev-prefix for
+compiled functions, so that once compiled, Emacs would treat
+~emacs-advanced-search-interface-foo~ and ~easi-foo~ the same? Found
+it: [[info:elisp#Shorthands][shorthands]].
+
+* Implementation ideas
+
+One struct definition for an atomic search engine.
+
+Another definition (possibly a struct, perhaps a class which is not a
+struct?) for a /searchable/. A searchable can be:
+- an atomic search engine
+- a list of searchables
+  (thus a searchable could be a list (a b c) where a is an atomic
+  engine, b is a list of atomic engines, and c is a list of lists of
+  atomic engines. This searchable could itself be an element in
+  another list which is itself a searchable...)
+
+then have methods defined on search engines:
+- get completions
+- get results (takes a query as an argument)
+- etc.
+
+And generics defined (not on any object in particular) for
+interacting with results:
+- get fields :: returns a list of fields in that result
+- get field :: (takes a field name, as a string) return the value of
+  FIELD in that result, or nil if no value.
+
+The best way to do this is probably with some sort of generics system
+(defining things like )  
+
+/then/ define the same methods on searchables case-by-case for atomic
+engines and lists of such. The atomic engines are easy. The list cases
+should just loop over the list, executing the same method recursively
+on each element of the list and collecting the return values together
+appropriately.
+
+Basic structural things:
+- a function ~easi-declare-search-engine~
+- a function ~easi-declare-group~
+- a variable ~easi-search-engines~
+
+- a type/struct (probably a struct) ~easi-metasearch-engine~. This
+  represents the thing or things used to actually do searching. Actual
+  individual search engines, and groups of search engines are both
+  instances of this type.
+- a type/struct ~easi-search-engine~
+- (notice there is no type for groups -- this makes it easy to treat
+  them as search engines internally).
+
+~easi-metasearch-engine~ should have slots:
+- name (mandatory)
+- opensearch
+- 
+
+Except name (a string) and key (a key sequence), each of these is a
+list of appropriate things.
+
+** Main entry point
+Main entry point: ~easi-search~. A a query and searchable as
+arguments. If either is nil when called interactively, then prompt for
+them.
+
+This will make it really easy to write functions for rerunning the
+same query with different engines, or requerying the same engines.
+Just store the query and searchables in appropriate buffer-local
+variables, and then:
+
+#+begin_src elisp
+  ;; Not sure about the names yet...
+  (defun easi-new-engines (searchable)
+    (interactive `(,(easi--prompt-searchables)))
+    (easi-search easi-current-query searchable))
+
+  (defun easi-new-query (query)
+    (interactive `(,(easi--prompt-query)))
+    (easi-search query easi-current-searchable))
+#+end_src
+
+* Search Engines
+The basic *thing* to support is [[https://github.com/dewitt/opensearch/][opensearch]].
+
+[[https://github.com/dewitt/opensearch/blob/master/opensearch-1-1-draft-6.md#opensearch-description-document][This]] is the spec for the standard description of a search engine.
+
+Must be possible to set a variable to a list of file/directory names,
+which are opensearch search engines described in xml.
+
+It has to be possible to associate keyboard keys with each engine (or
+at least some of them). This (and other things) could be possible for
+XML data by just using an ~emacs~ or ~easi~ namespace, which
+opensearch will simply ignore (right?).
+
+It also has to be possible to define search engines entirely from
+within emacs.
+
+** Responses
+Must be possible to somehow specify how responses are to be
+interpreted and formatted.
+
+This can be done with generics. Have a generic function
+~easi-results-get-fields~ for listing the fields in a result object,
+then ~easi-results-get-field-valuee~ (takes FIELD, a string), for
+getting the value of any field.
+
+/Then/ have a variable ~easi-equivalent-fields~, which is a list of
+objects like '("MASTER-NAME" ("list" "of" "other" "names") (or some
+other format, if that isn't the best in the implementation). If the
+field we are interested in appears in one of the lists, then it is
+equivalent to MASTER-NAME field. This will allow for transducing
+between fields with different capitalisation, or between fields with
+names like "id" and "identifier".
+
+Formatting will depend on the results presenter. So that information
+can be handled separately I guess?
+
+** Deduplication
+If you search 'Two Dogmas of Empiricism' in google and philpapers, the
+philpapers page comes up in the google results.
+
+Define a list of deduplication functions or methods, which take two
+results, and return a list of all the results which should be included
+in the final listing. Then map this over the list, collecting the
+results together into a new list.
+
+This should happen before mixing (see below).
+
+** amalgamating suggestions/results
+I'll need to amalgamate suggestions and results somehow, from
+different sources.
+
+I really like [[https://github.com/sidprobstein/swirl-search/wiki/2.-User-Guide#result-mixers][swirl's approach]] to this, which is to define a number of
+'results mixers'---one which ranks by relevance, one by date, one
+which stacks results from different engines, etc. These can be swapped
+out on the fly, after the results have all be downloaded.
+
+One way to do this is to have:
+- a function (stored in a customisable variable) for computing how
+  'good' the suggestion is. A good start might the inverse of how far
+  away it is from the initial string ([[help:string-distance][string-distance]]). There's a big
+  literature on search result relevance metrics (good article [[https://opensourceconnections.com/blog/2020/02/28/choosing-your-search-relevance-metric/][here]])
+- a per-engine setting for a multiplier on this number, so that
+  certain engines can be biased up or down. It should be possible to
+  set this as a list too (per engine), associating engines/groups with
+  scores, so that engine A can be biased up when used with B, but not
+  with C.
+
+* Searching interface
+There are normally two parts to the searching interface:
+- picking search engines to include
+- writing a query
+
+The two are independent. Use a customisable variable to specify which
+one comes first. Ideally also have a key (tab?) for switching between
+them (especially for the transient interface).
+
+Of course, suggestions will be unavailable if the query comes first,
+because there will be no list of known search engines to add. History
+(if configured) will still be available.
+
+** History
+Some users have third-party packages which handle history storage and
+collection (e.g. save-hist). Some do not. Have a variable which
+handles whether 
+
+** Picking search engines
+Two commands: one to search with default, other to choose engines.
+Passing a prefix arg to the default-search command will instead run
+the choosing command, but with the default search engine(s/group(s))
+and options already selected, should you want to add to or alter them.
+
+At least two options for the choosing interface (select which one you
+want to use in a custom variable):
+- a ~completing-read-multiple~ interface, where you choose the search
+  engines you want to use.
+  - Groups would have their own names, and be marked in some way as
+    groups. ~consult-multi~ would be good for separating the groups
+    from the standard search engines.
+  - opensearch xml includes quite a lot of metadata, which would show
+    up in the candidate strings and annotations. These would be
+    configurable
+- a transient interface, which presents different keys associated with
+  different engines. Press the key(s) you want and hit enter.
+  - This could also have options.
+  - Transient infixes can be grouped (in the sense of transient
+    groups) under headings.
+  - Groups (in the EASI sense) probably can't be distinguished from
+    search engines? I think that's fine though. Or maybe (again,
+    configurably), groups could have their names formatted differently
+    (e.g. ~(format "Group: %s" name)~).
+  - Either:
+    - exit after a search engine is picked (and search with it),
+      passing a prefix arg, or using a capital version of the letter
+      or something suppresses this and lets you pick another
+    - or by default /don't/ exit until the user hits a certain key
+      (space, enter, etc.)
+
+Have a well defined api for the choosing interface, so that the user
+/could/ define their own interface function, should they so wish (e.g.
+with which-key, or hydra). It should be a function which:
+- takes a list of searchables
+- returns a single searchable (perhaps by amalgamating those chosen
+  into a list)
+
+** Search query
+Entered with a completing-read interface which offers completions
+based on a combination of history and search suggestions (from all the
+in-use engines).
+
+Whether either of these is used is configurable, as is strategy for
+amalgamating them. (I found [[https://www.prefixbox.com/blog/autocomplete-search/#1ab1e3e25da1][this]], and put up a [[https://www.reddit.com/r/computerscience/comments/tf4gpl/is_there_workstandards_on_methods_for/][reddit post]])
+
+*** Query languages
+Minibuffer should include syntax highlighting and possibly some
+structured editing for query languages (e.g. grouping with "", AND, OR
+, NOT, etc.)
+
+The default is to just send this query straight to the search engines,
+but for real power users, it should be possible to have a local query
+language (entered into the minibuffer), which is then parsed and thus
+translated into a different query language for each search engine
+before being submitted (for suggestions or results).
+
+Good start for reading on this:
+- [[https://en.wikipedia.org/wiki/Information_retrieval_query_language][wikipedia, information retrieval language]]
+- [[http://zing.z3950.org/cql/][CQL, an attempt at a good query language]] (with links to some others)
+- [[https://link.springer.com/referenceworkentry/10.1007/978-0-387-39940-9_1070][query translation]]
+- [[https://arxiv.org/abs/1910.03118][The Query Translation Landscape: a Survey]]
+- [[http://infolab.stanford.edu/~kevin/queryTranslation.html][query translation]]
+
+* Results interface
+** Re-running queries
+
+This needs a command for (re)running:
+- same query, different engines
+- same engines, different query
+- new engine, new query
+
+** Presenters
+A presenter is just that: a way that results are presented (like, the
+way that biblatex is displayed in ebib).
+
+There are two kinds: *index/list presenters* and *result presenters*.
+Both have a default implementation which all search engines /must/ be
+compatible with.
+
+Presenters are the part of the system which take care of highlighting
+results and keywords.
+
+<<presenter-choosers>> Have a two variables (one for index, for results) each of which stores
+a function which should prompt the user and return an presenter. As
+above, define and document two functions which might be useful for
+this: a transient one and a completing-read one.
+
+*** Index presenters
+Index presenters present a list of results, in order. Ebib's index is
+a good example, as are grep buffers and occur buffers. In particular,
+an index presenter is really a lisp object which specifies /how/ a
+given list of results in a standard form is to be printed on the
+screen.
+
+Implementation: an index presenter is a structured lisp object. It has
+slots:
+- name :: name
+- key :: optional key used for quick selection in transient chooser or
+  similar
+- before :: code/function to be run /once/, before the presenter is first used
+- before-print :: code/function to be run before each redisplay
+- result-printer :: function for printing a single result. In
+  redisplay, we loop over the results and run this for each one
+- after-print :: code/function to after each redisplay
+- after :: code/function to be run /once/, after everything else is
+  done, the first time the presenter is used
+
+Possible also (probably not necessary?):
+- iterator :: function for looping over results. This lets the users
+  choose whether to use ~mapcar~ or ~dolist~ for example.
+- current-result-getter :: some way of getting which result is
+  current, or even getting the whole result object? This will probably
+  be necessary for updating the result buffer.
+- result-buffer-getter :: get the buffer which corresponds to the
+  current result presenter
+
+*** Results presenters
+A result presenter presents all the information (or all the relevant
+information) about one given result. Ebib's entry buffer is a good
+example.
+
+It should be possible to dynamically switch (during use) which results
+presenter a search engine uses. (See note on [[presenter-choosers]]
+above).
+
+This would be useful for moving between a presenter which shows
+(mostly) metadata about an article or document, and one which displays
+the body or the article itself in an easy-to-scan form. Similarly for
+geographic data, or images.
+
+A results presenter should be a lisp object with slots:
+- name :: name
+- key :: optional key used for quick selection in transient chooser or
+  similar
+- before :: code/function to be run /once/, before the presenter is first used
+- before-print :: code/function to be run before each redisplay
+- field-printer :: function for printing a single field. In
+  redisplay, we loop over the fields and run this for each one. This
+  is a method 
+- after-print :: code/function to run after each redisplay
+- after :: code/function to be run /once/, after everything else is
+  done, the first presenter time is used
+
+(notice the structural similarity to the above ~results-printer~)
+
+Possibly:
+- index-buffer-getter
+
+*** Using them together
+A result presenter, if displayed, should present the result currently
+at point (or otherwise currently selected) in the current index
+presenter.
+
+(I'm not entirely sure how my implementation will work yet, so it
+might be possible to have multiple index presenters open at once. If
+so, each (instance of a) result presenter has to be associated with
+exactly one index presenter).
+
+Displaying /any/ result presenter is optional: you should be able to
+turn it off.
+
+*** Search engine support
+Different search engines support different index and result
+presenters. (for example, one could write a presenter which uses ebib
+and it's api, but only bibliographic data could be displayed in this,
+so an image search engine could not be made to support it).
+
+It must be possible to specify which search engines support which
+presenters.
+
+I'm not sure yet, but either:
+- search engines should only specify support for presenters which can
+  handle the format they deliver their results in
+- or presenters should have a generic interface, and search engines
+  should specify (along with specifying /that/ they support a
+  presenter) a function for transforming their results into the
+  appropriate form(at).
+
+*** When to use what
+A index presenter is only used when /all/ the search engines used in
+the query support it. (This is why the have to all support the
+default.)
+
+It should be possible to write configuration preferences for which
+results presenter is used when (especially, with which index
+presenter, and in the presence of which other search engines).
+
+If all the search engines support more than presenter, prefer the
+first of them listed in the first engine listed.
+
+*** Highlighting
+Both types of presenter should include (optional, configurable)
+highlighting of matching keywords.
+
+This will require the original query to be converted into a list of
+relevant keywords. The function which does this should be
+configurable, but independent of the presenter.
+
+It will (at least) need to convert it into a string, then remove from
+that string all stopwords in the current language. Lists of stopwords
+can be found [[https://github.com/stopwords-iso/stopwords-iso][here]]. (Might be worth writing a separate, very small
+snippet or package for automatically updating stopwords lists on
+startup if there is an internet connection, and not doing so
+otherwise?)
+
+** Selecting presenters
+At the moment, there is no clear way to select which presenter to use.
+
+Some possibilities:
+- have it as an extra step, after engine selection and prompting. *Bad
+  idea*.
+- associate presenters with searchables.
+  - keyword for the structs
+  - the presenter for a list is just the first one supported by all
+    members of the list.
+- global variable (and assume that all presenters can handle all types
+  of result).
+  - this sort of makes sense, given that most presenters /will/ be
+    able to handle most types of results.
+  - but it seems clunky, and doesn't allow for the possibility that
+    any presenters /will/ support everything
+- maybe write some methods for lists of presenters, to ease config?
+- *maybe just do everything?* (THIS)
+  - allow per-searchable presenters, /and/ a global list. The
+    presenter to use is the first one in (so the global ones are
+    effectively a default) `(,@(get-list-of-searchable-presenters
+    searchable) ,@global-presenter-list)
+    
+** Actions
+Must be possible to specify alternative actions to do on the results
+of a particular search engine (e.g. write a function to download a
+youtube video), and to link these with keys (e.g. ~d~).
+
+Might be good if they could be emacs functions or shell scripts (that
+seems reasonable?)...
+
+This could be done in the xml with something like:
+
+#+BEGIN_SRC xml
+    <?xml version="1.0" encoding="UTF-8"?>
+  <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+    <ShortName>Web Search</ShortName>
+    <Description>Use Example.com to search the Web.</Description>
+    <Tags>example web</Tags>
+    <Contact>admin@example.com</Contact>
+    <Url type="application/rss+xml"
+	 template="http://example.com/?q={searchTerms}&amp;pw={startPage?}&amp;format=rss"/>
+    <EASIDescription xmlns="EASI">
+      <Key>e</Key>
+      <AltActions>
+	<Action>
+	  <Key>d</Key>
+	  <Name>download</Name>
+	  <Function>"my/custom-emacs-function"</Function>
+	</Action>
+	<Action>
+	  <Key>d</Key>
+	  <Name>download</Name>
+	  <Shell>"~/path/to/shell/script"</Shell>
+      </AltActions>
+    </EASIDescription>
+  </OpenSearchDescription>
+#+END_SRC
+
+*** Default actions
+It should be possible for the user to alter which action is the
+default. All search engines must have a default action.
+
+It should also be possible to specify an alternate action---a sort of
+secondary default. There should be a variable governing behaviour if
+this is not specified, but the command to run the alternate action is
+run. Either
+- run the default action
+- display a (transient?) menu of actions
+
+*** /TYPES/ of actions
+Ideally, it would be good to define /generic/ actions (like
+~download~, ~push-to-ebib~ and so on), and then have /implementations/
+(or methods, if we did this with ~cl-defgeneric~) for different
+engines. Then SEP, PhilPapers and Semantic Scholar wouldn't all have
+different actions, each doing the same thing, they would have
+different /ways/ of performing the same action.
+
+It must be possible for the user to define action types and write
+implementations for their own search engines.
+
+** Navigation paradigms
+Like I built in ebib, build a history and register system for moving
+between entries. Probably with similar keybindings?
+
+* History
+Optionally (with a custom var) keep a record of which searches are
+made and when, and which results are interacted with (and when). These
+records can be searched, viewed in their entirety, filtered or queried
+(by source(s), by time, by number of results, etc) , sorted etc. by
+the same interface as any other structured data.
+
+It should be possible to use the same "re-run with edits" commands as
+mentioned above for the results interface, /on/ any of the queries
+listed in the history.
+
+Not sure what the best format to store all this is. Maybe XML? Almost
+certainly /not/ elisp data. Perhaps it would be best to default to
+something like XML or json, but expose config variables which can be
+set to functions (e.g. ~easi-read-history-function~ and
+~easi-write-history-function~), which convert betwee EASI's internal
+representation and the stored medium. That way (and with another
+option ~easi-history-file~), the user could integrate EASI history
+with (e.g.) firefox search history, by just keeping them in the same
+format, in the same file.
+
+(later note, after starting the implementation: one of the problems
+with this is that easi doesn't /have/ an internal representation---it
+just has generics defined to list fields, and get field values, but
+these can have methods defined for any data type).
+
+* config helpers
+MAYBE define some macros to make things easier for users. Also define
+~use-package~ and ~leaf~ keywords, to make config easier. (define
+these /early on/ in the file, so that they can be used in the same
+block that is used to install the package)
+
+This should include a ~defengine~ macro, which includes the ability to
+take an xml-defined search engine and add further info to it (like an
+emacs key for the transient interface), so that people don't
+necessarily have to edit external xml (this is good if you have
+opensearch-defined plugins which might get overwritten in an update.
+It [[http://xml.silmaril.ie/includes.html][might]] also be possible to write your emacs-specific xml file, and
+just INCLUDE the original?)
+
+* Engines to add:
+- arXiv (obviously)
+- https://perseus.uchicago.edu/ (!!!)
+- CTAN https://ctan.org/help/xml-service
+- Qwant https://forum.vivaldi.net/topic/26200/qwant-and-other-search-engines-suggestions-feature
+- Duckduckgo https://forum.vivaldi.net/topic/26200/qwant-and-other-search-engines-suggestions-feature
+- Youtube
+- SEP
+- PhilPapers
+- Semantic Scholar
+- University library
+- Deft? https://jblevins.org/projects/deft/
+- elisp-based org roam searcher
+- Wikidata
+- https://newsdata.io/
+- Potentially useful resource :: https://chromium.googlesource.com/chromium/src/+/master/components/search_engines/prepopulated_engines.json
+- another list of engines ::
+  https://github.com/t-8ch/opensearch-repository
+- JSTOR
+- Springer
+- Some Cambridge ones:
+  - [[http://idiscover.cam.ac.uk/][idiscover]]
+  - [[https://libguides.cam.ac.uk/theses][theses and dissertations]]
+  - [[https://www.repository.cam.ac.uk/][apollo]]
+  - [[https://www.oxfordbibliographies.com/browse?module_0=obo-9780195396577][oxford philosophy bibliographies]]
+- Melpa/gnu elpa, with actions for copying to kill ring a
+  use-package/leaf declaration or manually installing (essentially a
+  ~list-packages~ replacement).
+- senate house library uses [[https://www.iii.com/products/encore/][encore]]
+- [[https://www.oxfordreference.com/][oxford reference]]
+- [[https://libgen.yncjkj.com/json.php][libgen]]
+- mapping in general, but really the [[https://api-portal.tfl.gov.uk/api-details][TUBE]] (so much data there...) see
+  also [[https://ruaridhw.github.io/london-tube/ManagingData.html][this]] blog post on playing with the data, and [[https://gtfs.org/][GTFS]] (supported by
+  some TFL APIs). GTFS would be cool to build a newreader feed out of,
+  so I always know what's going on with the tube...
+- [[https://www.data.gov.uk/dataset/ff93ffc1-6656-47d8-9155-85ea0b8f2251/national-public-transport-access-nodes-naptan][NaPTAN]] is amazing (also supported by some TFL APIs)
+- for podcasts: implement the [[https://gpoddernet.readthedocs.io/en/latest/api/reference/subscriptions.html][gpodder subscription API]] (probably the
+  advanced version it mentions). Then I can setup [[https://apps.nextcloud.com/apps/gpoddersync][GPodder sync]] on
+  nextcloud on my server, and sync podcasts everywhere! (there's also
+  a jellyfin feature request for a similar thing [[https://features.jellyfin.org/posts/48/podcast-support][here]]).
+- a grep interface. Make an easi-grep type which has slots for a
+  query, the name/path of the executable to use (so we can use grep,
+  rgrep, rga, etc.) and various options/switches. Write methods so
+  that when using one of these as a searchable, if any of those slots
+  is set to nil, then prompt for it in a useful way, but if it's set
+  to a real value then use that. This will make it possible to build
+  really powerful, interactable grep applications really easily.
+- [[https://openalex.org/][openalex]]
+
+* Types to support
+- opensearch
+- rss
+- atom
+- [[https://indieweb.org/h-feed][h-feed]]
+- [[https://indieweb.org/WebSub][websub]]
+- email (one day... probably with help from Emacs email facilities))
+- list [[https://indieweb.org/feed_file][here]] of different types of feed files
+- mastodon (in some way. Maybe a generic implementation of
+  activitystreams/activitypub first?)
+
+How to support org agenda entries as a calendar source: use
+~org--batch-agenda-csv~ as a basis and hack around a bit...
