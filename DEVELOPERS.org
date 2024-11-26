@@ -1,0 +1,73 @@
+#+title: EASI Developer's manual
+At the moment this is mostly just semi-structured notes to myself.
+
+* Basic types
+** Searchable
+A searchable is one of:
+- ~easi-search-engine~
+- ~easi-search-engine-group~
+- a list of searchables
+- a symbol whose value is a searchable
+
+Notice that this is recursive: a symbol which points at a list of
+symbols and search-engine objects, where each symbol points at another
+search-engine object is a valid searchable.
+
+Functions which say they take a searchable or list of searchables
+must be compatible with all of these variations.
+
+** Structured object field getter
+Easi deals with a lot of nested structured objects (alists, plists, cl
+structs, etc.). A structured object field getter is a generic way of
+getting information out of these structured objects. Technically, a
+field is anything for which ~easi--structured-object-get-field~ has a
+method. At the moment this includes:
+A field getter is:
+- a string
+- a function
+- a list of field getters
+
+* Universal default/local appendment pattern
+Lots of things in Easi can take make values, and are such that the
+desirable (or even possible) values might vary between search engines.
+
+This is often solved in the following way:
+- have a universal custom variable, which stores a list of defaults.
+  E.g. ~easi-default-results-presenters~.
+- Have a slot in the relevant structured objects (normally the basic
+  types of searchable) which stores extra values.
+  (~easi-search-engine-result-presenters~)
+
+When getting a value in code, map over the searchables we are using,
+getting all the values in the relevant slot for each one. Construct a
+list of all the values which appeared in every such slot (i.e. take
+the intersection of the values of the slot in each object). Prepend
+this to the default list. The result is the list to use in code (e.g.
+for prompting the user if they need to choose). The car of this list
+is a good default if one is needed.
+
+* Results vs result
+Things to do with ~results~ are to do with a list of (potentially)
+/many/ results. Things to do with ~result~ are to do with /one/
+result.
+
+* Writing presenters
+The slots which do things in a presenter are:
+- before
+- printer
+- after
+- hook
+
+These should all have values of a list of functions. The functions in
+the first three should take a printable object and a buffer (though
+they need not do anything with them -- they just have to accept two
+arguments). For results presenter this object is a list of results
+(each result being itself some list object, possibly a list). For
+result presenters, the object is just one result (again, possibly a
+list). The functions in ~hook~ should accept no arguments -- this is
+mostly useful for turning on minor modes.
+
+When a presenter is first used, the functions in ~before~ are run (in
+order), then ~printer~ , then ~after~, then finally ~hook~.
+
+When the display is updated, only ~printer~ is run.
