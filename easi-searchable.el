@@ -146,6 +146,20 @@ Technically, this is itself a searchable, but naming it this way
 makes more sense."))
   "A group of search-engines.")
 
+;;;; Getting name
+;; I know GETTERS BAD, but this seemed like the simplest way.
+
+(cl-defgeneric easi-searchable--name (searchable))
+
+(cl-defmethod easi-searchable--name ((searchable symbol))
+  (easi-searchable--name (symbol-value searchable)))
+
+(cl-defmethod easi-searchable--name ((searchable easi-search-engine))
+  (slot-value searchable 'name))
+
+(cl-defmethod easi-searchable--name ((searchable easi-search-engine-group))
+  (slot-value searchable 'name))
+
 ;;;; Getting suggestions
 
 (defvar easi-default-max-suggestions)
@@ -168,7 +182,7 @@ makes more sense."))
 
 If NUMBER is non-nil, limit the number of suggestions from each
 engine in SEARCHABLE to NUMBER.
-
+TODO Alter docs here!
 If SEARCHABLE is an `easi-search-engine' with a defined
 \"suggestion-post-processor\" slot, then the value of that slot
 will be applied to the suggestions before they are returned. If
@@ -177,14 +191,15 @@ then the call is (easi-structured-object-get-field PROC RAW)."
   ;; Default -- no suggestions (`ignore' is used to appease flymake)
   (ignore query searchable number))
 
-(cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine-group) &optional number)
-  "Map `easi-searchable-suggestions' over searchables.
+;; TODO I should just get rid of this right?
+;; (cl-defmethod easi-searchable-suggestions (query (searchable easi-search-engine-group) &optional number)
+;;   "Map `easi-searchable-suggestions' over searchables.
 
-Get \"searchables\" slot in SEARCHABLE, and map
-`easi-searchable-suggestions' over each one, passing QUERY, the
-searchable and NUMBER in each case."
-  (mapcar (lambda (sch) (easi-searchable-suggestions query sch number))
-	  (slot-value searchable 'searchables)))
+;; Get \"searchables\" slot in SEARCHABLE, and map
+;; `easi-searchable-suggestions' over each one, passing QUERY, the
+;; searchable and NUMBER in each case."
+;;   (mapcar (lambda (sch) (easi-searchable-suggestions query sch number))
+;; 	  (slot-value searchable 'searchables)))
 
 (cl-defmethod easi-searchable-suggestions (query (searchable cons) &optional number)
   "Map `easi-searchable-suggestions' over SEARCHABLE.
