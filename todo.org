@@ -1,0 +1,998 @@
+When I've done all the [#A] items, I've hit feature complete and
+should make an alpha release.
+
+* TODO Should I split up all and queryable searchables into different classes
+Should I have one class for things which can do all, and another for
+things which can do queries? (the only problem is that inheriting from
+both is going to be complicated...)
+
+* IN PROGRESS rewrite the query/all functionality in terms of methods
+I think this would be better. Each method should be passed the
+searchable itself as an argument (so it can access data stored in
+there if necessary) and the query where relevant.
+
+I don't want to use different types for things with and without
+query/all capabilities (because I've worked so hard to unify the code
+in all other resspects) so in the code which needs it I'm sure I can
+just use a ~condition-case~ to catch when we can't do the relevant
+thing.
+
+* IN PROGRESS [#A] Actions
+Look into how ~vtable~ [[file:/usr/local/share/emacs/29.0.60/lisp/emacs-lisp/vtable.el.gz::when-let ((actions (vtable-actions table))][implements a similar thing]].
+
+It looks like different presenters will have to implement this
+themselves. Which is really annoying, buy hey ho.
+
+** TODO Advice for getting targets and dealing with marks
+I should rewrite the handling of the :actions slot in searchables.
+Instead of taking a keymap, it should take a list of lists, each list
+having (in this order):
+- a KEY as in `keymap-set'
+- a DEFINITION as in `keymap-set'
+- the symbol :target-getter followed by a symbol for a target getting function
+- the symbol :multi-handler followed by a symbol for a function to run
+  instead when there are marked (potentially multiple) targets
+
+So each element of the overall list will look something like one of
+these:
+- (KEY DEFINITION)
+- (KEY DEFINITION :target-getter 'some-function)
+- (KEY DEFINITION :multi-handler 'some-function)
+- (KEY DEFINITION :target-getter 'some-function :multi-handler 'some-function))
+
+Then on initialisation, easi sets up local advice for dealing with
+these values. See [[info:elisp#Core Advising Primitives][elisp#Core Advising Primitives]] for how to set advice
+/only/ locally. Set it up so that the target-getter is used to pass
+arguments to the function.
+
+If no target getter is specified, then it works just like a normal
+keybinding---nothing is passed as an argument (you can still write an
+interactive wrapper command if you want).
+
+Probably best to allow that `some-function' in each case will simply
+be /set as advice/, rather than trying to do anything clever. This
+gives the user complete control if they need it.
+
+I should write an off-the-shelf function which just gets the result at
+point and passes that. This will be useful in most cases.
+
+** An implementation idea
+Each search engine should have a slot called actions, set to a keymap,
+mapping keys to functions, which each take a single arg (which is
+generally the object at point). There should also be universal
+~easi-universal-actions~.
+
+Then when presenting, each of the keys in these maps is bound to
+~easi-act~. This command detects which key was used to call it, checks
+the keymaps (in order: map for result at point, then map universal
+map), gets the corresponding function and runs ~(funcall function
+(easi--get-current-result))~.
+
+Calling ~easi-act~ on it's own (i.e. from ~M-x~, or with a key just
+bound to ~easi-act~) should:
+- create a keymap, by mapping over the different keymaps and pushing
+  to the new keymap each key and an interactive lambda wrapper over
+  the associated function.
+- transiently enable this keymap (this way, the keymap is accessible,
+  and things like pressing ~C-h~ for help on it will work). Ideally
+  the things-bound-to will include some sort of documentation so that
+  things like ~C-h~ and the embark prompter work.
+
+Perhaps a slot for engine groups too? (this would be more complex
+because it is always the search-/engine/ which is attached to a
+result, even if it was originally found with a group. I could manage
+this by changing [[file:easi-searchable.el::cl-defmethod easi-searchable-resultsy ((searchable easi-search-engine-group) &key query number page][easi-searchable--results (for groups)]] to copy the
+relevant search engine object, then merge the relevant group's actions
+list into that of the copied object, and pass that (new, copied)
+object into the rest of the process. This might have ramifications
+down the line?).
+
+Of course, ~?~ should be bound in ~easi-results-mode-map~ to a command
+called ~easi-describe-actions~. This should be available in
+~easi-result-mode~ as well.
+
+*** Multiples and marking
+At some point, I will implement the ability to mark multiple results,
+and then call an action. How calling an action on multiple results
+/works/ should be configurable (i.e. for some functions, it would be
+most appropriate to call the function /once/, passing all the marked
+results as args. For others, it would be better to call function anew
+for each marked result). This will be configured by setting an
+~easi-marked-action-handler~ property on the symbol.
+
+**** Dealing with 
+
+** Notes
+Actions should be listed as a keymap.
+
+E.g.
+
+#+begin_src elisp
+  (setf (easi-search-engine-actions some-searchable)
+	(define-keymap
+	  :name "Some searchable actions"
+	  "f" 'some-action-foo
+	  "b" 'some-action-bar))
+#+end_src
+
+or
+
+#+begin_src elisp
+  (setq easi-default-actions
+	(define-keymap
+	  :name "Default searchable actions"
+	  "f" 'some-action-foo
+	  "b" 'some-action-bar))
+#+end_src
+
+This should make embark integration easier, as well as defining a
+transient or something for a command ~easi-act~.
+
+Build a system which somehow activates the relevant maps when their
+respective results are selected, and keeps the default ones activated
+all the time. The easiest way to do this is to assume that point is on
+the current result, and just print all such results with overlays. But
+that would require each presenter to implement this. Better to have a
+generic system (perhaps with an ~easi-update~available-actions~
+function?) Probably want to read [[info:elisp#Active Keymaps][this]] info node some more. Or I could
+just merge all the different keymaps together put ~:enable~
+menu-properties on them to test for the current searchable...
+
+** Context menus
+Actions must automatically setup context menus on results, so that you
+can left-click on something and get discoverable actions.
+
+** Embark integration?
+Embark stores its actions in keymaps, so the actions defined should be
+easy to push into embark keymaps. It should be possible to either just
+reuse an embark keymap, /or/ specify one which all the keys defined as
+actions should also be bound in.
+
+Honestly, I think the powerful features of embark and Emacs keymap
+definition syntax will probably make this fairly easy.
+
+Here's a very basic attempt at embark integration:
+
+#+begin_src elisp
+;; `embark-converter' must be a function which takes a result object
+;; of the type this engine returns, and returns what an embark target
+;; finder should.
+(cl-defstruct (easi-search-engine-embark
+	       (:constructor easi-search-engine-embark-create)
+	       (:include easi-search-engine))
+  embark-converter)
+
+
+(defun easi-embark-current-result-finder ()
+  (when-let* ((_ easi-results-mode)
+	      (session (easi-session--get-current))
+	      (res (easi--get-current-result session))
+	      (searchable (esai-result--retrieve-search-engine res))
+	      (_ (easi-search-engine-embark-p searchable))
+	      (converter (easi-search-engine-embark-embark-converter)))
+    (funcall converter result)))
+
+(add-to-list 'embark-target-finders
+	     'easi-embark-current-result-finder)
+#+end_src
+
+* TODO Make click-to-navigate work in tabular-list presenter
+In fact, try to just tie together point movement and updating the
+result buffer? That would make everything /much/ easier (e.g. you
+don't have to bind n, C-n and <down> all to easi-next!)
+
+* TODO rename? ~easi-searchable--get-suggestions~
+TODO Housekeeping: does `' need to be to renamed in line with the
+results function (i.e. to `easi-searchable--suggestions')?
+
+* ISSUE ~easi-view-results~ assumes results buffer is displayed in a window
+But it might not be. If it isn't, it should probably be displayed?
+
+* TODO MAYBE Allow args in ~easi--get-create-current-session~
+Use keyword args, and just pass them straight to the creation
+function. If we don't create, then pass the args (in some clever way)
+to ~setf~ and set them. Might make the code in ~easi-search~ slightly
+simpler.
+
+* IN PROGRESS Print groups properly
+*** TODO Presenter groups
+Analogously to search engine groups, you might often use several
+presenters together (each one in its own buffer) and want to switch
+between them a lot. A presenter group object should have all the basic
+shit a presenter has (name, key for selection, documentation, etc.)
+and slot holding a list of presenters (each being either an atomic
+presenter, or a group).
+
+Then we need a way of displaying groups /as groups/. Have a
+customisable option like ~easi-presenter-group-display-functions~ (an
+abnormal hook), which should be run in buffers which are displaying
+results with a group presenter. Each function should be passed the
+presenter group as an arg, and maybe the session as well?
+
+The default for this should be something like setting up and turning
+on ~tab-line-mode~ to display a list of the relevant buffers
+(~tab-line-mode~ also supports groups of tabs, so we could deal with
+recursive groups in a useful way).
+
+All this will require making multiple presenters work.
+
+* DONE [#A] Support multiple presenters at once
+I think I should do this next as it will significantly alter the
+structure of a lot of the current code.
+
+The idea is to support having an arbitrary number of result(s)
+buffers, each with any arbitrary presenter.
+
+** DONE Variable for default way of grouping presenter buffers
+** DONE Treat presenters just like searchables
+A presentable is anything which is:
+- an easi-presenter object
+- an easi-presenter-group object
+- a list of presentables
+- a symbol with a value which is a presentable
+  
+Then the problem is almost entirely solved. The only problem is how to
+compute the intersection of available presentables from a list of
+searchables. I'll need a general way of comparing presentables. Hmmmm.
+
+*** DONE Define a presenter group struct
+Should have:
+- [X] name
+- [X] key
+- [X] list of other presenters-or-groups
+- [X] docstring
+- [X] grouping presentation function
+
+** DONE write ~easi-presentable--set-buffers~
+Write a function which takes a presentable and a session, which sets
+the relevant values in the session object for that presenter,
+finding/creating buffers as necessary. We will thus no longer need the
+part of ~easi--present-result~ which does this:
+#+name: easi--present-result/set-buffers
+#+begin_src elisp
+(cl-pushnew result-buffer
+	    (easi-session-state-result-buffers session))
+(setf (alist-get result-buffer
+		 (easi-session-state-buffer-presenters
+		  session))
+      result-presenter)
+#+end_src
+
+Or the corresponding part of ~easi--present-results~:
+#+name: easi--present-results/set-buffers
+#+begin_src elisp
+(cl-pushnew results-buffer (easi-session-state-results-buffers session))
+(setf (alist-get results-buffer
+		 (easi-session-state-buffer-presenters
+		  session))
+      results-presenter)
+#+end_src
+
+** DONE write ~easi-presentable--print~
+To be used internally by ~easi--print~. This will be a generic, and
+have implementations for all four types of presentable.
+
+The implementation for groups should:
+- map the function over each presentable in the group
+- run the relevant group display functions/s, if any
+
+** DONE easi--present-result
+- [X] use ~easi-presentable--set-buffers~ instead of [[easi--present-result/set-buffers][current code]]
+- [X] loop over easi-print for each buffer in the session's buffer
+  list
+
+** DONE easi--present-results
+- [X] use ~easi-presentable--set-buffers~ instead of [[easi--present-results/set-buffers][current code]]
+- [X] loop over easi-print for each buffer in the session's buffer
+  list
+  
+** DONE Display buffers correctly
+When looping over buffers, hide all the ones with presenters which are
+not used. Maybe let this be user-configurable?
+
+*** DONE Hiding buffers
+When we update, somehow pass a list of which presenters we are
+actually /using/ this time round (this is just ~result{,s}-presenter~ as
+passed to ~easi-presentable--set-buffers~. It isn't always a list).
+
+Ensure that all these have buffers (we already do this).
+
+Then when we loop in ~easi--print~, print those which are in the list.
+Those which are not, we should `undisplay'. That is, run the
+`hide-function', which is either what is in the presenter's
+`hide-function' slot, or ~easi-default-result-hide-function~.
+
+** DONE Make ~easi--print~ more generic
+*** DONE Write an api for common actions
+Method to implement for all presenters:
+- printing results :: Ideally there should be a way to just print one
+  or several new results without new reprinting everything (though I
+  should account for the fact that some presenters may be such that
+  this is impossible)
+  - updating? Maybe a specific way of updating already-printed results
+    or lists of such? Maybe buffer reverting?
+  - default implementation :: just get the contents of the ~:printer~
+    and run them, slot by slot
+- jump to a result :: given a result, jump to it. This will be
+  important for updating one results buffer from something done in a
+  different buffer, and managing /related results/ systems (which will
+  happen eventually...)
+  - default implementation :: go to first result (with the relevant
+    generic function), then use the next-result and current-result
+    generics to get to the desired result. Document that this is not
+    recommended, and even just hardcoding the same behaviour into your
+    class is probably a better idea (i.e. writing a function which
+    does this, but in the same way. This means that only one dispatch
+    call needs to be made, and the underlying function can be
+    compiled)
+- next/previous/first/last result :: maybe? Not sure how useful this
+  is. But it would mean that simple navigation could be made
+  completely easi-centric and generic.
+- presenting groups :: I want a generic way of clustering or grouping
+  results, and returning (probably hierarchical) groups for each. So
+  I'll need a way of displaying arbitrarily deep hierarchical groups
+  of results.
+  - This will mostly be done by having a presenter-group type and
+    treating presentables like searchables.
+
+Bind all of these to commands inside.
+
+*** DONE Rewrite ~easi--print~ to use these functions
+** Thoughts about infrastructure
+Perhaps the next step is to make ~easi-presenter~ an abstract class
+(i.e. to forbid creating instances directly of it, so it can only be
+used as a parent class of new classes which are /actually/ used. Then
+each new presenter would be forced to derive from it, and then one
+would just write methods which specialised on that presenter type.)
+
+I'll need to be able to update other results buffers (i.e. move an
+indicator around) from a single buffer where an action is taken. To
+make this non-terrible, there should be a standard interface for
+getting and setting the current result, and moving around any
+indicators that the presenter uses.
+
+The best way to implement this might be with methods on a class?
+(might be easier to approach this if I unify the classes first.) If
+all presenters were instances of a class, then I could define methods
+on them, which take args of:
+- a presenter
+- a session/newly-current-result/whatever
+- other info if necessary
+
+Methods I need:
+- printing results :: Ideally there should be a way to just print one
+  or several new results without new reprinting everything (though I
+  should account for the fact that some presenters may be such that
+  this is impossible)
+  - updating? Maybe a specific way of updating already-printed results
+    or lists of such? Maybe buffer reverting?
+- jump to a result :: given a result, jump to it. This will be
+  important for updating one results buffer from something done in a
+  different buffer, and managing /related results/ systems (which will
+  happen eventually...)
+- next/previous/first/last result :: maybe? Not sure how useful this
+  is. But it would mean that simple navigation could be made
+  completely easi-centric and generic.
+- presenting groups :: I want a generic way of clustering or grouping
+  results, and returning (probably hierarchical) groups for each. So
+  I'll need a way of displaying arbitrarily deep hierarchical groups
+  of results.
+
+Most of these could pretty easily be built just as generics with
+methods. The default implementation will often be to get something
+from a slot and do something with it, but some derived types could
+override this with their own behaviour.
+
+(i.e. we could remove the ~:current-getter~ slot and replace
+it with a defgeneric (no default implementation) which each presenter
+class has to )
+
+NOTE: [[info:vtable#Interface Functions][the interface functions for vtable]] might be a good place to
+start with a list of things to implement. Because they would be really
+/easy/ to do for vtable.
+
+
+
+And then I could write default implementations for a few of these, and
+document which of the methods /have/ to be imlemented for each one (so
+that if the others aren't, the default implementations can use those
+few defined ones to make it all work). Recommend though that
+every presenter implement every method.
+
+We can probably (?) implement the same method in different ways for
+different presenters by using the [[info:elisp#Generic Functions][~eql~ specialiser]] to test for
+different objects.
+
+This would take a lot of learning about EIEIO.
+
+*** DONE Implementation notes
+*I think this is probably the way!!!*
+
+A slightly different way of doing this might be to:
+- instead of using a struct for the ~easi-presenter~ type(s), use an
+  EIEIO class.
+- then each different presenter (the tabulated list presenter, the
+  ~vtable~ presenter, etc.) are defined as structs or classes which
+  have that class as their superclass (e.g. ~(cl-defstruct
+  easi-vtable-presenter)~).
+- This would allow several useful things:
+  - using the superclass enforces that all the basic slots exist in
+    each and every presenter, so they can be manipulated in expected
+    ways.
+    - presenters can also have their own slots (for storing common state
+      variables, though the superclass should have a generic state slot
+      too just in case).
+  - each presenter's specific class can overtired the methods already
+    defined on the superclass. In some cases, these methods might not
+    have an implementation for the superclass---these are the methods
+    which /must/ be defined by the more specific classes (things like
+    getting the current result, or jumping to a specific result)
+
+* TODO [#A] Tidy up all TODOs
+* TODO [#A] Tidy up ~Examples (not part of infrastructure) (to be eventually removed)~
+* TODO Rewrite structured oibject getters with threads?
+I.e. with ~thread-first~ and ~thread-last~. Is this worth it instead
+of the recursive design I have now? How can I benchmark the
+difference?
+
+* TODO [#B] check all initforms
+Not everything needs to be nil all the time. Some (many?) things can
+be left uninitialised unless we touch them. This is probably better
+practice.
+
+* TODO [#B] Derive searchable/presentable groups from a group class?
+These groups both behave in the same way. I could give them a
+superclass to express this. It would probably have to be an abstract
+class though.
+
+Similarly, maybe have a superclass for selectables---key, name,
+docstring, etc.
+
+* TODO [#B] Sorter functions should take a whole session, not just query
+* TODO [#B] Support for grouping and clustering
+* TODO [#B] Commands for switching presenter
+Of course, to do this, I'll have to write some more presenters first...
+
+* TODO [#B] Make filtering work
+* TODO [#B] Implement fallbacks
+Kinda like aliases: if there's a fallback from x to y, and querying x
+gets nil, then query y instead. Fallbacks can come in lists, thus:
+
+#+begin_src elisp
+(setf (easi-search-engine-fallbacks some-engine)
+      `(("foo" "bar" "baz")
+	("qux" "bar")))
+#+end_src
+
+So if querying "foo" gets nil, try with "bar" (similarly with "qux"),
+and if "bar" fails (regardless of how you came to be querying it), try
+querying "baz". This recursion means that no fallback field name every
+need appear /before another field name/ more than once, because after
+that once, the other field name will always take over.
+
+* TODO [#B] Implement a query head method for all-results
+Allow the all results getter to be of the form ~(query FOO)~, where
+~foo~, is a query which can be passed to whatever
+~queryable-results-getter~ is for that searchable. Then getting all
+results just runs ~(easi-searchable--query-results foo (queryable-results-getter
+searchable))~ as expected.
+
+* TODO [#B] MAYBE Use a proper EIEIO superclass to specify searchables
+At the moment the searchable psuedo-type is not defined, it just sort
+of exists. See if there's a way to specify a superclass in EIEIO so
+that I /can/ define it properly.
+
+* TODO [#B] Make all printing async (in a thread)
+This will allow for really slow printers with easi still being
+non-blocking.
+
+* TODO [#B] Allow more (customisable) next page strategies
+These could be just arbitrary functions
+
+~easi-get-next-page~ also needs refactoring.
+
+* TODO [#C] Write a session switcher
+And some associated commands (e.g. for naming, saving, editing
+sessions, etc.)
+
+!!!!!!!! THIS IS WHERE EASI REALLY SHINES!!!!! I can just write a
+session-management interface using easi itself!!!!! Then when I make
+accessor presenters a thing, I can implement a session /switcher/
+using that model. Oh my god this is so cool.
+
+* TODO results-list imenu
+Set ~imenu-create-index-function~
+
+#+begin_quote
+This variable specifies the function to use for creating a buffer
+index.  The function should take no arguments, and return an index
+alist for the current buffer.  It is called within
+‘save-excursion’, so where it leaves point makes no difference.
+
+The index alist can have three types of elements.  Simple elements
+look like this:
+
+     (INDEX-NAME . INDEX-POSITION)
+
+Selecting a simple element has the effect of moving to position
+INDEX-POSITION in the buffer.  Special elements look like this:
+
+     (INDEX-NAME INDEX-POSITION FUNCTION ARGUMENTS...)
+
+Selecting a special element performs:
+
+     (funcall FUNCTION
+              INDEX-NAME INDEX-POSITION ARGUMENTS...)
+
+A nested sub-alist element looks like this:
+
+     (MENU-TITLE . SUB-ALIST)
+
+It creates the submenu MENU-TITLE specified by SUB-ALIST.
+
+The default value of ‘imenu-create-index-function’ is
+‘imenu-default-create-index-function’.  This function calls the
+value of ‘imenu-prev-index-position-function’ and the value of
+‘imenu-extract-index-name-function’ to produce the index alist.
+However, if either of these two variables is ‘nil’, the default
+function uses ‘imenu-generic-expression’ instead.
+#+end_quote
+
+** Plan
+Get an ordered list of entries from tabulated-list (to account for
+tabulated-list-mode's sorting).
+
+* TODO [#C] Use proper display actions results presenters
+Using ~display-buffer~ causes a bug. Don't know why.
+
+* TODO [#C] Multiple current results
+It would be really cool if we could have multiple `cursors' in the
+results buffer, each picking out a result, and each moving
+independently. Then by looking at the result buffers (each associated
+with a different result) the user could compare the different results.
+This would be really cool, and (because those buffers are /just
+buffers/), could integrate quite well with Emacs' diffing
+capabilities.
+
+* TODO Maybe derive lots of the basic things from an ~easi-selectable~ class
+The class would have slots for name, key, icon, documentation, and
+maybe an extra slot for other shit? Then users could just write /one/
+easi-select function, and there could be a really simple internal
+function which would let you select from a list of any types which
+instantiate the class.
+
+Could also use this to generalise the format of Easi selection lists.
+If I'm going to be using them for selection at least:
+- searchables
+- sorters
+- presenters
+- possibly sessions?
+- possibly buffers within a presenter group? (need to implement
+  presenter groups!)
+
+Some users might not want an /entirely/ similar experience for
+different selection interfaces. (e.g. they might want sessions to be
+~completing-read~, but presenters to be transient). I should account
+for this. Perhaps have a default one, and then more specific ones,
+with a standardised naming convention about how the different types
+relate to the names. Then my globally-applicable selection function
+could just get the relevant function for each type, and run it.
+
+* TODO An easy/i way to deal with authentication
+Derive a new class from ~easi-search-engine~, which has all the same
+slots, but also has an ~auth~ slot. Then just alter the calling
+conventions of everything results-getting stack so that the relevant
+searchable is always passed in as an argument. Then these things can
+just extract the ~auth~ slot, and use the [[info:auth#Top][auth-source]] library to get
+relevant credentials for passing on in the api call or whatever.
+
+If I'm going to develop things like this, it might be worth splitting
+easi up like this:
+- top level files :: core of easi. Don't actually do anything on their
+  own, they just provide structure
+- add [[./defaults]] :: for things like the prompting functions which Easi
+  ships with (and autoload everything in there)
+- put things like easi-auth in [[./lib]] :: they need to go somewhere
+
+** similar idea for dynamic lists
+It would be really good if we could specify data sources and say that
+they're dynamic, and include in the way we specify a description of
+how to check for updates. Something like ~(dynamic <normal stuff here>
+<update description here>)~ for example: ~`(dynamic
+,#my/get-all-results (timer :high-seconds 4 :triggered nil))~
+
+Might also be cool if caching could be handled automatically like this
+too (and in such a way that users could describe their own caching
+preferences and use different back ends for different things).
+
+* TODO results-list menu bar
+Consider adding a mode-specific menu to the menu bar. This should
+preferably include the most important menu-specific settings and
+commands that will allow users discovering the main features quickly
+and efficiently.
+
+* TODO Define a custom type for searchables
+And then use it in the type for ~easi-searchables~.
+
+* TODO results-list fontlock
+Specify `font-lock-defaults'.
+
+Maybe this should be more complex, and I could define proper
+highlighters and highlight selectors as useful objects. (though don't
+reinvent the wheel -- is there any way I can just use
+completion-styles for this?)
+
+* TODO Define a custom type for presenters
+And then use it in the type for ~easi-default-result{,s}-presenters~~
+
+* TODO implement alternatives in ~easi-results-list-fields~
+Find some sensible way of specifying alternative fields in FIELD (e.g.
+"title" OR "name", whichever is first). I can't use a list, because I
+use already that for nested queries. Can't use a vector because that's
+already used for mapping.
+
+This should be easier now that I'm using a plist.
+
+I think the easiest way is probably to just a reserved word:
+~:easi-or~ and write a method with a specialiser like ~(head
+:easi-or)~. Adding more words would be simple, just add more methods.
+This would produce a nice little DSL which I could specify formally.
+
+* TODO results-list needs to have some case in/sensitive fields
+Find a way of specifying some fields to be some case in/sensitive.
+
+This should be pretty simple now.
+
+* TODO Can I rewrite the attachment and retrieval system in terms of structured objects?
+Can I make ~easi--structured-object-get-field~ a generalised variable?
+
+If so, I could rewrite the engine attachment and retrieval functions
+in terms of it.
+
+(or at least, I could write some methods in terms of it. I don't want
+to assume that all implementations for all data types will support
+~setf~).
+
+* TODO Write some tests
+Test that ~easi-result-retrieve-search-engine~ on the result of
+~easi-utils-result-attach-search-engine~ is what we expect.
+
+* TODO MAYBE Add global default field aliases
+(is this a good idea?)
+
+* TODO Faces/transformations for results list
+* TODO Commands to bury and raise EASI as a whole
+* TODO Display docstrings in ~easi--completing-read-multiple-searchables~
+* TODO Vectors for grouping in ~easi-searchables~
+I want to be able to group (and sub-group) the searchables for
+presentation. Use vectors for this, like in transient. Each vector is
+a group. If it begins with a string, that is the name of the group.
+Thus one might:
+
+#+begin_src elisp
+  (setq easi-searchables
+	'(["General"
+	   easi-google
+	   easi-searx]
+	  ["Pictures"
+	   easi-google-images
+	   easi-some-stock-photo-engine
+	   easi-some-icon-engine]
+	  ["Philosophy"
+	   my/easi-philosopy-group
+	   ["Specific"
+	    easi-philpapers-engine
+	    easi-sep-engine
+	    easi-iep-engine]]
+	  easi-some-other-engine-foo
+	  easi-some-other-engine-bar))
+#+end_src
+
+** TODO Document this in ~easi-sea=rchable-prompter~
+** TODO Use these for grouping in ~easi--completing-read-multiple-searchables~
+* TODO Write the transient prompter
+IDK man, there's a LOT going on here...
+
+#+begin_src elisp
+(transient-define-prefix tsc-generated-child ()
+  "Prefix that uses `setup-children' to generate single child."
+
+  ["Replace this child"
+   ;; Let's override the group's method
+   :setup-children
+   (lambda (_) ; we don't care about the stupid suffix
+
+     ;; remember to return a list
+     (list (transient--parse-suffix
+            transient--prefix
+            '("r" "replacement" (lambda ()
+                                  (interactive)
+                                  (message "okay!"))))))
+
+   ("s" "haha stupid suffix" (lambda ()
+                               (interactive)
+                               (message "You should replace me!")))])
+
+
+
+(transient-define-prefix my-finder-by-keyword ()
+  "Select a keyword and list matching packages."
+  ;; The real `finder-by-keyword' is more convenient
+  ;; of course, but that is not the point here.
+  [:class transient-columns
+          :setup-children
+          (lambda (_)
+            )])
+
+
+
+(transient-define-prefix tsc-generated-child ()
+  "Prefix that uses `setup-children' to generate single child."
+
+  ["Replace this child"
+   ;; Let's override the group's method
+   :setup-children
+   (lambda (_) ; we don't care about the stupid suffix
+
+     ;; remember to return a list
+     (list (transient--parse-suffix
+            transient--prefix
+            '("r" "replacement" (lambda ()
+                                  (interactive)
+                                  (message "okay!"))
+	      :transient t))))
+
+   ("s" "haha stupid suffix" (lambda ()
+                               (interactive)
+                               (message "You should replace me!")))])
+
+
+
+
+;; TODO:
+;; - Args in transient
+;; - keep transient for different keys
+
+(transient-define-prefix selectable-chooser ()
+  "some docs"
+  [:class transient-row
+   :setup-children
+   ;; TODO make this a real function? Would that help?
+   (lambda (_)
+     (mapcar (apply-partially
+	      'selectable-to-transient-fix
+	      transient--prefix)
+	     selectable-list
+	     ))])
+
+
+
+(selectable-to-transient-fix 'selectable-chooser foo)
+
+(defun selectable-to-transient-fix (prefix selectable)
+  (transient--parse-suffix prefix
+  `(,(slot-value selectable 'key)
+    ,(slot-value selectable 'name)
+    ;; TODO This will get more complex in a minute...
+    ,(lambda ()
+       ;; This has to be interactive!
+       (interactive))
+    :class transient-selection
+)))
+
+(cl-defstruct selectable
+  key name object)
+
+(setq foo
+  (make-selectable
+   :key "f"
+   :name "Foo"
+   :payload 1))
+
+(setq bar
+  (make-selectable
+   :key "b"
+   :name "Bar"
+   :payload 2))
+
+(setq baz
+  (make-selectable
+   :key "Z"
+   :name "Baz"
+   :payload 3))
+   
+(setq selectable-list `(,foo ,bar ,baz))
+
+
+
+
+(defclass transient-selection (transient-infix)
+  ((selection    :initarg :variable)
+   ;; t for selected, nil 
+   (selected :initarg :selected :initform nil)
+   (format                            :initform " %k %d"))
+  "Class for infix commands that represent a transient selection."
+  )
+
+;; TODO Do I need this?
+(cl-defmethod transient-format-value ((obj transient-selection))
+  (if-let ((value (oref obj value)))
+      (format "%s" value)
+    ;; TODO?
+    (propertize "" 'face 'transient-inactive-value)))
+
+(cl-defmethod transient-format-description ((obj transient-selection))
+  (when-let ((desc (oref obj description)))
+    (if (functionp desc)
+        (with-current-buffer transient--original-buffer
+          (funcall desc))
+      (propertize desc 'face
+		  ;; Is this the best test?
+		  (if (oref obj selected)
+		      'transient-value
+		    ;; 'transient-inactive-value
+		    'error)))))
+
+(cl-defmethod transient-infix-read ((obj transient-selection))
+  (if (oref obj selected) nil t))
+
+;; Shouldn't need this?
+(cl-defmethod transient-toggle-selected ((obj transient-selection))
+  "Toggle selected slot of OBJ."
+  (oset (oref obj selected)
+	selected
+	(if (oref obj selected) nil t))
+  ;; TODO ?
+  ;; (transient--history-push obj)
+  )
+
+#+end_src
+* TODO Inheritance in basic searchable types
+(and maybe for presenters too?)
+
+Have an ~:inherit~ slot. This can be set to a searchable.
+
+Trying to get results or suggestions from a searchable which doesn't
+support them but has an inheritance from one that does should just get
+them from the one that does.
+
+- If inheriting from a search engine, it's obvious how this would
+  work.
+- From a group, try inheriting from each searchable in the
+  ~:searchables~ slots turn until one works.
+- From a list, try inheriting from each one until works.
+- From a symbol, inherit from the value of the symbol
+
+* TODO [#C] Make field aliases work with groups as well?
+So that I can have different aliases for the same engine depending on
+whether its called individually or from a group.
+
+* org roam node presenter
+
+An interesting start:
+
+#+begin_src elisp
+  (setq foo-node (org-roam-node-read))
+
+  (defun my/org-roam-preview-function ()
+    (let* ((beg (save-excursion
+		 (org-roam-end-of-meta-data t)
+		 (point)))
+
+	   (end?
+	    (if (= 0 (org-outline-level)) (point-max)
+	      (save-excursion
+		(org-forward-heading-same-level 1)
+		(point))))
+	  (end (if (= beg end?) (point-max) end?)))
+      (string-trim (buffer-substring-no-properties beg end))))
+
+  (defun my/org-roam-preview-node-section (node)
+    ;; (magit-insert-heading (org-roam-node-title node))
+    ;; (insert (let ((org-roam-preview-function #'my/org-roam-preview-function))
+    ;; 	      (org-roam-fontify-like-in-org-mode
+    ;;          (org-roam-preview-get-contents (org-roam-node-file node) 0)))
+    ;;             "\n")
+    ;;     ;; (oset section file (org-roam-node-file node))
+    ;;     ;; (oset section point (point))
+    ;;     (insert ?\n)
+
+    (magit-insert-section section (org-roam-preview-section)
+      (magit-insert-heading "Contents")
+      (insert (let ((org-roam-preview-function #'my/org-roam-preview-function))
+		  (org-roam-fontify-like-in-org-mode
+		 (org-roam-preview-get-contents (org-roam-node-file node) 0)))
+		"\n")
+	(oset section file (org-roam-node-file node))
+	(oset section point (point))
+	(insert ?\n))
+    )
+
+  (setq org-roam-mode-sections
+	'(my/org-roam-preview-node-section
+	  org-roam-backlinks-section
+	  org-roam-reflinks-section))
+
+  (let ((node foo-node)
+	(buffer (get-buffer-create "results")))
+    (with-current-buffer buffer
+      (setq-local org-roam-buffer-current-node node)
+	(setq-local org-roam-buffer-current-directory org-roam-directory)
+	(org-roam-buffer-render-contents))
+      (display-buffer buffer))
+#+end_src
+
+To make this work /really/ well, it might be an idea to submit a PR
+such that functions in ~org-roam-preview-postprocess-functions~ can
+return a /list/ of admissable things (which are then concatenated) and
+that magit section objects are admissable as well as strings. Then I
+transform each org heading into a magit section of recursive depth and
+display them all inside the Contents section. Which would be cool.
+
+* TODO columns-of-cards presenter
+For people who want to use instagram in Emacs?
+
+* TODO Support async results return
+This is simple in principle. Require that all presenters be able to
+handle a nil list of results.
+
+Then write methods of ~easi-get-results~ for:
+- ~(head async)~ (applying to things like ~(async foo-func)~, where
+  ~foo-func~ is a function of some kind which returns an buffer or
+  something. Then automatically setup an async process, and filter its
+  returning buffer, each new line (or whatever) giving us a new
+  result. We'll have to have a function for adding a new result to any
+  given results buffer (but we'll need this anyway, for editing and
+  adding to lists for interactive use), then just add the new result).
+
+* TODO [#C] related entries
+Allow a standard way for results to specify which other results (in
+the same list) they are related to, and what that relation is. Then
+could easily write something like ~ebib-follow-crossref~ for jumping
+to them (or hook it into relate-files -- this would be especially
+useful for making DWIM behaviour when using easi to build a file
+manager).
+
+The simplest way is probably just to attach a list to the object slot
+'easi-related' (like how we store 'easi-search-engine'). Generalise
+the current method for storing 'easi-search-engine' to one for storing
+an arbitrary value /at an arbitrary key/. Then store a list of
+~(relatum . relation)~ pairs, like ~((cite-key "hardt05_multit") .
+overview-of)~. Then have a customisable var ~easi-related-prompt~,
+which should be a function which takes such a list and returns one of
+the pairs. Like ebib, if there is only candidate then don't bother
+prompting. Another function (somewhat more generic I imagine) will
+handle jumping to these, probably by using specialisers and taking
+both parts of the pair as arguments.
+
+(later thought -- Hmmm, only storing pairs might be limiting for some
+users, who want to store more complex info?)
+
+Would be useful for:
+- Interaction with ~related-files~ with an easi-based file manager
+- jumping from tracks and albums to artists and albums
+- jumping between related entries in a bibliography
+- jumping between articles (e.g. SEP, wikipedia) which reference each
+  other in refs or 'see also' sections
+- jumping between org roam nodes which refer to or backlink each other
+- Jumping from org roam nodes to their resources (the things linke in
+  their refs)?
+
+* TODO Possible integration with related-files
+I could use ~&context~ specialisers in ~cl-lib~ to write methods for
+various related-files things which only apply when I'm in a Easi
+buffer. In particular, jumping to a place could have a method
+(specialised in this way) which:
+- jumps to the place in the current easi buffer if its there
+- otherwise calls ~cl-call-next-method~, so that we can just jump as
+  we usually would.
+
+Similarly, jump-or-create could have a reasonable Easi integration
+once Easi has support for creating new objects.
+  
+* TODO [#Z] Write a proper optics library for Emacs
+A proper [[https://xebia.com/blog/a-very-short-intro-to-optics/][optics]] library could and should replace the
+~structured-object-getter~ interface.
+
+* TODO Internationalise! Support different languages!
+
